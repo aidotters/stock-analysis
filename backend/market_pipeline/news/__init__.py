@@ -1,4 +1,5 @@
 from market_pipeline.news.config_parser import (
+    FilterKeywords,
     NewsSource,
     NewsConfig,
     load_config,
@@ -6,6 +7,7 @@ from market_pipeline.news.config_parser import (
 )
 
 __all__ = [
+    "FilterKeywords",
     "NewsSource",
     "NewsConfig",
     "load_config",
