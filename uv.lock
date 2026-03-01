@@ -2869,6 +2869,7 @@ dependencies = [
     { name = "pytest-mock" },
     { name = "python-dateutil" },
     { name = "python-dotenv" },
+    { name = "pyyaml" },
     { name = "requests" },
     { name = "ruff" },
     { name = "scikit-learn" },
@@ -2876,6 +2877,7 @@ dependencies = [
     { name = "ta-lib" },
     { name = "tqdm" },
     { name = "types-python-dateutil" },
+    { name = "types-pyyaml" },
     { name = "types-requests" },
     { name = "xlrd" },
     { name = "yfinance" },
@@ -2907,6 +2909,7 @@ requires-dist = [
     { name = "pytest-mock", specifier = ">=3.14.1" },
     { name = "python-dateutil", specifier = ">=2.8.0" },
     { name = "python-dotenv", specifier = ">=1.1.1" },
+    { name = "pyyaml", specifier = ">=6.0" },
     { name = "requests", specifier = ">=2.32.4" },
     { name = "ruff", specifier = ">=0.12.2" },
     { name = "scikit-learn", specifier = ">=1.7.0" },
@@ -2914,6 +2917,7 @@ requires-dist = [
     { name = "ta-lib", specifier = ">=0.6.4" },
     { name = "tqdm", specifier = ">=4.67.1" },
     { name = "types-python-dateutil", specifier = ">=2.8.0" },
+    { name = "types-pyyaml", specifier = ">=6.0" },
     { name = "types-requests", specifier = ">=2.31.0" },
     { name = "xlrd", specifier = ">=2.0.2" },
     { name = "yfinance", specifier = ">=0.2.65" },
@@ -3034,6 +3038,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/40/ff/c047ddc68c803b46470a357454ef76f4acd8c1088f5cc4891cdd909bfcf6/types_pytz-2025.2.0.20251108.tar.gz", hash = "sha256:fca87917836ae843f07129567b74c1929f1870610681b4c92cb86a3df5817bdb", size = 10961 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e7/c1/56ef16bf5dcd255155cc736d276efa6ae0a5c26fd685e28f0412a4013c01/types_pytz-2025.2.0.20251108-py3-none-any.whl", hash = "sha256:0f1c9792cab4eb0e46c52f8845c8f77cf1e313cb3d68bf826aa867fe4717d91c", size = 10116 },
+]
+
+[[package]]
+name = "types-pyyaml"
+version = "6.0.12.20250915"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/7e/69/3c51b36d04da19b92f9e815be12753125bd8bc247ba0470a982e6979e71c/types_pyyaml-6.0.12.20250915.tar.gz", hash = "sha256:0f8b54a528c303f0e6f7165687dd33fafa81c807fcac23f632b63aa624ced1d3", size = 17522 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bd/e0/1eed384f02555dde685fff1a1ac805c1c7dcb6dd019c916fe659b1c1f9ec/types_pyyaml-6.0.12.20250915-py3-none-any.whl", hash = "sha256:e7d4d9e064e89a3b3cae120b4990cd370874d2bf12fa5f46c97018dd5d3c9ab6", size = 20338 },
 ]
 
 [[package]]

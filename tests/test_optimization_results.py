@@ -237,16 +237,15 @@ class TestSaveLoad:
 
             for metric_name in original_best.metrics:
                 assert (
-                    loaded_best.metrics[metric_name] == original_best.metrics[metric_name]
+                    loaded_best.metrics[metric_name]
+                    == original_best.metrics[metric_name]
                 )
 
 
 class TestCompositeMetric:
     """Test composite (weighted) metric handling."""
 
-    def test_composite_metric_ranking(
-        self, sample_trials: list[TrialResult]
-    ) -> None:
+    def test_composite_metric_ranking(self, sample_trials: list[TrialResult]) -> None:
         """Composite metric correctly combines multiple metrics."""
         results = OptimizationResults(
             trials=sample_trials,
@@ -262,9 +261,7 @@ class TestCompositeMetric:
         best = results.best()
         assert best is not None
 
-    def test_top_with_composite_metric(
-        self, sample_trials: list[TrialResult]
-    ) -> None:
+    def test_top_with_composite_metric(self, sample_trials: list[TrialResult]) -> None:
         """top() works correctly with composite metric."""
         results = OptimizationResults(
             trials=sample_trials,

@@ -43,6 +43,8 @@ dependencies = [
     "types-requests>=2.31.0",
     "types-python-dateutil>=2.8.0",
     "nbformat>=5.10.4",
+    "pyyaml>=6.0",
+    "types-PyYAML>=6.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -78,6 +80,13 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = "tests.*"
 ignore_errors = true
+
+[tool.ruff.lint.per-file-ignores]
+"backend/market_pipeline/analysis/high_low_ratio.py" = ["E402"]
+"backend/market_pipeline/analysis/minervini.py" = ["E402"]
+"backend/market_pipeline/analysis/relative_strength.py" = ["E402"]
+"backend/market_pipeline/jquants/data_processor.py" = ["E402"]
+"notebooks/**" = ["E402"]
 
 [tool.coverage.run]
 source = ["backend"]

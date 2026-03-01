@@ -261,3 +261,5 @@ docs/plan/**
 !docs/plan/.gitkeep
 docs/refs/**
 !docs/refs/.gitkeep
+docs/reports/**
+!docs/reports/.gitkeep

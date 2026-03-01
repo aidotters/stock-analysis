@@ -1,0 +1,33 @@
+sources:
+  news:
+    - name: "日経電子版"
+      url: "https://www.nikkei.com/markets/"
+      auth: "cdp"
+      selector: "article"
+      description: "日経の市場ニュース一覧"
+
+    - name: "Reuters Japan"
+      url: "https://jp.reuters.com/markets/"
+      auth: "none"
+      selector: "article"
+      description: "ロイター日本語版の市場ニュース"
+
+  analysis:
+    - name: "トウシル"
+      url: "https://media.rakuten-sec.net/"
+      auth: "none"
+      selector: "article"
+      description: "楽天証券の投資情報メディア"
+
+    - name: "会社四季報オンライン"
+      url: "https://shikiho.toyokeizai.net/"
+      auth: "cdp"
+      selector: "article"
+      description: "東洋経済の四季報オンライン"
+
+  # Phase 2用: 銘柄個別ページの巡回設定
+  financial:
+    - name: "会社四季報（銘柄ページ）"
+      url_template: "https://shikiho.toyokeizai.net/stocks/{code}"
+      auth: "cdp"
+      description: "四季報の個別銘柄ページ（Phase 2で使用）"

@@ -292,7 +292,9 @@ class OptimizationResults:
             reverse = metric_name != "max_drawdown"
             return sorted(
                 self._trials,
-                key=lambda t: t.metrics.get(metric_name, float("-inf") if reverse else float("inf")),
+                key=lambda t: t.metrics.get(
+                    metric_name, float("-inf") if reverse else float("inf")
+                ),
                 reverse=reverse,
             )
 
@@ -319,10 +321,7 @@ class OptimizationResults:
         return score
 
     def __repr__(self) -> str:
-        return (
-            f"OptimizationResults(trials={len(self._trials)}, "
-            f"metric={self._metric})"
-        )
+        return f"OptimizationResults(trials={len(self._trials)}, metric={self._metric})"
 
 
 def _convert_to_json_serializable(value: Any) -> Any:

@@ -11,9 +11,9 @@ flowchart TB
     end
 
     subgraph Collection["データ収集レイヤー"]
-        RDJ[run_daily_jquants.py<br/>平日 22:00]
-        RWT[run_weekly_tasks.py<br/>日曜 20:00]
-        RMM[run_monthly_master.py<br/>毎月1日 18:00]
+        RDJ[run_daily_jquants.py<br/>平日 18:00]
+        RWT[run_weekly_tasks.py<br/>土曜 06:00]
+        RMM[run_monthly_master.py<br/>毎月1日 20:30]
     end
 
     subgraph Storage["SQLiteストレージ"]
@@ -24,7 +24,7 @@ flowchart TB
     end
 
     subgraph Analysis["分析レイヤー"]
-        RDA[run_daily_analysis.py<br/>平日 23:00]
+        RDA[run_daily_analysis.py<br/>平日 18:30]
         MIN[minervini.py]
         HLR[high_low_ratio.py]
         RSP[relative_strength.py]
@@ -82,6 +82,10 @@ graph LR
             CM[cache_manager.py]
             SN[slack_notifier.py]
         end
+
+        subgraph News["news/"]
+            NCP[config_parser.py<br/>NewsSource, NewsConfig]
+        end
     end
 
     subgraph MarketReader["backend/market_reader/"]
@@ -133,7 +137,7 @@ graph LR
 
 ```mermaid
 sequenceDiagram
-    participant Cron as cron
+    participant Launchd as launchd
     participant RDJ as run_daily_jquants
     participant JQ as J-Quants API
     participant DB as jquants.db
@@ -141,8 +145,8 @@ sequenceDiagram
     participant ADB as analysis_results.db
     participant Slack as Slack Webhook
 
-    Note over Cron: 平日 22:00
-    Cron->>RDJ: 起動
+    Note over Launchd: 平日 18:00
+    Launchd->>RDJ: 起動
     RDJ->>JQ: 認証 (refresh token)
     JQ-->>RDJ: id token
 
@@ -153,10 +157,10 @@ sequenceDiagram
 
     RDJ->>DB: バッチ保存
     RDJ->>Slack: 成功/エラー通知
-    RDJ-->>Cron: 完了
+    RDJ-->>Launchd: 完了
 
-    Note over Cron: 平日 23:00
-    Cron->>RDA: 起動
+    Note over Launchd: 平日 18:30
+    Launchd->>RDA: 起動
     RDA->>DB: 株価データ読込
 
     par 並列処理
@@ -167,22 +171,22 @@ sequenceDiagram
 
     RDA->>ADB: 結果保存
     RDA->>Slack: 成功/エラー通知
-    RDA-->>Cron: 完了
+    RDA-->>Launchd: 完了
 ```
 
 ## シーケンス図: 週次処理フロー
 
 ```mermaid
 sequenceDiagram
-    participant Cron as cron
+    participant Launchd as launchd
     participant RWT as run_weekly_tasks
     participant JQ as J-Quants API
     participant SDB as statements.db
     participant IA as integrated_analysis
     participant OUT as output/
 
-    Note over Cron: 日曜 20:00
-    Cron->>RWT: 起動
+    Note over Launchd: 土曜 06:00
+    Launchd->>RWT: 起動
 
     alt --statements-only
         RWT->>JQ: 財務諸表取得
@@ -199,7 +203,7 @@ sequenceDiagram
         IA->>OUT: Excel出力
     end
 
-    RWT-->>Cron: 完了
+    RWT-->>Launchd: 完了
 ```
 
 ## データベースER図
@@ -356,11 +360,18 @@ classDiagram
         +bool is_configured
     }
 
+    class LoggingSettings {
+        +str level
+        +str format
+        +str date_format
+    }
+
     Settings *-- PathSettings
     Settings *-- JQuantsAPISettings
     Settings *-- YFinanceSettings
     Settings *-- AnalysisSettings
     Settings *-- DatabaseSettings
+    Settings *-- LoggingSettings
     Settings *-- SlackSettings
 ```
 
@@ -369,10 +380,10 @@ classDiagram
 ```mermaid
 graph TB
     subgraph Server["サーバー環境"]
-        subgraph Cron["cronジョブ"]
-            C1[22:00 run_daily_jquants]
-            C2[23:00 run_daily_analysis]
-            C3[日曜 20:00 run_weekly_tasks]
+        subgraph Cron["launchdジョブ"]
+            C1[18:00 run_daily_jquants]
+            C2[18:30 run_daily_analysis]
+            C3[土曜 06:00 run_weekly_tasks]
             C4[毎月1日 run_monthly_master]
         end
 

@@ -181,7 +181,9 @@ def run_daily_analysis(
                             raise RuntimeError("No data found in jquants database")
                     except Exception as e:
                         logger.error(f"Error getting latest date from database: {e}")
-                        raise RuntimeError(f"Error getting latest date from database: {e}") from e
+                        raise RuntimeError(
+                            f"Error getting latest date from database: {e}"
+                        ) from e
 
                 calc_end_date_str = end_date.strftime("%Y-%m-%d")
                 calc_start_date_str = (
@@ -209,7 +211,9 @@ def run_daily_analysis(
                                 result_db_path=analysis_config.results_db_path,
                                 n_workers=analysis_config.n_workers,
                             )
-                            logger.info("relative_strength table initialization completed.")
+                            logger.info(
+                                "relative_strength table initialization completed."
+                            )
                         else:
                             logger.info(
                                 "relative_strength table found. Updating recent data using parallel processing..."
@@ -252,7 +256,9 @@ def run_daily_analysis(
                         )
 
                         if errors > 0:
-                            logger.warning(f"RSI update completed with {errors} errors.")
+                            logger.warning(
+                                f"RSI update completed with {errors} errors."
+                            )
                             success = False
                         else:
                             logger.info("RSI update completed successfully.")
@@ -377,10 +383,13 @@ def run_daily_analysis(
                     logger.info("Creating daily analysis summary...")
                     try:
                         summary = create_analysis_summary(
-                            date=calc_end_date_str, db_path=analysis_config.results_db_path
+                            date=calc_end_date_str,
+                            db_path=analysis_config.results_db_path,
                         )
                         if summary:
-                            logger.info(f"Daily Analysis Summary for {calc_end_date_str}:")
+                            logger.info(
+                                f"Daily Analysis Summary for {calc_end_date_str}:"
+                            )
                             for key, value in summary.items():
                                 logger.info(f"  {key}: {value}")
                         else:
@@ -390,7 +399,9 @@ def run_daily_analysis(
                             success = False
                         logger.info("Analysis summary creation completed.")
                     except Exception as e:
-                        logger.error(f"Error creating analysis summary: {e}", exc_info=True)
+                        logger.error(
+                            f"Error creating analysis summary: {e}", exc_info=True
+                        )
                         success = False
 
                 # 7. Chart Classification
@@ -400,12 +411,16 @@ def run_daily_analysis(
                         run_chart_classification_full()
                         logger.info("Chart classification completed.")
                     except Exception as e:
-                        logger.error(f"Error in chart classification: {e}", exc_info=True)
+                        logger.error(
+                            f"Error in chart classification: {e}", exc_info=True
+                        )
                         success = False
 
                 # 8. Integrated Scores (save to DB)
                 if "integrated_scores" in modules:
-                    logger.info("Running integrated scores analysis and saving to DB...")
+                    logger.info(
+                        "Running integrated scores analysis and saving to DB..."
+                    )
                     try:
                         run_integrated_analysis2(target_date=calc_end_date_str)
                         logger.info("Integrated scores saved to database successfully.")
