@@ -20,6 +20,18 @@
     - **チャートパターン分類:** 機械学習を用いて、株価チャートの形状を自動的に分類し、特定のパターン（上昇、下落、もみ合いなど）を識別します。データの可用性に基づいて動的にウィンドウサイズを選択（1200日または960日の長期パターン分析を含む）し、高性能なバッチ処理により効率的に実行されます。
     - **統合分析:** 上記の各分析結果を組み合わせ、複合的なスコアや条件フィルタリングにより、多角的な視点から銘柄を評価します。
 
+- **ニュース駆動型銘柄発見 (`/discover-stocks`):**
+    - ニュースや分析記事から有望銘柄を自動抽出するClaude Codeスキルです。
+    - Playwright MCPでニュースサイト（日経電子版、Reuters Japan）や分析サイト（トウシル、会社四季報オンライン）を巡回し、銘柄コード・推奨理由を抽出します。
+    - 裏付け情報の収集とリスク分析を経て、候補銘柄レポートを `docs/reports/adhoc/` に出力します。
+    - テーマ絞り込み（例: AI、半導体）やカテゴリ・期間指定に対応しています。
+    - 巡回先設定は `config/news_sources.yaml` で管理されます。
+
+- **銘柄詳細分析 (`/analyze-stock`):**
+    - 銘柄コードまたはPhase 1候補リストから、企業分析・財務分析・テクニカル分析を統合した投資判断レポートを生成します。
+    - 会社四季報銘柄ページ（CDP経由）、企業IR情報、既存テクニカルツール（StockScreener, TechnicalAnalyzer, DataReader）を情報ソースとして活用します。
+    - 5段階投資判断評価（強気/やや強気/中立/やや弱気/弱気）を含むレポートを `docs/reports/stocks/` に出力します。
+
 ## 分析機能の詳細
 
 `backend/market_pipeline/analysis` ディレクトリには、以下の分析プログラムが含まれており、それぞれが特定の分析手法を実装しています。
@@ -205,6 +217,68 @@ SLACK_WEBHOOK_URL=https://hooks.slack.com/services/xxx/yyy/zzz
 - リトライロジック（最大3回、1秒間隔）
 - 成功時はメトリクス（レコード数、銘柄数等）を含む通知を送信
 - エラー時はトレースバック情報を含む通知を送信
+
+## ニュース駆動型銘柄発見 (`/discover-stocks`)
+
+ニュースや分析記事から有望銘柄を抽出するClaude Codeスキルです。Playwright MCPでサイトを巡回し、銘柄コード・推奨理由を抽出、裏付け情報収集とリスク分析を経てレポートを生成します。
+
+```bash
+# 基本実行（直近7日間、全カテゴリ）
+/discover-stocks
+
+# テーマ絞り込み
+/discover-stocks --theme "AI"
+
+# カテゴリ・期間指定
+/discover-stocks --category analysis --from 2026-02-20 --to 2026-02-28
+```
+
+**巡回先カテゴリ（`config/news_sources.yaml`で管理）:**
+- `news`: ニュースサイト（日経電子版, Reuters Japan）
+- `analysis`: 分析サイト（トウシル, 会社四季報オンライン）
+- `financial`: 個別銘柄ページ（Phase 2用）
+
+**認証方式:**
+- `auth: cdp` — Chrome DevTools Protocol経由（要: `open -a 'Google Chrome' --args --remote-debugging-port=9222`）
+- `auth: none` — Playwright MCPで直接アクセス
+
+**構成ファイル:**
+- `config/news_sources.yaml`: 巡回先サイト設定（カテゴリ別）
+- `.claude/skills/discover-stocks/SKILL.md`: スキル定義
+- `backend/market_pipeline/news/config_parser.py`: YAML設定パーサー
+- `docs/reports/adhoc/`: レポート出力先
+
+## 銘柄詳細分析 (`/analyze-stock`)
+
+銘柄コードまたはPhase 1候補リストから、企業分析・財務分析・テクニカル分析を統合した投資判断レポートを生成します。
+
+```bash
+# 銘柄コード直接指定
+/analyze-stock 7203
+
+# 複数銘柄の一括分析
+/analyze-stock 7203 9984
+
+# Phase 1候補リストから全銘柄を分析
+/analyze-stock --from-report docs/reports/adhoc/2026-02-28-candidates.md
+
+# Phase 1候補リストから特定銘柄のみ分析
+/analyze-stock --from-report docs/reports/adhoc/2026-02-28-candidates.md 7203 9984
+```
+
+**情報ソース:**
+- 会社四季報銘柄ページ（CDP経由、フォールバック: WebSearch）
+- 企業IR情報・業界動向（WebSearch）
+- 既存テクニカルツール（StockScreener, TechnicalAnalyzer, DataReader）
+
+**レポート内容:**
+- 企業概要、財務分析（PER/PBR/ROE等）、テクニカル分析（統合スコア/Minervini/RSP）
+- 業界・競合分析、リスク要因
+- 投資判断サマリー（5段階評価: 強気/やや強気/中立/やや弱気/弱気）
+
+**構成ファイル:**
+- `.claude/skills/analyze-stock/SKILL.md`: スキル定義
+- `docs/reports/stocks/`: レポート出力先
 
 ## Market Reader パッケージ
 
