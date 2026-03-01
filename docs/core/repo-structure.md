@@ -166,9 +166,11 @@ Stock-Analysis/
 │   └── news_sources.yaml            # ニュース巡回先設定
 │
 ├── .claude/skills/                  # Claude Codeスキル定義
-│   ├── discover-stocks/             # ニュースドリブン銘柄発見スキル（Phase 1）
+│   ├── discover-stocks/             # ニュースドリブン銘柄発見スキル（Phase 1/3）
 │   │   └── SKILL.md
-│   └── analyze-stock/               # 銘柄詳細分析スキル（Phase 2）
+│   ├── research-stock-news/         # 銘柄ニュース調査スキル（Phase 3）
+│   │   └── SKILL.md
+│   └── analyze-stock/               # 銘柄詳細分析スキル（Phase 2/3）
 │       └── SKILL.md
 │
 ├── .env                              # 環境変数（gitignore）

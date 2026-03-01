@@ -25,6 +25,35 @@ sources:
       selector: "article"
       description: "東洋経済の四季報オンライン"
 
+  # Phase 3用: 適時開示情報の巡回設定
+  disclosure:
+    - name: "会社四季報（適時開示）"
+      url: "https://shikiho.toyokeizai.net/news?id=disclosure"
+      auth: "none"
+      description: "四季報オンラインの適時開示ページ"
+      filter_keywords:
+        include:
+          - "業績予想の修正"
+          - "上方修正"
+          - "下方修正"
+          - "決算短信"
+          - "四半期決算"
+          - "自己株式取得"
+          - "自社株買い"
+          - "配当予想の修正"
+          - "増配"
+          - "減配"
+          - "株式分割"
+          - "株式併合"
+          - "資本業務提携"
+          - "事業譲渡"
+          - "TOB"
+          - "MBO"
+        exclude:
+          - "株主総会招集通知"
+          - "コーポレート・ガバナンスに関する報告書"
+          - "定款"
+
   # Phase 2用: 銘柄個別ページの巡回設定
   financial:
     - name: "会社四季報（銘柄ページ）"

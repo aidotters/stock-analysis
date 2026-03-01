@@ -5,6 +5,19 @@
 ## [Unreleased]
 
 ### Added
+- ニュース駆動型銘柄発見 Phase 3: 適時開示情報対応と銘柄ニュース調査スキル
+  - `FilterKeywords` dataclass: タイトルベースのキーワードフィルタリング設定（`include`/`exclude`リスト）
+  - `NewsSource.filter_keywords` フィールド追加: 適時開示等のフィルタリング対応
+  - `config/news_sources.yaml`: `disclosure`カテゴリ追加（会社四季報適時開示ページ、16個のinclude / 3個のexcludeキーワード）
+  - `.claude/skills/research-stock-news/SKILL.md`: 銘柄ニュース調査スキル新規作成
+  - `tests/test_news_config.py`: `FilterKeywords`バリデーション・パーステスト追加
+
+### Changed
+- `.claude/skills/discover-stocks/SKILL.md`: 適時開示巡回ステップ追加（`--category disclosure`対応）
+- `.claude/skills/analyze-stock/SKILL.md`: `/research-stock-news`相当のニュース情報を自動統合
+- `backend/market_pipeline/news/__init__.py`: `FilterKeywords`エクスポート追加
+
+### Added
 - `backend/market_pipeline/news/config_parser.py`: ニュース巡回先設定パーサーモジュール
   - `NewsSource` frozenデータクラス: 巡回先サイト情報（name, auth, url, selector等）
   - `NewsConfig`データクラス: カテゴリ別ソース管理

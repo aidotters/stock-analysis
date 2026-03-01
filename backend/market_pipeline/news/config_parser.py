@@ -13,6 +13,22 @@ VALID_AUTH_VALUES = {"none", "cdp"}
 
 
 @dataclass(frozen=True)
+class FilterKeywords:
+    """タイトルベースのキーワードフィルタリング設定。"""
+
+    include: list[str]
+    exclude: list[str] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        if not self.include:
+            raise ValueError("filter_keywords.include must not be empty.")
+        if not isinstance(self.exclude, list):
+            raise ValueError(
+                f"filter_keywords.exclude must be a list, got {type(self.exclude).__name__}."
+            )
+
+
+@dataclass(frozen=True)
 class NewsSource:
     """巡回先サイトの設定。"""
 
@@ -22,6 +38,7 @@ class NewsSource:
     selector: str = ""
     description: str = ""
     url_template: str = ""
+    filter_keywords: FilterKeywords | None = None
 
     def __post_init__(self) -> None:
         if self.auth not in VALID_AUTH_VALUES:
@@ -90,6 +107,16 @@ def load_config(path: str | Path) -> NewsConfig:
             if not isinstance(item, dict):
                 raise ValueError(f"Each source in '{category}' must be a mapping.")
             _validate_required_fields(item, category)
+            fk_raw = item.get("filter_keywords")
+            filter_kw: FilterKeywords | None = None
+            if fk_raw is not None:
+                if not isinstance(fk_raw, dict):
+                    raise ValueError(
+                        f"'filter_keywords' for source '{item['name']}' must be a mapping."
+                    )
+                include = fk_raw.get("include", [])
+                exclude = fk_raw.get("exclude", [])
+                filter_kw = FilterKeywords(include=include, exclude=exclude)
             parsed.append(
                 NewsSource(
                     name=item["name"],
@@ -98,6 +125,7 @@ def load_config(path: str | Path) -> NewsConfig:
                     selector=item.get("selector", ""),
                     description=item.get("description", ""),
                     url_template=item.get("url_template", ""),
+                    filter_keywords=filter_kw,
                 )
             )
         config.sources[category] = parsed

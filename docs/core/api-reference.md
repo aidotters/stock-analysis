@@ -137,7 +137,7 @@ sources = get_sources_by_category(config, "news")
 | パラメータ | 型 | 説明 |
 |-----------|-----|------|
 | `config` | `NewsConfig` | 設定オブジェクト |
-| `category` | `str` | カテゴリ名（`news`, `analysis`, `financial`） |
+| `category` | `str` | カテゴリ名（`news`, `analysis`, `disclosure`, `financial`） |
 
 **戻り値**: `list[NewsSource]` - ソースのリスト（未知カテゴリの場合は空リスト）
 
@@ -153,6 +153,16 @@ frozenデータクラス。各巡回先サイトの情報を保持。
 | `selector` | `str \| None` | CSSセレクタ |
 | `description` | `str \| None` | サイト説明 |
 | `url_template` | `str \| None` | URLテンプレート（`{code}`プレースホルダー） |
+| `filter_keywords` | `FilterKeywords \| None` | タイトルフィルタリング設定（省略時は`None`） |
+
+### FilterKeywords（データクラス）
+
+frozenデータクラス。タイトルベースのキーワードフィルタリング設定を保持。
+
+| 属性 | 型 | 説明 |
+|-----|-----|------|
+| `include` | `list[str]` | 含むべきキーワードリスト（必須、空リスト不可） |
+| `exclude` | `list[str]` | 除外キーワードリスト（デフォルト: 空リスト） |
 
 ### NewsConfig（データクラス）
 

@@ -154,13 +154,15 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 
 ### 4.1 ニュース巡回設定 (`backend/market_pipeline/news/`)
 
-`/discover-stocks`スキルで使用するニュース巡回先サイトのYAML設定パーサー:
+`/discover-stocks`、`/research-stock-news`スキルで使用するニュース巡回先サイトのYAML設定パーサー:
 
 | モジュール | 機能 |
 |-----------|------|
-| `config_parser.py` | YAML設定読み込み・バリデーション（NewsSource, NewsConfig） |
+| `config_parser.py` | YAML設定読み込み・バリデーション（NewsSource, NewsConfig, FilterKeywords） |
 
-設定ファイル: `config/news_sources.yaml`（カテゴリ: news, analysis, financial）
+設定ファイル: `config/news_sources.yaml`（カテゴリ: news, analysis, disclosure, financial）
+
+`disclosure` カテゴリは適時開示情報の巡回に使用され、`filter_keywords`（`include`/`exclude`リスト）によるタイトルベースのフィルタリングをサポートする。
 
 ### 5. データアクセスレイヤー (`backend/market_reader/`)
 
