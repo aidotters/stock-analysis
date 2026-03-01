@@ -28,7 +28,9 @@ _ENV_FILE = _PROJECT_ROOT / ".env"
 class PathSettings(BaseSettings):
     """Directory and file path settings."""
 
-    model_config = SettingsConfigDict(env_prefix="STOCK_ANALYSIS_", env_file=_ENV_FILE, extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="STOCK_ANALYSIS_", env_file=_ENV_FILE, extra="ignore"
+    )
 
     base_dir: Path = Path(__file__).parent.parent.parent.parent  # Project root
 
@@ -69,7 +71,9 @@ class PathSettings(BaseSettings):
 class JQuantsAPISettings(BaseSettings):
     """J-Quants API configuration."""
 
-    model_config = SettingsConfigDict(env_prefix="JQUANTS_", env_file=_ENV_FILE, extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="JQUANTS_", env_file=_ENV_FILE, extra="ignore"
+    )
 
     # Credentials (from environment)
     email: str = Field(default="", validation_alias="EMAIL")
@@ -88,7 +92,9 @@ class JQuantsAPISettings(BaseSettings):
 class YFinanceSettings(BaseSettings):
     """yfinance API configuration."""
 
-    model_config = SettingsConfigDict(env_prefix="YFINANCE_", env_file=_ENV_FILE, extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="YFINANCE_", env_file=_ENV_FILE, extra="ignore"
+    )
 
     # Rate limiting (conservative defaults to avoid 429 errors)
     max_workers: int = 1  # Sequential processing recommended
@@ -98,7 +104,9 @@ class YFinanceSettings(BaseSettings):
 class AnalysisSettings(BaseSettings):
     """Technical analysis parameters."""
 
-    model_config = SettingsConfigDict(env_prefix="ANALYSIS_", env_file=_ENV_FILE, extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="ANALYSIS_", env_file=_ENV_FILE, extra="ignore"
+    )
 
     # Period settings
     rsp_period_days: int = 500  # RSP calculation lookback
@@ -137,7 +145,9 @@ class AnalysisSettings(BaseSettings):
 class DatabaseSettings(BaseSettings):
     """SQLite optimization settings."""
 
-    model_config = SettingsConfigDict(env_prefix="SQLITE_", env_file=_ENV_FILE, extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="SQLITE_", env_file=_ENV_FILE, extra="ignore"
+    )
 
     journal_mode: str = "WAL"  # Write-Ahead Logging
     synchronous: str = "NORMAL"  # Balance speed/safety
@@ -157,7 +167,9 @@ class DatabaseSettings(BaseSettings):
 class SlackSettings(BaseSettings):
     """Slack notification settings."""
 
-    model_config = SettingsConfigDict(env_prefix="SLACK_", env_file=_ENV_FILE, extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="SLACK_", env_file=_ENV_FILE, extra="ignore"
+    )
 
     webhook_url: str = ""
     error_webhook_url: str = ""
@@ -174,7 +186,9 @@ class SlackSettings(BaseSettings):
 class LoggingSettings(BaseSettings):
     """Logging configuration."""
 
-    model_config = SettingsConfigDict(env_prefix="LOG_", env_file=_ENV_FILE, extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="LOG_", env_file=_ENV_FILE, extra="ignore"
+    )
 
     level: str = "INFO"
     format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

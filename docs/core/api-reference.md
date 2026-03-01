@@ -80,6 +80,16 @@ settings = get_settings()
 | `cache_size` | `int` | 10000 | キャッシュサイズ（ページ） |
 | `mmap_size` | `int` | 268435456 | メモリマップサイズ（256MB） |
 
+#### settings.logging
+
+| 属性 | 型 | デフォルト | 説明 |
+|-----|-----|---------|------|
+| `level` | `str` | `"INFO"` | ログレベル |
+| `format` | `str` | `"%(asctime)s - %(name)s - %(levelname)s - %(message)s"` | ログフォーマット |
+| `date_format` | `str` | `"%Y-%m-%d %H:%M:%S"` | 日付フォーマット |
+
+**環境変数プレフィックス:** `LOG_`（例: `LOG_LEVEL=DEBUG`）
+
 #### settings.slack
 
 | 属性 | 型 | デフォルト | 説明 |
@@ -89,6 +99,71 @@ settings = get_settings()
 | `enabled` | `bool` | `True` | 通知の有効/無効 |
 | `timeout_seconds` | `int` | `10` | HTTPタイムアウト（秒） |
 | `max_retries` | `int` | `3` | リトライ回数 |
+
+---
+
+## ニュース巡回設定モジュール (`backend/market_pipeline/news/`)
+
+ニュース巡回先サイトのYAML設定を読み込み・バリデーションするモジュール。`/discover-stocks`スキルで使用。
+
+### load_config()
+
+```python
+from market_pipeline.news import load_config
+
+config = load_config("config/news_sources.yaml")
+```
+
+**パラメータ:**
+
+| パラメータ | 型 | 説明 |
+|-----------|-----|------|
+| `path` | `str \| Path` | YAML設定ファイルのパス |
+
+**戻り値**: `NewsConfig` - 設定オブジェクト
+
+**例外**: `FileNotFoundError`（ファイル不在）、`ValueError`（バリデーションエラー）
+
+### get_sources_by_category()
+
+```python
+from market_pipeline.news import get_sources_by_category
+
+sources = get_sources_by_category(config, "news")
+```
+
+**パラメータ:**
+
+| パラメータ | 型 | 説明 |
+|-----------|-----|------|
+| `config` | `NewsConfig` | 設定オブジェクト |
+| `category` | `str` | カテゴリ名（`news`, `analysis`, `financial`） |
+
+**戻り値**: `list[NewsSource]` - ソースのリスト（未知カテゴリの場合は空リスト）
+
+### NewsSource（データクラス）
+
+frozenデータクラス。各巡回先サイトの情報を保持。
+
+| 属性 | 型 | 説明 |
+|-----|-----|------|
+| `name` | `str` | サイト名 |
+| `auth` | `str` | 認証方式（`"none"` または `"cdp"`） |
+| `url` | `str \| None` | サイトURL（`url`または`url_template`のいずれか必須） |
+| `selector` | `str \| None` | CSSセレクタ |
+| `description` | `str \| None` | サイト説明 |
+| `url_template` | `str \| None` | URLテンプレート（`{code}`プレースホルダー） |
+
+### NewsConfig（データクラス）
+
+| 属性 | 型 | 説明 |
+|-----|-----|------|
+| `sources` | `dict[str, list[NewsSource]]` | カテゴリ別ソースリスト |
+
+| プロパティ | 型 | 説明 |
+|-----------|-----|------|
+| `categories` | `list[str]` | カテゴリ名リスト |
+| `all_sources` | `list[NewsSource]` | 全ソースのフラットリスト |
 
 ---
 
@@ -261,7 +336,8 @@ TechnicalAnalyzer(source: Literal["jquants", "yfinance"] = "jquants")
 - `ticker` (`str`): 銘柄コード
 - `start` (`str | None`): 開始日 (YYYY-MM-DD)
 - `end` (`str | None`): 終了日 (YYYY-MM-DD)
-- `**kwargs`: 追加引数（`period` など）
+- `**kwargs`: データソース固有の追加引数
+  - `period` (`str`): 期間指定（start/endの代替）。例: `"1y"`, `"6mo"`, `"3mo"`, `"1mo"`
 
 **戻り値**: `pd.DataFrame` - OHLCV列を持つDataFrame
 

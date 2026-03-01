@@ -38,6 +38,10 @@ Stock-Analysis/
 │   │   ├── master/                       # マスターデータ処理
 │   │   │   └── master_db.py
 │   │   │
+│   │   ├── news/                         # ニュース巡回設定
+│   │   │   ├── __init__.py              # エクスポート定義
+│   │   │   └── config_parser.py          # YAML設定読み込み・バリデーション
+│   │   │
 │   │   ├── utils/                        # ユーティリティ
 │   │   │   ├── __init__.py              # エクスポート定義
 │   │   │   ├── parallel_processor.py     # 並列処理フレームワーク
@@ -82,11 +86,11 @@ Stock-Analysis/
 │           ├── bollinger.py              # BollingerBreakout/Squeezeシグナル
 │           └── volume.py                 # VolumeSpike/VolumeBreakoutシグナル
 │
-├── scripts/                          # 実行スクリプト（cron用）
-│   ├── run_daily_jquants.py          # 日次株価取得（平日22:00）
-│   ├── run_daily_analysis.py         # 日次分析（平日23:00）
-│   ├── run_weekly_tasks.py           # 週次タスク（日曜20:00）
-│   ├── run_monthly_master.py         # 月次マスター更新（1日18:00）
+├── scripts/                          # 実行スクリプト（launchd用）
+│   ├── run_daily_jquants.py          # 日次株価取得（平日18:00）
+│   ├── run_daily_analysis.py         # 日次分析（平日18:30）
+│   ├── run_weekly_tasks.py           # 週次タスク（土曜06:00）
+│   ├── run_monthly_master.py         # 月次マスター更新（1日20:30）
 │   ├── run_adhoc_integrated_analysis.py # アドホック統合分析
 │   ├── create_database_indexes.py    # DBインデックス作成
 │   └── _old/
@@ -95,6 +99,8 @@ Stock-Analysis/
 │
 ├── tests/                            # テストコード
 │   ├── conftest.py                   # 共有フィクスチャ
+│   ├── fixtures/                     # テスト用データファイル
+│   │   └── sample_prices.csv         # サンプル株価データ
 │   ├── test_minervini.py
 │   ├── test_high_low_ratio.py
 │   ├── test_relative_strength.py
@@ -146,12 +152,24 @@ Stock-Analysis/
 │   │   └── ANALYSIS_OPTIMIZATION_README.md
 │   ├── plan/                         # 実装計画ドキュメント
 │   │   └── *.md
-│   └── ideas/                        # アイデア・検討用ドキュメント
+│   ├── ideas/                        # アイデア・検討用ドキュメント
+│   └── reports/                      # レポート出力
+│       ├── adhoc/                    # アドホック分析レポート（discover-stocks等）
+│       └── stocks/                   # 銘柄詳細分析レポート（analyze-stock出力）
 │
 ├── notebooks/                        # Jupyter Notebook（分析・可視化用）
 │   └── *.ipynb
 │
 ├── sandbox/                          # 実験用コード
+│
+├── config/                          # 設定ファイル
+│   └── news_sources.yaml            # ニュース巡回先設定
+│
+├── .claude/skills/                  # Claude Codeスキル定義
+│   ├── discover-stocks/             # ニュースドリブン銘柄発見スキル（Phase 1）
+│   │   └── SKILL.md
+│   └── analyze-stock/               # 銘柄詳細分析スキル（Phase 2）
+│       └── SKILL.md
 │
 ├── .env                              # 環境変数（gitignore）
 ├── .env.example                      # 環境変数テンプレート
@@ -190,6 +208,7 @@ Stock-Analysis/
 | `backend/market_pipeline/utils/parallel_processor.py` | 並列処理ラッパー |
 | `backend/market_pipeline/utils/cache_manager.py` | キャッシュ管理 |
 | `backend/market_pipeline/utils/slack_notifier.py` | Slack Incoming Webhook通知（SlackNotifier, JobContext, JobResult） |
+| `backend/market_pipeline/news/config_parser.py` | ニュース巡回先YAML設定パーサー |
 | `backend/market_reader/reader.py` | DataReaderクラス（pandas_datareader風API） |
 | `backend/market_reader/exceptions.py` | カスタム例外クラス |
 | `backend/technical_tools/analyzer.py` | TechnicalAnalyzerファサードクラス（テクニカル分析統合） |
@@ -208,11 +227,11 @@ Stock-Analysis/
 
 | パス | 実行タイミング | 説明 |
 |-----|--------------|------|
-| `scripts/run_daily_jquants.py` | 平日22:00 | J-Quants APIから株価取得 |
-| `scripts/run_daily_analysis.py` | 平日23:00 | 日次分析実行 |
-| `scripts/run_weekly_tasks.py` | 日曜20:00 | 財務諸表取得 + 統合分析 |
-| `scripts/run_monthly_master.py` | 毎月1日18:00 | マスターデータ更新 |
-| `scripts/run_adhoc_integrated_analysis.py` | 手動 | アドホック統合分析実行 |
+| `scripts/run_daily_jquants.py` | 平日18:00 | J-Quants APIから株価取得 |
+| `scripts/run_daily_analysis.py` | 平日18:30 | 日次分析実行 |
+| `scripts/run_adhoc_integrated_analysis.py` | 平日19:00 | アドホック統合分析実行 |
+| `scripts/run_weekly_tasks.py` | 土曜06:00 | 財務諸表取得 + 統合分析 |
+| `scripts/run_monthly_master.py` | 毎月1日20:30 | マスターデータ更新 |
 | `scripts/create_database_indexes.py` | 初回のみ | DBインデックス作成 |
 
 ### データベース
@@ -250,6 +269,7 @@ Stock-Analysis/
 | `tests/test_optimizer.py` | StrategyOptimizerクラス |
 | `tests/test_optimization_results.py` | OptimizationResultsクラス |
 | `tests/test_slack_notifier.py` | SlackNotifier/JobContext/JobResult |
+| `tests/test_news_config.py` | ニュース巡回先設定パーサー |
 | `tests/test_type8_optimization.py` | Type8最適化 |
 | `tests/test_rsi_optimization.py` | RSI最適化 |
 | `tests/test_fixes.py` | バグ修正検証 |

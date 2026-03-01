@@ -273,9 +273,7 @@ class StrategyOptimizer:
         all_combinations = list(itertools.product(*param_values))
 
         # Create parameter dictionaries
-        all_param_sets = [
-            dict(zip(param_names, combo)) for combo in all_combinations
-        ]
+        all_param_sets = [dict(zip(param_names, combo)) for combo in all_combinations]
 
         # Apply constraints
         valid_param_sets = [

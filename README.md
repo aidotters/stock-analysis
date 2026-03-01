@@ -8,28 +8,28 @@
 
 ## 主な機能
 
-*   **データ収集と管理:**
-    *   **日次株価取得 (J-Quants):** 平日の夜間にJ-Quants APIから最新の株価四本値（始値, 高値, 安値, 終値）および出来高を取得し、`data/jquants.db` に保存します。
-    *   **週次財務データ取得 (J-Quants Statements):** 週末にJ-Quants Statements APIから財務諸表データ（売上高、利益、EPS、BPS等）を取得し、PER・PBR・ROE等の財務指標を計算して `data/statements.db` に保存します。
-    *   **月次マスターデータ更新:** 毎月1回、最新の銘柄一覧（マスターデータ）を更新し、`data/master.db` に保存します。
+- **データ収集と管理:**
+    - **日次株価取得 (J-Quants):** 平日の夜間にJ-Quants APIから最新の株価四本値（始値, 高値, 安値, 終値）および出来高を取得し、`data/jquants.db` に保存します。
+    - **週次財務データ取得 (J-Quants Statements):** 週末にJ-Quants Statements APIから財務諸表データ（売上高、利益、EPS、BPS等）を取得し、PER・PBR・ROE等の財務指標を計算して `data/statements.db` に保存します。
+    - **月次マスターデータ更新:** 毎月1回、最新の銘柄一覧（マスターデータ）を更新し、`data/master.db` に保存します。
 
-*   **株式分析:**
-    *   **ミネルヴィニ戦略:** マーク・ミネルヴィニの投資基準に基づき、銘柄のトレンドと強さを評価します。
-    *   **高値・安値比率 (HL Ratio):** 過去一定期間の高値と安値に対する現在の株価の位置を評価し、買われすぎ・売られすぎを判断します。
-    *   **相対力 (Relative Strength):** 市場全体や他の銘柄と比較した株価の相対的な強さを評価します。
-    *   **チャートパターン分類:** 機械学習を用いて、株価チャートの形状を自動的に分類し、特定のパターン（上昇、下落、もみ合いなど）を識別します。データの可用性に基づいて動的にウィンドウサイズを選択（1200日または960日の長期パターン分析を含む）し、高性能なバッチ処理により効率的に実行されます。
-    *   **統合分析:** 上記の各分析結果を組み合わせ、複合的なスコアや条件フィルタリングにより、多角的な視点から銘柄を評価します。
+- **株式分析:**
+    - **ミネルヴィニ戦略:** マーク・ミネルヴィニの投資基準に基づき、銘柄のトレンドと強さを評価します。
+    - **高値・安値比率 (HL Ratio):** 過去一定期間の高値と安値に対する現在の株価の位置を評価し、買われすぎ・売られすぎを判断します。
+    - **相対力 (Relative Strength):** 市場全体や他の銘柄と比較した株価の相対的な強さを評価します。
+    - **チャートパターン分類:** 機械学習を用いて、株価チャートの形状を自動的に分類し、特定のパターン（上昇、下落、もみ合いなど）を識別します。データの可用性に基づいて動的にウィンドウサイズを選択（1200日または960日の長期パターン分析を含む）し、高性能なバッチ処理により効率的に実行されます。
+    - **統合分析:** 上記の各分析結果を組み合わせ、複合的なスコアや条件フィルタリングにより、多角的な視点から銘柄を評価します。
 
 ## 分析機能の詳細
 
 `backend/market_pipeline/analysis` ディレクトリには、以下の分析プログラムが含まれており、それぞれが特定の分析手法を実装しています。
 
-*   **`minervini.py`**: マーク・ミネルヴィニの株式スクリーニング戦略を実装しています。株価と移動平均線の関係、52週高値・安値からの乖離率などを基に、銘柄のトレンドと強さを評価します。計算結果は `data/analysis_results.db` の `minervini` テーブルに保存されます。
-*   **`high_low_ratio.py`**: 銘柄の高値・安値比率を計算するロジックです。過去52週間の高値と安値の範囲内で、現在の株価がどの位置にあるかを示します。結果は `data/analysis_results.db` の `hl_ratio` テーブルに保存されます。
-*   **`relative_strength.py`**: 相対力（Relative Strength Percentage: RSP）および相対力指数（Relative Strength Index: RSI）を計算するロジックです。銘柄の市場に対する相対的なパフォーマンスを評価します。結果は `data/analysis_results.db` の `relative_strength` テーブルに保存されます。
-*   **`chart_classification.py`**: 株価チャートのパターンを分類するロジックです。過去の株価データから特定の期間（20日、60日、120日、240日、および動的選択される960日または1200日）のチャート形状を抽出し、「上昇」「下落」「もみ合い」などのパターンに分類します。データの可用性に基づいて自動的に長期ウィンドウ（1200日 ≥ 960日）を選択し、バッチ処理による高性能な分析を提供します。結果は `data/analysis_results.db` の `classification_results` テーブルに保存されます。
-*   **`integrated_analysis.py`**: 上記の各分析プログラムによって生成された結果（`hl_ratio`, `minervini`, `relative_strength`, `classification_results`）を `data/analysis_results.db` から読み込み、それらを統合して複合的な評価を行うためのユーティリティ関数を提供します。これにより、複数の指標を横断的に評価し、より精度の高い銘柄選定を支援します。このスクリプト自体はデータを生成せず、既存のデータをクエリ・集計します。
-*   **`integrated_analysis2.py`**: `integrated_analysis.py` の機能を利用し、各分析結果と財務指標データを統合して、最終的な分析結果をExcelファイルとして `output` フォルダに出力します。
+- **`minervini.py`**: マーク・ミネルヴィニの株式スクリーニング戦略を実装しています。株価と移動平均線の関係、52週高値・安値からの乖離率などを基に、銘柄のトレンドと強さを評価します。計算結果は `data/analysis_results.db` の `minervini` テーブルに保存されます。
+- **`high_low_ratio.py`**: 銘柄の高値・安値比率を計算するロジックです。過去52週間の高値と安値の範囲内で、現在の株価がどの位置にあるかを示します。結果は `data/analysis_results.db` の `hl_ratio` テーブルに保存されます。
+- **`relative_strength.py`**: 相対力（Relative Strength Percentage: RSP）および相対力指数（Relative Strength Index: RSI）を計算するロジックです。銘柄の市場に対する相対的なパフォーマンスを評価します。結果は `data/analysis_results.db` の `relative_strength` テーブルに保存されます。
+- **`chart_classification.py`**: 株価チャートのパターンを分類するロジックです。過去の株価データから特定の期間（20日、60日、120日、240日、および動的選択される960日または1200日）のチャート形状を抽出し、「上昇」「下落」「もみ合い」などのパターンに分類します。データの可用性に基づいて自動的に長期ウィンドウ（1200日 ≥ 960日）を選択し、バッチ処理による高性能な分析を提供します。結果は `data/analysis_results.db` の `classification_results` テーブルに保存されます。
+- **`integrated_analysis.py`**: 上記の各分析プログラムによって生成された結果（`hl_ratio`, `minervini`, `relative_strength`, `classification_results`）を `data/analysis_results.db` から読み込み、それらを統合して複合的な評価を行うためのユーティリティ関数を提供します。これにより、複数の指標を横断的に評価し、より精度の高い銘柄選定を支援します。このスクリプト自体はデータを生成せず、既存のデータをクエリ・集計します。
+- **`integrated_analysis2.py`**: `integrated_analysis.py` の機能を利用し、各分析結果と財務指標データを統合して、最終的な分析結果をExcelファイルとして `output` フォルダに出力します。
 
 ## ディレクトリ構成
 
@@ -41,6 +41,7 @@
 │   │   ├── config/      # 設定管理（Pydantic Settings）
 │   │   ├── jquants/     # J-Quants API関連の処理（株価・財務諸表）
 │   │   ├── master/      # 銘柄マスター関連の処理
+│   │   ├── news/        # ニュース巡回設定（YAML設定パーサー）
 │   │   ├── utils/       # ユーティリティ（キャッシュ、並列処理、Slack通知等）
 │   │   └── yfinance/    # yfinance連携（レガシー）
 │   ├── market_reader/   # pandas_datareader風のデータアクセスAPI（旧stock_reader/）
@@ -51,8 +52,13 @@
 ├── notebooks/           # Jupyter Notebook（分析・可視化用）
 ├── scripts/             # 定期実行用のスクリプト群
 ├── tests/               # テストコード
+├── config/              # 設定ファイル
+│   └── news_sources.yaml # ニュース巡回先設定
 ├── docs/                # ドキュメント
 │   ├── core/            # コア設計ドキュメント
+│   ├── reports/         # レポート出力
+│   │   ├── adhoc/       # アドホック分析レポート（discover-stocks等）
+│   │   └── stocks/      # 銘柄詳細分析レポート（analyze-stock出力）
 │   └── refs/            # 参考資料
 ├── pyproject.toml       # プロジェクトの依存関係定義
 └── README.md            # このファイル
@@ -92,15 +98,10 @@
     このプロジェクトは Python 3.10 以上を要求します。
 
 3.  **依存ライブラリのインストール:**
-    `uv` または `pip` を使用して、必要なライブラリをインストールします。
+    `uv` を使用して、必要なライブラリをインストールします。
     ```bash
-    # uvを使用する場合
-    uv pip install -r requirements.txt
-
-    # pipを使用する場合
-    pip install -r requirements.txt
+    uv sync
     ```
-    ※ `requirements.txt` がない場合は、`pyproject.toml` から生成するか、直接インストールしてください。
 
 4.  **環境変数の設定:**
     J-Quants APIを利用するために、認証情報の設定が必要です。プロジェクトルートに `.env` ファイルを作成し、以下の内容を記述してください。
@@ -115,13 +116,13 @@
 
 各スクリプトを直接実行することで、任意のタイミングでデータ取得や分析を実行できます。
 
-*   **J-Quants日次データ取得:**
+- **J-Quants日次データ取得:**
     J-Quants APIから日次株価データを取得します。
     ```bash
     python scripts/run_daily_jquants.py
     ```
 
-*   **週次タスク (財務データ取得 & 統合分析):**
+- **週次タスク (財務データ取得 & 統合分析):**
     J-Quants Statements APIから財務諸表データを取得し、財務指標を計算、統合分析を実行します。
     ```bash
     # 全タスク実行
@@ -134,25 +135,25 @@
     python scripts/run_weekly_tasks.py --analysis-only
     ```
 
-*   **月次マスターデータ更新:**
+- **月次マスターデータ更新:**
     銘柄マスターデータを更新します。
     ```bash
     python scripts/run_monthly_master.py
     ```
 
-*   **日次分析フロー:**
+- **日次分析フロー:**
     高値・安値比率、ミネルヴィニ戦略、相対力（RSP/RSI）の計算とデータベースへの保存、およびその日の分析サマリーのログ出力を実行します。
     ```bash
     python scripts/run_daily_analysis.py
     ```
 
-*   **統合分析:**
+- **統合分析:**
     `integrated_analysis2.py` を直接実行することで、統合分析を行い、結果をExcelファイルに出力します。
     ```bash
     python backend/market_pipeline/analysis/integrated_analysis2.py
     ```
 
-*   **チャートパターン分類:**
+- **チャートパターン分類:**
     チャートパターンの分類分析を実行します。複数の実行モードが利用可能です。
     ```bash
     # サンプル実行（基本的なパターン分析）
@@ -168,25 +169,21 @@
     python backend/market_pipeline/analysis/chart_classification.py --mode full --batch-size 50
     ```
 
-### cronによる自動実行
+### launchdによる自動実行
 
-`cron_schedule.txt` に記載されている設定を参考に、cronにジョブを登録することで、データ取得・更新・分析を自動化できます。
+macOS launchdを使用してデータ取得・更新・分析を自動化しています。スリープ復帰後にも自動実行されます。
 
-**設定例:**
-```crontab
-# 平日22時にJ-Quantsで株価データを取得
-0 22 * * 1-5 /path/to/python /Users/tak/Markets/Stocks/Stock-Analysis/scripts/run_daily_jquants.py >> /Users/tak/Markets/Stocks/Stock-Analysis/logs/jquants_daily.log 2>&1
+**スケジュール:**
 
-# 日曜20時に週次タスク（財務データ取得、統合分析）を実行
-0 20 * * 0 /path/to/python /Users/tak/Markets/Stocks/Stock-Analysis/scripts/run_weekly_tasks.py >> /Users/tak/Markets/Stocks/Stock-Analysis/logs/weekly_tasks.log 2>&1
+| スクリプト | 実行タイミング | 説明 |
+|-----------|--------------|------|
+| `run_daily_jquants.py` | 平日 18:00 | J-Quants APIから株価取得 |
+| `run_daily_analysis.py` | 平日 18:30 | 日次分析実行 |
+| `run_adhoc_integrated_analysis.py` | 平日 19:00 | アドホック統合分析 |
+| `run_weekly_tasks.py` | 土曜 06:00 | 財務諸表取得 + 統合分析 |
+| `run_monthly_master.py` | 毎月1日 20:30 | マスターデータ更新 |
 
-# 毎月1日18時にマスターデータを更新
-0 18 1 * * /path/to/python /Users/tak/Markets/Stocks/Stock-Analysis/scripts/run_monthly_master.py >> /Users/tak/Markets/Stocks/Stock-Analysis/logs/master_monthly.log 2>&1
-
-# 平日23時に日次分析フローを実行
-0 23 * * 1-5 /path/to/python /Users/tak/Markets/Stocks/Stock-Analysis/scripts/run_daily_analysis.py >> /Users/tak/Markets/Stocks/Stock-Analysis/logs/daily_analysis.log 2>&1
-```
-**注意:** `/path/to/python` の部分は、使用しているPython実行環境の絶対パスに置き換えてください。ログファイルのパスも適宜調整してください。
+**管理:** `~/.local/share/launchd/setup.sh --status`
 
 ### Slack通知
 
@@ -520,21 +517,22 @@ history = screener.history("7203", days=30)
 
 このプロジェクトでは、以下の主要なライブラリを使用しています。
 
-*   pandas: データ操作と分析
-*   numpy: 数値計算
-*   sqlite3: SQLiteデータベース操作
-*   aiohttp: 非同期HTTPリクエスト（J-Quants API用）
-*   requests: HTTPリクエスト
-*   pydantic-settings: 設定管理
-*   backtesting: バックテストフレームワーク（technical_tools/backtester.pyで使用）
-*   matplotlib: グラフ描画（チャート分類で使用）
-*   plotly: インタラクティブチャート（technical_toolsで使用）
-*   yfinance: 米国株データ取得（technical_toolsで使用）
-*   japanize_matplotlib: matplotlibの日本語表示対応（チャート分類で使用）
-*   scipy: 科学技術計算（チャート分類で使用）
-*   scikit-learn: 機械学習（チャート分類で使用）
-*   pytest: テストフレームワーク
-*   openpyxl: Excelファイルの読み書き
+- pandas: データ操作と分析
+- numpy: 数値計算
+- sqlite3: SQLiteデータベース操作
+- aiohttp: 非同期HTTPリクエスト（J-Quants API用）
+- requests: HTTPリクエスト
+- pydantic-settings: 設定管理
+- backtesting: バックテストフレームワーク（technical_tools/backtester.pyで使用）
+- matplotlib: グラフ描画（チャート分類で使用）
+- plotly: インタラクティブチャート（technical_toolsで使用）
+- yfinance: 米国株データ取得（technical_toolsで使用）
+- japanize_matplotlib: matplotlibの日本語表示対応（チャート分類で使用）
+- scipy: 科学技術計算（チャート分類で使用）
+- scikit-learn: 機械学習（チャート分類で使用）
+- pyyaml: YAML設定ファイルの読み込み
+- pytest: テストフレームワーク
+- openpyxl: Excelファイルの読み書き
 
 ## 計算される財務指標
 

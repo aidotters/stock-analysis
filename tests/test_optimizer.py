@@ -248,9 +248,7 @@ class TestRandomSearch:
 class TestMetricOptimization:
     """Test different metric optimization."""
 
-    def test_total_return_metric(
-        self, sample_price_data: pd.DataFrame, mocker
-    ) -> None:
+    def test_total_return_metric(self, sample_price_data: pd.DataFrame, mocker) -> None:
         """Can optimize for total_return metric."""
         mock_reader = mocker.patch("technical_tools.backtester.DataReader")
         mock_reader.return_value.get_prices.return_value = sample_price_data
@@ -270,9 +268,7 @@ class TestMetricOptimization:
         assert results.best() is not None
         assert "total_return" in results.best().metrics
 
-    def test_sharpe_ratio_metric(
-        self, sample_price_data: pd.DataFrame, mocker
-    ) -> None:
+    def test_sharpe_ratio_metric(self, sample_price_data: pd.DataFrame, mocker) -> None:
         """Can optimize for sharpe_ratio metric."""
         mock_reader = mocker.patch("technical_tools.backtester.DataReader")
         mock_reader.return_value.get_prices.return_value = sample_price_data
@@ -292,9 +288,7 @@ class TestMetricOptimization:
         assert results.best() is not None
         assert "sharpe_ratio" in results.best().metrics
 
-    def test_max_drawdown_metric(
-        self, sample_price_data: pd.DataFrame, mocker
-    ) -> None:
+    def test_max_drawdown_metric(self, sample_price_data: pd.DataFrame, mocker) -> None:
         """Can optimize for max_drawdown metric (minimization)."""
         mock_reader = mocker.patch("technical_tools.backtester.DataReader")
         mock_reader.return_value.get_prices.return_value = sample_price_data
@@ -314,9 +308,7 @@ class TestMetricOptimization:
         assert results.best() is not None
         assert "max_drawdown" in results.best().metrics
 
-    def test_win_rate_metric(
-        self, sample_price_data: pd.DataFrame, mocker
-    ) -> None:
+    def test_win_rate_metric(self, sample_price_data: pd.DataFrame, mocker) -> None:
         """Can optimize for win_rate metric."""
         mock_reader = mocker.patch("technical_tools.backtester.DataReader")
         mock_reader.return_value.get_prices.return_value = sample_price_data
@@ -336,9 +328,7 @@ class TestMetricOptimization:
         assert results.best() is not None
         assert "win_rate" in results.best().metrics
 
-    def test_composite_metric(
-        self, sample_price_data: pd.DataFrame, mocker
-    ) -> None:
+    def test_composite_metric(self, sample_price_data: pd.DataFrame, mocker) -> None:
         """Can optimize with composite (weighted) metric."""
         mock_reader = mocker.patch("technical_tools.backtester.DataReader")
         mock_reader.return_value.get_prices.return_value = sample_price_data
@@ -390,9 +380,7 @@ class TestRSIOptimization:
 class TestMACDOptimization:
     """Test MACD parameter optimization."""
 
-    def test_macd_optimization(
-        self, sample_price_data: pd.DataFrame, mocker
-    ) -> None:
+    def test_macd_optimization(self, sample_price_data: pd.DataFrame, mocker) -> None:
         """Can optimize MACD parameters."""
         mock_reader = mocker.patch("technical_tools.backtester.DataReader")
         mock_reader.return_value.get_prices.return_value = sample_price_data
@@ -444,9 +432,7 @@ class TestExitRuleOptimization:
 class TestParallelExecution:
     """Test parallel execution."""
 
-    def test_parallel_execution(
-        self, sample_price_data: pd.DataFrame, mocker
-    ) -> None:
+    def test_parallel_execution(self, sample_price_data: pd.DataFrame, mocker) -> None:
         """Parallel execution produces same results as single-threaded."""
         mock_reader = mocker.patch("technical_tools.backtester.DataReader")
         mock_reader.return_value.get_prices.return_value = sample_price_data
@@ -470,9 +456,7 @@ class TestParallelExecution:
 class TestIntegrationWithBacktester:
     """Test integration with existing Backtester."""
 
-    def test_basic_integration(
-        self, sample_price_data: pd.DataFrame, mocker
-    ) -> None:
+    def test_basic_integration(self, sample_price_data: pd.DataFrame, mocker) -> None:
         """StrategyOptimizer integrates with Backtester correctly."""
         mock_reader = mocker.patch("technical_tools.backtester.DataReader")
         mock_reader.return_value.get_prices.return_value = sample_price_data
@@ -615,8 +599,6 @@ class TestWalkForwardValidation:
         optimizer.add_search_space("ma_long", [50])
 
         # Mock _run_walk_forward to simulate all splits failing
-        original_run_walk_forward = optimizer._run_walk_forward
-
         def failing_walk_forward(*args, **kwargs):
             # Return fallback metrics (what happens when oos_returns is empty)
             return {

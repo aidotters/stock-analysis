@@ -39,23 +39,7 @@ python_version = "3.10"
 
 ## プロジェクト構造
 
-```
-project_root/
-├── backend/               # バックエンドパッケージ群
-│   ├── market_pipeline/   # コアロジック（旧core/）
-│   │   ├── analysis/      # 分析アルゴリズム
-│   │   ├── config/        # 設定管理
-│   │   ├── jquants/       # J-Quants API連携
-│   │   ├── utils/         # ユーティリティ
-│   │   └── master/        # マスターデータ処理
-│   └── market_reader/     # データアクセスAPI（旧stock_reader/）
-├── scripts/               # 実行スクリプト
-├── tests/                 # テストコード
-├── data/                  # SQLiteデータベース
-├── output/                # 出力ファイル
-├── logs/                  # ログファイル
-└── docs/                  # ドキュメント
-```
+詳細なディレクトリツリーとファイル説明は [repo-structure.md](repo-structure.md) を参照。
 
 ## 設定管理パターン
 
@@ -403,4 +387,6 @@ dev = [
 3. [ ] テストを `tests/` に作成
 4. [ ] 必要に応じて `scripts/` に実行スクリプトを追加
 5. [ ] `CLAUDE.md` を更新
-6. [ ] リント・型チェックを実行
+6. [ ] `docs/core/api-reference.md` にAPI仕様を追加
+7. [ ] `docs/core/repo-structure.md` にファイル構成を追加
+8. [ ] リント・型チェックを実行

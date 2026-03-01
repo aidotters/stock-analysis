@@ -6,7 +6,7 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 
 ## システム全体像
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                            外部データソース                                   │
 ├───────────────────────┬─────────────────────────┬───────────────────────────┤
@@ -19,7 +19,7 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 │                          データ収集レイヤー                                    │
 │  ┌─────────────────────┐ ┌─────────────────────┐ ┌─────────────────────────┐ │
 │  │ run_daily_jquants   │ │ run_weekly_tasks    │ │ run_monthly_master      │ │
-│  │ (平日 22:00)         │ │ (日曜 20:00)         │ │ (毎月1日 18:00)          │ │
+│  │ (平日 18:00)         │ │ (土曜 06:00)         │ │ (毎月1日 20:30)          │ │
 │  └─────────┬───────────┘ └─────────┬───────────┘ └───────────┬─────────────┘ │
 └────────────┼───────────────────────┼─────────────────────────┼───────────────┘
              │                       │                         │
@@ -41,7 +41,7 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 ┌───────────────────────────────────────────────────────────────────────────────┐
 │                             分析レイヤー                                      │
 │  ┌────────────────────────────────────────────────────────────────────────┐  │
-│  │                    run_daily_analysis.py (平日 23:00)                  │  │
+│  │                    run_daily_analysis.py (平日 18:30)                  │  │
 │  │  ┌──────────────┐ ┌────────────────┐ ┌──────────────────────────────┐ │  │
 │  │  │ minervini.py │ │ high_low_ratio │ │ relative_strength.py         │ │  │
 │  │  │ トレンド選別   │ │   HL比率計算    │ │ RSP/RSI計算                   │ │  │
@@ -118,9 +118,11 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 
 | スクリプト | 実行タイミング | 役割 |
 |-----------|---------------|------|
-| `run_daily_jquants.py` | 平日 22:00 | J-Quants APIから日次株価データを取得 |
-| `run_weekly_tasks.py` | 日曜 20:00 | 財務諸表取得 + 統合分析実行 |
-| `run_monthly_master.py` | 毎月1日 18:00 | 銘柄マスターデータ更新 |
+| `run_daily_jquants.py` | 平日 18:00 | J-Quants APIから日次株価データを取得 |
+| `run_daily_analysis.py` | 平日 18:30 | 日次分析実行（HL比率、Minervini、RSP/RSI） |
+| `run_adhoc_integrated_analysis.py` | 平日 19:00 | アドホック統合分析実行 |
+| `run_weekly_tasks.py` | 土曜 06:00 | 財務諸表取得 + 統合分析実行 |
+| `run_monthly_master.py` | 毎月1日 20:30 | 銘柄マスターデータ更新 |
 
 ### 2. API連携レイヤー (`backend/market_pipeline/jquants/`)
 
@@ -149,6 +151,16 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 | `parallel_processor.py` | ProcessPoolExecutor/ThreadPoolExecutorラッパー |
 | `cache_manager.py` | APIレスポンス・計算結果のメモリキャッシュ |
 | `slack_notifier.py` | Slack Incoming Webhook通知（SlackNotifier, JobContext, JobResult） |
+
+### 4.1 ニュース巡回設定 (`backend/market_pipeline/news/`)
+
+`/discover-stocks`スキルで使用するニュース巡回先サイトのYAML設定パーサー:
+
+| モジュール | 機能 |
+|-----------|------|
+| `config_parser.py` | YAML設定読み込み・バリデーション（NewsSource, NewsConfig） |
+
+設定ファイル: `config/news_sources.yaml`（カテゴリ: news, analysis, financial）
 
 ### 5. データアクセスレイヤー (`backend/market_reader/`)
 
@@ -200,6 +212,8 @@ signals = analyzer.detect_crosses("7203", patterns=[(5, 25), (25, 75)])
 | `backtester.py` | Backtesterクラス（シグナルベースバックテスト） |
 | `backtest_results.py` | BacktestResultsクラス（結果分析・可視化・エクスポート） |
 | `virtual_portfolio.py` | VirtualPortfolioクラス（仮想ポートフォリオ管理） |
+| `optimizer.py` | StrategyOptimizerクラス（戦略パラメータ最適化） |
+| `optimization_results.py` | OptimizationResultsクラス（最適化結果分析・可視化） |
 | `backtest_signals/` | バックテスト用シグナル定義（プラグイン形式） |
 
 ### 6. 設定レイヤー (`backend/market_pipeline/config/`)

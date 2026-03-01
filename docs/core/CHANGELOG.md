@@ -5,6 +5,16 @@
 ## [Unreleased]
 
 ### Added
+- `backend/market_pipeline/news/config_parser.py`: ニュース巡回先設定パーサーモジュール
+  - `NewsSource` frozenデータクラス: 巡回先サイト情報（name, auth, url, selector等）
+  - `NewsConfig`データクラス: カテゴリ別ソース管理
+  - `load_config()`: YAML設定ファイルの読み込みとバリデーション
+  - `get_sources_by_category()`: カテゴリ別ソース取得
+  - `auth`フィールドのバリデーション（`none`または`cdp`のみ許可）
+- `config/news_sources.yaml`: ニュース巡回先設定ファイル（news, analysis, financialカテゴリ）
+- `tests/test_news_config.py`: ニュース巡回先設定パーサーのテスト
+- `pyproject.toml`: `pyyaml>=6.0`, `types-PyYAML>=6.0`, `nbformat>=5.10.4` 依存関係追加
+
 - `backend/market_pipeline/utils/slack_notifier.py`: Slack Incoming Webhook通知モジュール
   - `SlackNotifier`クラス: 成功・エラー・警告の3種類の通知送信
   - `JobContext`コンテキストマネージャ: `with`文によるジョブの自動通知
@@ -142,10 +152,6 @@
 
 ## 最近のコミット履歴
 
-### 19ef3b3 - バグ修正
-- **タイプ**: fix
-- **概要**: 各種バグの修正
-
 ### 6703a19 - yfinanceからjquantsデータ計算への切り替え
 - **タイプ**: refactor
 - **スコープ**: yfinance-to-jquants
@@ -174,26 +180,12 @@
 - **スコープ**: jquants/data_processing.py
 - **概要**: J-Quants API認証のリフレッシュトークン取得機能
 
-### 472fb3b - その他更新
-- 軽微な修正とコード改善
-
-### 5ef870e - その他更新
-- 軽微な修正とコード改善
-
-### cd230ae - その他更新
-- 軽微な修正とコード改善
-
 ### 38a9118 - integrated_analysis2.pyの追加とREADME更新
 - **概要**: Excel出力機能の追加
 - READMEドキュメントの更新
 
-### cf38fb6 - バグ修正とノートブック追加
-- **概要**: 各種バグの修正
+### cf38fb6 - ノートブック追加
 - Jupyterノートブックの追加
-
-### 55ee88c - バグ修正とテストスクリプト更新
-- **概要**: バグ修正
-- テストスクリプトの改善
 
 ### 340763b - 分析機能とテスト機能の追加
 - **概要**: 新しい分析アルゴリズムの実装
@@ -202,9 +194,6 @@
 ### 7bd2483 - READMEの更新
 - **タイプ**: Docs
 - **概要**: 新しい分析機能と使用方法の説明を追加
-
-### 07e1cb1 - バグ修正
-- **概要**: 各種バグの修正
 
 ### f50576a - 初期コミット
 - **概要**: プロジェクトの初期セットアップ
