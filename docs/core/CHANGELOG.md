@@ -4,7 +4,17 @@
 
 ## [Unreleased]
 
+### Changed
+- `.claude/skills/analyze-stock/SKILL.md`: レポートテンプレートに財務状況（2.2）・キャッシュフロー（2.3）・ネットキャッシュ分析（2.4）セクションを追加、四季報データ抽出JSを強化
+
 ### Added
+- `/analyze-stock` チャートPNG画像生成機能
+  - `TechnicalAnalyzer.plot_chart()` + `fig.write_image()` でローソク足+SMA+RSI+MACD+GC/DCシグナルのチャートPNG画像を自動生成
+  - 保存先: `docs/reports/stocks/images/{code}-chart-YYYYMMDD-HHMM.png`（1200x800px）
+  - `kaleido>=1.0.0` をオプショナル依存（`chart-export`）として追加
+  - チャート生成失敗時はスキップしてテキストのみのレポートを生成（エラー耐性）
+  - `.gitignore` に `docs/reports/stocks/images/*.png` を追加
+
 - ニュース駆動型銘柄発見 Phase 3: 適時開示情報対応と銘柄ニュース調査スキル
   - `FilterKeywords` dataclass: タイトルベースのキーワードフィルタリング設定（`include`/`exclude`リスト）
   - `NewsSource.filter_keywords` フィールド追加: 適時開示等のフィルタリング対応

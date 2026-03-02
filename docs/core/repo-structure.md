@@ -156,6 +156,7 @@ Stock-Analysis/
 │   └── reports/                      # レポート出力
 │       ├── adhoc/                    # アドホック分析レポート（discover-stocks等）
 │       └── stocks/                   # 銘柄詳細分析レポート（analyze-stock出力）
+│           └── images/               # チャートPNG画像（{code}-chart-YYYYMMDD-HHMM.png）
 │
 ├── notebooks/                        # Jupyter Notebook（分析・可視化用）
 │   └── *.ipynb
