@@ -248,7 +248,6 @@ temp/*
 
 **/_old/
 
-CLAUDE.md
 .claude/
 .steering/
 
@@ -263,3 +262,4 @@ docs/refs/**
 !docs/refs/.gitkeep
 docs/reports/**
 !docs/reports/.gitkeep
+docs/reports/stocks/images/*.png

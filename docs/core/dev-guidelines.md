@@ -387,6 +387,7 @@ dev = [
 3. [ ] テストを `tests/` に作成
 4. [ ] 必要に応じて `scripts/` に実行スクリプトを追加
 5. [ ] `CLAUDE.md` を更新
-6. [ ] `docs/core/api-reference.md` にAPI仕様を追加
-7. [ ] `docs/core/repo-structure.md` にファイル構成を追加
-8. [ ] リント・型チェックを実行
+6. [ ] `README.md` を更新（ユーザー向け機能説明）
+7. [ ] `docs/core/api-reference.md` にAPI仕様を追加
+8. [ ] `docs/core/repo-structure.md` にファイル構成を追加
+9. [ ] リント・型チェックを実行
