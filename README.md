@@ -75,6 +75,7 @@
 │   ├── reports/         # レポート出力
 │   │   ├── adhoc/       # アドホック分析レポート（discover-stocks等）
 │   │   └── stocks/      # 銘柄詳細分析レポート（analyze-stock出力）
+│   │       └── images/  # チャートPNG画像
 │   └── refs/            # 参考資料
 ├── pyproject.toml       # プロジェクトの依存関係定義
 └── README.md            # このファイル
@@ -307,14 +308,17 @@ SLACK_WEBHOOK_URL=https://hooks.slack.com/services/xxx/yyy/zzz
 - 既存テクニカルツール（StockScreener, TechnicalAnalyzer, DataReader）
 
 **レポート内容:**
-- 企業概要、財務分析（PER/PBR/ROE等）、テクニカル分析（統合スコア/Minervini/RSP）
+- 企業概要、財務分析（PER/PBR/ROE等）、財務状況（総資産/自己資本/有利子負債等）、キャッシュフロー、ネットキャッシュ分析（ネットキャッシュ/ネットキャッシュ比率/キャッシュニュートラルPER）、テクニカル分析（統合スコア/Minervini/RSP）
+- 株価チャートPNG画像（ローソク足+SMA+RSI+MACD+GC/DCシグナル、直近2年、`docs/reports/stocks/images/{code}-chart.png`）
 - 業界・競合分析、リスク要因
 - 直近の適時開示・ニュース（`/research-stock-news`相当の情報を自動統合）
 - 投資判断サマリー（5段階評価: 強気/やや強気/中立/やや弱気/弱気）
 
+**チャート生成依存:** `kaleido`（オプショナル）。未インストール時はチャート生成をスキップし、テキストのみのレポートを生成する。
+
 **構成ファイル:**
 - `.claude/skills/analyze-stock/SKILL.md`: スキル定義
-- `docs/reports/stocks/`: レポート出力先
+- `docs/reports/stocks/`: レポート出力先（`images/`サブディレクトリにチャートPNG画像）
 
 ## Market Reader パッケージ
 
@@ -641,6 +645,7 @@ history = screener.history("7203", days=30)
 - scipy: 科学技術計算（チャート分類で使用）
 - scikit-learn: 機械学習（チャート分類で使用）
 - pyyaml: YAML設定ファイルの読み込み
+- kaleido: Plotlyチャートの静的画像エクスポート（オプション、`chart-export`エクストラ）
 - pytest: テストフレームワーク
 - openpyxl: Excelファイルの読み書き
 

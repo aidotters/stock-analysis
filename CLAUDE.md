@@ -219,7 +219,7 @@ with JobContext("ジョブ名") as job:
 - 既存テクニカルツール（StockScreener, TechnicalAnalyzer, DataReader）
 
 **レポート内容:**
-- 企業概要、財務分析（PER/PBR/ROE等）、テクニカル分析（統合スコア/Minervini/RSP）
+- 企業概要、財務分析（PER/PBR/ROE等）、財務状況（総資産/自己資本/有利子負債等）、キャッシュフロー、ネットキャッシュ分析（ネットキャッシュ/ネットキャッシュ比率/キャッシュニュートラルPER）、テクニカル分析（統合スコア/Minervini/RSP）
 - 株価チャートPNG画像（ローソク足+SMA+RSI+MACD+GC/DCシグナル、直近2年、`docs/reports/stocks/images/{code}-chart.png`）
 - 業界・競合分析、リスク要因
 - 直近の適時開示・ニュース（`/research-stock-news`相当の情報を自動統合）
