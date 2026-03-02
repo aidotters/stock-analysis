@@ -166,11 +166,27 @@ Stock-Analysis/
 │   └── news_sources.yaml            # ニュース巡回先設定
 │
 ├── .claude/skills/                  # Claude Codeスキル定義
-│   ├── discover-stocks/             # ニュースドリブン銘柄発見スキル（Phase 1/3）
+│   ├── analyze-stock/               # 銘柄詳細分析スキル
 │   │   └── SKILL.md
-│   ├── research-stock-news/         # 銘柄ニュース調査スキル（Phase 3）
+│   ├── architecture-design/         # アーキテクチャ設計書作成スキル
 │   │   └── SKILL.md
-│   └── analyze-stock/               # 銘柄詳細分析スキル（Phase 2/3）
+│   ├── development-guidelines/      # 開発ガイドライン作成スキル
+│   │   └── SKILL.md
+│   ├── discover-stocks/             # ニュースドリブン銘柄発見スキル
+│   │   └── SKILL.md
+│   ├── functional-design/           # 機能設計書作成スキル
+│   │   └── SKILL.md
+│   ├── glossary-creation/           # 用語集作成スキル
+│   │   └── SKILL.md
+│   ├── prd-writing/                 # PRD作成スキル
+│   │   └── SKILL.md
+│   ├── repository-structure/        # リポジトリ構造定義書作成スキル
+│   │   └── SKILL.md
+│   ├── research-stock-news/         # 銘柄ニュース調査スキル
+│   │   └── SKILL.md
+│   ├── steering/                    # 作業計画・タスクリスト管理スキル
+│   │   └── SKILL.md
+│   └── validation/                  # コード品質検証スキル
 │       └── SKILL.md
 │
 ├── .env                              # 環境変数（gitignore）

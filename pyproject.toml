@@ -47,6 +47,11 @@ dependencies = [
     "types-PyYAML>=6.0",
 ]
 
+[project.optional-dependencies]
+chart-export = [
+    "kaleido>=1.0.0",
+]
+
 [tool.setuptools.packages.find]
 where = ["backend"]
 

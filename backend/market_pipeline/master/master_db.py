@@ -9,7 +9,7 @@ import sqlite3
 import pandas as pd
 import requests
 from datetime import datetime
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from urllib.parse import urljoin
 from typing import Optional, Dict, Any
 import logging
@@ -25,12 +25,14 @@ class StockMasterDB:
         銘柄マスターデータベースの初期化
 
         Args:
-            db_path (str): データベースファイルのパス。指定しない場合は data/master.db
+            db_path (str): データベースファイルのパス。指定しない場合は設定のmaster_dbパス
         """
         if db_path is None:
-            data_dir = os.path.join(os.path.dirname(__file__), "..", "..", "data")
-            os.makedirs(data_dir, exist_ok=True)
-            db_path = os.path.join(data_dir, "master.db")
+            from market_pipeline.config import get_settings
+
+            settings = get_settings()
+            os.makedirs(str(settings.paths.data_dir), exist_ok=True)
+            db_path = str(settings.paths.master_db)
 
         self.db_path = db_path
         self._init_db()
@@ -82,11 +84,16 @@ class StockMasterDB:
             response.raise_for_status()
             soup = BeautifulSoup(response.content, "html.parser")
             excel_link = soup.find(
-                "a", href=lambda href: href and (".xls" in href or ".xlsx" in href)
+                "a",
+                href=lambda href: bool(href and (".xls" in href or ".xlsx" in href)),
             )
 
-            if excel_link and excel_link.get("href"):
-                excel_url = urljoin(url, str(excel_link["href"]))
+            if isinstance(excel_link, Tag):
+                excel_href = excel_link.get("href")
+                if not excel_href:
+                    logger.error("Excel link found but href is empty")
+                    return None
+                excel_url = urljoin(url, str(excel_href))
                 excel_response = requests.get(excel_url)
                 excel_response.raise_for_status()
 

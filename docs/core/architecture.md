@@ -243,15 +243,23 @@ sma_short = settings.analysis.sma_short
 
 ```sql
 CREATE TABLE daily_quotes (
-    Code TEXT,
     Date TEXT,
+    Code TEXT,
     Open REAL,
     High REAL,
     Low REAL,
     Close REAL,
+    UpperLimit TEXT,
+    LowerLimit TEXT,
+    Volume REAL,
+    TurnoverValue REAL,
+    AdjustmentFactor REAL,
+    AdjustmentOpen REAL,
+    AdjustmentHigh REAL,
+    AdjustmentLow REAL,
     AdjustmentClose REAL,
-    Volume INTEGER,
-    PRIMARY KEY (Code, Date)
+    AdjustmentVolume REAL,
+    PRIMARY KEY (Date, Code)
 );
 
 CREATE INDEX idx_daily_quotes_code ON daily_quotes (Code);
