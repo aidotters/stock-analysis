@@ -134,6 +134,7 @@ def run_daily_analysis(
             "summary",
             "chart_classification",
             "integrated_scores",
+            "yfinance_valuation",
         ]
 
     logger.info(f"Starting daily analysis workflow. Modules to run: {modules}")
@@ -428,6 +429,25 @@ def run_daily_analysis(
                         logger.error(f"Error in integrated scores: {e}", exc_info=True)
                         success = False
 
+                # 9. yfinance Valuation (rolling update)
+                if "yfinance_valuation" in modules:
+                    logger.info("Running yfinance valuation rolling update...")
+                    try:
+                        from market_pipeline.yfinance.valuation_fetcher import (
+                            ValuationFetcher,
+                        )
+
+                        fetcher = ValuationFetcher()
+                        result = fetcher.run()
+                        job.add_metric(
+                            "yfinance取得",
+                            f"成功={result['success']}, 失敗={result['failed']}, スキップ={result['skipped']}",
+                        )
+                        logger.info(f"yfinance valuation update completed: {result}")
+                    except Exception as e:
+                        logger.error(f"Error in yfinance valuation: {e}", exc_info=True)
+                        success = False
+
             status_msg = (
                 "Daily analysis workflow finished successfully."
                 if success
@@ -471,6 +491,7 @@ if __name__ == "__main__":
             "summary",
             "chart_classification",
             "integrated_scores",
+            "yfinance_valuation",
         ],
         help="Analysis modules to run (default: all modules)",
     )

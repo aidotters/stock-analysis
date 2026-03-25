@@ -100,6 +100,11 @@ class YFinanceSettings(BaseSettings):
     max_workers: int = 1  # Sequential processing recommended
     rate_limit_delay: float = 2.0  # seconds between requests
 
+    # Valuation fetcher settings
+    valuation_batch_size: int = 150
+    valuation_wait_seconds: float = 0.5
+    valuation_max_workers: int = 4
+
 
 class AnalysisSettings(BaseSettings):
     """Technical analysis parameters."""

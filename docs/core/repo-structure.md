@@ -48,8 +48,9 @@ Stock-Analysis/
 │   │   │   ├── cache_manager.py          # キャッシュ管理
 │   │   │   └── slack_notifier.py         # Slack通知（SlackNotifier, JobContext, JobResult）
 │   │   │
-│   │   └── yfinance/                     # yfinance連携（レガシー、移行中）
-│   │       └── data_processor.py
+│   │   └── yfinance/                     # yfinance連携
+│   │       ├── data_processor.py          # レガシー株価取得
+│   │       └── valuation_fetcher.py       # BSデータ・バリュエーション指標取得（ローリング更新）
 │   │
 │   ├── market_reader/                    # pandas_datareader風データアクセスAPI（旧stock_reader/）
 │   │   ├── __init__.py                   # パッケージエクスポート
@@ -110,6 +111,7 @@ Stock-Analysis/
 │   ├── test_statements_processor.py
 │   ├── test_fundamentals_calculator.py
 │   ├── test_data_processor.py        # yfinance（レガシー）
+│   ├── test_valuation_fetcher.py    # ValuationFetcher（yfinance BS取得）
 │   ├── test_analysis_integration.py
 │   ├── test_type8_optimization.py
 │   ├── test_rsi_optimization.py
@@ -277,6 +279,7 @@ Stock-Analysis/
 | `tests/test_fundamentals_calculator.py` | 財務指標計算 |
 | `tests/test_jquants_data_processor.py` | J-Quants API |
 | `tests/test_data_processor.py` | yfinanceデータ処理（レガシー） |
+| `tests/test_valuation_fetcher.py` | ValuationFetcher（yfinance BS・バリュエーション取得） |
 | `tests/test_stock_reader.py` | market_readerパッケージ |
 | `tests/test_technical_tools.py` | technical_toolsパッケージ |
 | `tests/test_integrated_scores.py` | IntegratedScoresRepository |

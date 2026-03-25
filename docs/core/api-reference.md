@@ -46,6 +46,9 @@ settings = get_settings()
 |-----|-----|---------|------|
 | `max_workers` | `int` | 1 | 最大ワーカー数（1 = シーケンシャル推奨） |
 | `rate_limit_delay` | `float` | 2.0 | リクエスト間隔（秒） |
+| `valuation_batch_size` | `int` | 150 | ローリング更新の1回あたりの処理銘柄数 |
+| `valuation_wait_seconds` | `float` | 0.5 | yfinance API呼び出し間のウェイト（秒） |
+| `valuation_max_workers` | `int` | 4 | 並列取得スレッド数 |
 
 #### settings.analysis
 
@@ -99,6 +102,91 @@ settings = get_settings()
 | `enabled` | `bool` | `True` | 通知の有効/無効 |
 | `timeout_seconds` | `int` | `10` | HTTPタイムアウト（秒） |
 | `max_retries` | `int` | `3` | リトライ回数 |
+
+---
+
+## yfinanceバリュエーションモジュール (`backend/market_pipeline/yfinance/`)
+
+> **Note:** `data_processor.py` はレガシーモジュール（deprecated）です。新規開発では `valuation_fetcher.py` を使用してください。
+
+### ValuationFetcher
+
+yfinanceからBS情報（現金等・有利子負債）・時価総額・PERを取得し、ネットキャッシュ指標を計算するクラス。ローリング更新方式で毎日N銘柄ずつ処理する。
+
+```python
+from market_pipeline.yfinance.valuation_fetcher import ValuationFetcher
+
+fetcher = ValuationFetcher()
+result = fetcher.run()  # {'success': 120, 'failed': 5, 'skipped': 0, 'elapsed': 180.5}
+```
+
+#### コンストラクタ
+
+```python
+ValuationFetcher(
+    master_db_path: str | None = None,
+    statements_db_path: str | None = None,
+    batch_size: int | None = None,
+    max_workers: int | None = None,
+    wait_seconds: float | None = None,
+)
+```
+
+**パラメータ**:
+- `master_db_path`: master.dbのパス（省略時はsettings.paths.master_dbを使用）
+- `statements_db_path`: statements.dbのパス（省略時はsettings.paths.statements_dbを使用）
+- `batch_size`: 1回あたりの処理銘柄数（省略時はsettings.yfinance.valuation_batch_sizeを使用）
+- `max_workers`: 並列取得スレッド数（省略時はsettings.yfinance.valuation_max_workersを使用）
+- `wait_seconds`: API呼び出し間のウェイト秒（省略時はsettings.yfinance.valuation_wait_secondsを使用）
+
+#### メソッド
+
+##### `initialize_table() -> None`
+
+`yfinance_valuation`テーブルを作成（存在しない場合）。
+
+##### `select_target_codes(limit: int | None = None) -> list[str]`
+
+ローリング更新の優先順位に基づいて対象銘柄を選定。
+
+**優先順**:
+1. yfinance_valuationに未登録の銘柄（PER低い順、NULL末尾）
+2. bs_period_endから90日以上経過した銘柄（PER低い順、NULL末尾）
+3. bs_updated_atが古い順
+
+**パラメータ**:
+- `limit` (`int | None`): 取得件数上限（省略時はbatch_sizeを使用）
+
+**戻り値**: `list[str]` - 銘柄コードのリスト
+
+##### `fetch_single(symbol: str) -> dict | None`
+
+yfinanceから1銘柄のBS・時価総額・PERを取得。
+
+**パラメータ**:
+- `symbol` (`str`): yfinanceシンボル（例: "7203.T"）
+
+**戻り値**: `dict | None` - `{code, cash_and_equivalents, interest_bearing_debt, bs_period_end, market_cap, per}` または取得失敗時`None`
+
+##### `calculate_metrics(row: dict) -> dict`
+
+net_cash_ratio, cash_neutral_perを計算。
+
+- `market_cap=0/None` → `net_cash_ratio=None`
+- `cash_and_equivalents=None` → `net_cash_ratio=None`
+- `per=None` → `cash_neutral_per=None`
+
+##### `save_batch(records: list[dict]) -> int`
+
+バッチでyfinance_valuationテーブルに保存（INSERT OR REPLACE）。
+
+**戻り値**: `int` - 保存レコード数
+
+##### `run(limit: int | None = None) -> dict`
+
+メインのローリング更新を実行。
+
+**戻り値**: `dict` - `{success: int, failed: int, skipped: int, elapsed: float}`
 
 ---
 
@@ -532,6 +620,10 @@ StockScreener(
 - `pbr_max` (`float | None`): 最大PBR
 - `roe_min` (`float | None`): 最小ROE
 - `dividend_yield_min` (`float | None`): 最小配当利回り
+- `net_cash_ratio_min` (`float | None`): 最小純ネットキャッシュ比率
+- `net_cash_ratio_max` (`float | None`): 最大純ネットキャッシュ比率
+- `cash_neutral_per_min` (`float | None`): 最小キャッシュニュートラルPER
+- `cash_neutral_per_max` (`float | None`): 最大キャッシュニュートラルPER
 - `pattern_window` (`int | None`): チャートパターンウィンドウ（20, 60, 120, 240, 960, 1200）
 - `pattern_labels` (`list[str] | None`): パターンラベルリスト（例: ["上昇", "急上昇"]）
 - `sector` (`str | None`): セクターフィルター
@@ -599,6 +691,10 @@ results = screener.filter(config)
 | 財務 | `pbr_max` | `float \| None` | None |
 | 財務 | `roe_min` | `float \| None` | None |
 | 財務 | `dividend_yield_min` | `float \| None` | None |
+| バリュエーション | `net_cash_ratio_min` | `float \| None` | None |
+| バリュエーション | `net_cash_ratio_max` | `float \| None` | None |
+| バリュエーション | `cash_neutral_per_min` | `float \| None` | None |
+| バリュエーション | `cash_neutral_per_max` | `float \| None` | None |
 | パターン | `pattern_window` | `int \| None` | None |
 | パターン | `pattern_labels` | `list[str] \| None` | None |
 | その他 | `sector` | `str \| None` | None |

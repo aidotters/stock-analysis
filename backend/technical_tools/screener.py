@@ -57,6 +57,12 @@ class ScreenerFilter:
     roe_min: Optional[float] = None
     dividend_yield_min: Optional[float] = None
 
+    # Valuation (yfinance_valuation)
+    net_cash_ratio_min: Optional[float] = None
+    net_cash_ratio_max: Optional[float] = None
+    cash_neutral_per_min: Optional[float] = None
+    cash_neutral_per_max: Optional[float] = None
+
     # Chart pattern
     pattern_window: Optional[int] = None
     pattern_labels: Optional[list[str]] = field(default=None)
@@ -130,6 +136,11 @@ class StockScreener:
         pbr_max: Optional[float] = None,
         roe_min: Optional[float] = None,
         dividend_yield_min: Optional[float] = None,
+        # Valuation (yfinance_valuation JOIN)
+        net_cash_ratio_min: Optional[float] = None,
+        net_cash_ratio_max: Optional[float] = None,
+        cash_neutral_per_min: Optional[float] = None,
+        cash_neutral_per_max: Optional[float] = None,
         # Chart pattern (classification_results JOIN)
         pattern_window: Optional[int] = None,
         pattern_labels: Optional[list[str]] = None,
@@ -192,6 +203,10 @@ class StockScreener:
             pbr_max = filter_config.pbr_max
             roe_min = filter_config.roe_min
             dividend_yield_min = filter_config.dividend_yield_min
+            net_cash_ratio_min = filter_config.net_cash_ratio_min
+            net_cash_ratio_max = filter_config.net_cash_ratio_max
+            cash_neutral_per_min = filter_config.cash_neutral_per_min
+            cash_neutral_per_max = filter_config.cash_neutral_per_max
             pattern_window = filter_config.pattern_window
             pattern_labels = filter_config.pattern_labels
             sector = filter_config.sector
@@ -322,6 +337,45 @@ class StockScreener:
             except Exception as e:
                 logger.warning(f"Could not load fundamentals data: {e}")
 
+        # JOIN with yfinance_valuation if needed
+        needs_valuation = any(
+            v is not None
+            for v in [
+                net_cash_ratio_min,
+                net_cash_ratio_max,
+                cash_neutral_per_min,
+                cash_neutral_per_max,
+            ]
+        )
+
+        if needs_valuation and not df.empty:
+            try:
+                with self._get_statements_connection() as conn:
+                    valuation_query = """
+                        SELECT
+                            code as Code,
+                            net_cash_ratio,
+                            cash_neutral_per,
+                            market_cap as yf_market_cap,
+                            per as yf_per
+                        FROM yfinance_valuation
+                    """
+                    valuation_df = pd.read_sql(valuation_query, conn)
+
+                if not valuation_df.empty:
+                    df = df.merge(valuation_df, on="Code", how="left")
+
+                    if net_cash_ratio_min is not None:
+                        df = df[df["net_cash_ratio"] >= net_cash_ratio_min]
+                    if net_cash_ratio_max is not None:
+                        df = df[df["net_cash_ratio"] <= net_cash_ratio_max]
+                    if cash_neutral_per_min is not None:
+                        df = df[df["cash_neutral_per"] >= cash_neutral_per_min]
+                    if cash_neutral_per_max is not None:
+                        df = df[df["cash_neutral_per"] <= cash_neutral_per_max]
+            except Exception as e:
+                logger.warning(f"Could not load valuation data: {e}")
+
         # JOIN with pattern data if needed
         if pattern_window is not None and not df.empty:
             try:
@@ -368,6 +422,9 @@ class StockScreener:
             "priceToBook",
             "dividendYield",
             "returnOnEquity",
+            # Valuation
+            "net_cash_ratio",
+            "cash_neutral_per",
             # Meta
             "Date",
         ]

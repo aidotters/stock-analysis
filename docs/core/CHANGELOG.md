@@ -4,6 +4,23 @@
 
 ## [Unreleased]
 
+### Added
+- yfinanceバリュエーション指標取得・スクリーニング機能
+  - `backend/market_pipeline/yfinance/valuation_fetcher.py`: `ValuationFetcher`クラス新規追加
+    - yfinance APIからBS情報（現金等・有利子負債）・時価総額・PERをローリング取得（デフォルト150銘柄/日）
+    - 優先順位ロジック: BS未取得(PER低い順) → 90日経過(PER低い順) → 更新日古い順
+    - `net_cash_ratio`（純ネットキャッシュ比率）、`cash_neutral_per`（キャッシュニュートラルPER）を自動計算
+    - データ保存先: `statements.db` → `yfinance_valuation`テーブル
+  - `backend/technical_tools/screener.py`: StockScreenerにバリュエーションフィルタ追加
+    - `ScreenerFilter`に`net_cash_ratio_min/max`, `cash_neutral_per_min/max`フィールド追加
+    - `yfinance_valuation`テーブルの遅延JOINによるフィルタリング
+  - `backend/market_pipeline/config/settings.py`: `YFinanceSettings`にバリュエーション設定追加
+    - `valuation_batch_size`, `valuation_wait_seconds`, `valuation_max_workers`
+  - `scripts/run_daily_analysis.py`: `yfinance_valuation`モジュール追加（`--modules yfinance_valuation`で単独実行可）
+  - `tests/test_valuation_fetcher.py`: ValuationFetcherの単体テスト（18テスト）
+  - `tests/test_stock_screener.py`: バリュエーションフィルタのテスト追加
+  - `.env.example`: `YFINANCE_VALUATION_*`環境変数追加
+
 ### Changed
 - `.claude/skills/analyze-stock/SKILL.md`: レポートテンプレートに財務状況（2.2）・キャッシュフロー（2.3）・ネットキャッシュ分析（2.4）セクションを追加、四季報データ抽出JSを強化
 
@@ -120,7 +137,7 @@
 ### Changed
 - `backend/technical_tools/__init__.py`: StrategyOptimizer, OptimizationResults, TrialResult, 最適化例外クラスをエクスポート追加
 - `backend/technical_tools/__init__.py`: Backtester, BacktestResults, Trade, VirtualPortfolio, 新例外クラスをエクスポート追加
-- パッケージバージョンを0.2.0に更新
+- パッケージバージョンは0.1.0（pyproject.toml）
 
 ### Documentation
 - `CLAUDE.md`: StrategyOptimizer使用例とAPI説明追加
