@@ -31,6 +31,9 @@ python scripts/run_daily_analysis.py
 # Run specific analysis modules only
 python scripts/run_daily_analysis.py --modules hl_ratio rsp
 
+# Run yfinance valuation rolling update only
+python scripts/run_daily_analysis.py --modules yfinance_valuation
+
 # Run adhoc integrated analysis (weekdays 19:00)
 python scripts/run_adhoc_integrated_analysis.py
 
@@ -85,6 +88,14 @@ mypy .
 - `data_processor.py`: Daily price data fetcher with async processing
 - `statements_processor.py`: Financial statements API fetcher
 - `fundamentals_calculator.py`: Calculates PER, PBR, ROE, ROA, etc. from raw statements
+
+### yfinance Valuation (backend/market_pipeline/yfinance/)
+- `valuation_fetcher.py`: `ValuationFetcher` class for rolling yfinance BS data collection
+  - Fetches cash & equivalents, total debt, market cap, PER from yfinance
+  - Calculates net_cash_ratio and cash_neutral_per
+  - Rolling update: processes N stocks/day (default 150), prioritizing stale/missing data
+  - Data stored in `statements.db` → `yfinance_valuation` table
+  - Integrated into `run_daily_analysis.py` as `yfinance_valuation` module
 
 ### Master Modules (backend/market_pipeline/master/)
 - `master_db.py`: `StockMasterDB` class for managing stock master data (TSE listed stocks)
@@ -306,6 +317,13 @@ config = ScreenerFilter(
 )
 results = screener.filter(config)
 
+# バリュエーション指標でフィルタリング（yfinance_valuation連携）
+results = screener.filter(
+    net_cash_ratio_min=0.3,
+    cash_neutral_per_max=10.0,
+    composite_score_min=70.0,
+)
+
 # チャートパターンでフィルタリング
 results = screener.filter(
     pattern_window=60,
@@ -323,6 +341,7 @@ history = screener.history("7203", days=30)
 - 統合スコア（composite_score）と順位の日次蓄積
 - テクニカル指標（HlRatio, RSI）でのフィルタリング
 - 財務指標（時価総額、PER、PBR、ROE、配当利回り）でのフィルタリング
+- バリュエーション指標（net_cash_ratio, cash_neutral_per）でのフィルタリング（yfinance_valuation連携）
 - チャートパターン（60日/120日など）でのフィルタリング
 - 順位変動分析（rank_changes）：metricバリデーション対応
 - 銘柄別時系列データ取得（history）
@@ -631,3 +650,4 @@ statements_db = settings.paths.statements_db
   - `tests/test_news_config.py`: ニュース巡回先設定パーサーテスト
   - `tests/test_analysis_integration.py`: 分析統合テスト
   - `tests/test_data_processor.py`: データプロセッサテスト
+  - `tests/test_valuation_fetcher.py`: ValuationFetcherテスト（yfinance BS取得・バリュエーション計算）

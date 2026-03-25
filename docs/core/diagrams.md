@@ -8,6 +8,7 @@ flowchart TB
         JQ[J-Quants API<br/>日次株価]
         JS[J-Quants Statements<br/>財務諸表]
         MA[Master API<br/>銘柄マスター]
+        YF[yfinance API<br/>BS・時価総額・PER]
     end
 
     subgraph Collection["データ収集レイヤー"]
@@ -29,6 +30,7 @@ flowchart TB
         HLR[high_low_ratio.py]
         RSP[relative_strength.py]
         CHR[chart_classification.py]
+        VF[valuation_fetcher.py<br/>ローリング更新]
     end
 
     subgraph Integration["統合・出力"]
@@ -46,6 +48,8 @@ flowchart TB
     RDA --> HLR --> ADB
     RDA --> RSP --> ADB
     JDB --> CHR --> ADB
+    MDB --> VF
+    YF --> VF --> SDB
 
     ADB --> IA1
     SDB --> IA1
@@ -83,6 +87,10 @@ graph LR
             SN[slack_notifier.py]
         end
 
+        subgraph YFinance["yfinance/"]
+            VFM[valuation_fetcher.py<br/>ValuationFetcher]
+        end
+
         subgraph News["news/"]
             NCP[config_parser.py<br/>NewsSource, NewsConfig]
         end
@@ -112,6 +120,7 @@ graph LR
     SET --> HL
     SET --> RS
     SET --> DR
+    SET --> VFM
 
     PP --> MN
     PP --> HL
@@ -143,6 +152,7 @@ sequenceDiagram
     participant DB as jquants.db
     participant RDA as run_daily_analysis
     participant ADB as analysis_results.db
+    participant SDB as statements.db
     participant Slack as Slack Webhook
 
     Note over Launchd: 平日 18:00
@@ -170,6 +180,11 @@ sequenceDiagram
     end
 
     RDA->>ADB: 結果保存
+
+    Note over RDA: yfinance Valuation
+    RDA->>RDA: ValuationFetcher.run()
+    RDA->>SDB: yfinance_valuation保存
+
     RDA->>Slack: 成功/エラー通知
     RDA-->>Launchd: 完了
 ```
@@ -281,12 +296,26 @@ erDiagram
         REAL confidence
     }
 
+    yfinance_valuation {
+        TEXT code PK
+        REAL cash_and_equivalents
+        REAL interest_bearing_debt
+        TEXT bs_period_end
+        REAL market_cap
+        REAL per
+        REAL net_cash_ratio
+        REAL cash_neutral_per
+        TEXT bs_updated_at
+        TEXT updated_at
+    }
+
     daily_quotes ||--o{ hl_ratio : "計算元"
     daily_quotes ||--o{ minervini : "計算元"
     daily_quotes ||--o{ relative_strength : "計算元"
     daily_quotes ||--o{ classification_results : "計算元"
     financial_statements ||--o{ calculated_fundamentals : "計算元"
     stocks_master ||--o{ daily_quotes : "銘柄情報"
+    stocks_master ||--o{ yfinance_valuation : "銘柄情報"
 ```
 
 ## クラス図: 設定システム
@@ -308,6 +337,9 @@ classDiagram
     class YFinanceSettings {
         +int max_workers
         +float rate_limit_delay
+        +int valuation_batch_size
+        +float valuation_wait_seconds
+        +int valuation_max_workers
     }
 
     class PathSettings {
@@ -411,6 +443,7 @@ graph TB
 
     subgraph External["外部サービス"]
         JQAPI[J-Quants API]
+        YFAPI[yfinance API]
         SLACK[Slack Webhook]
     end
 
@@ -428,6 +461,7 @@ graph TB
     PY --> ERR
 
     PY <--> JQAPI
+    PY <--> YFAPI
     PY --> SLACK
 ```
 

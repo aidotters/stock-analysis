@@ -7,12 +7,12 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 ## システム全体像
 
 ```text
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                            外部データソース                                   │
-├───────────────────────┬─────────────────────────┬───────────────────────────┤
-│    J-Quants API       │  J-Quants Statements    │     Master Data API       │
-│   (日次株価四本値)      │  (財務諸表データ)         │    (銘柄マスター)           │
-└───────────┬───────────┴────────────┬────────────┴─────────────┬─────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────────┐
+│                            外部データソース                                             │
+├───────────────────────┬─────────────────────────┬──────────────────┬──────────────────┤
+│    J-Quants API       │  J-Quants Statements    │  Master Data API │  yfinance API    │
+│   (日次株価四本値)      │  (財務諸表データ)         │  (銘柄マスター)   │ (BS・時価総額)    │
+└───────────┬───────────┴────────────┬────────────┴────────┬─────────┴──────┬───────────┘
             │                        │                          │
             ▼                        ▼                          ▼
 ┌───────────────────────────────────────────────────────────────────────────────┐
@@ -131,6 +131,17 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 | `data_processor.py` | 非同期処理による日次株価データ取得 |
 | `statements_processor.py` | 財務諸表APIフェッチャー |
 | `fundamentals_calculator.py` | PER, PBR, ROE, ROA等の財務指標計算 |
+
+### 2.5 yfinanceバリュエーション (`backend/market_pipeline/yfinance/`)
+
+| モジュール | 機能 |
+|-----------|------|
+| `valuation_fetcher.py` | BSデータ（現金等・有利子負債）・時価総額・PER取得、ネットキャッシュ指標計算 |
+
+- ローリング更新: 毎日150銘柄ずつ処理（約20営業日で全銘柄一巡）
+- 優先順: BS未取得(PER低い順) → 90日経過(PER低い順) → 更新日古い順
+- 出力: `statements.db` → `yfinance_valuation`テーブル
+- StockScreenerから`net_cash_ratio`, `cash_neutral_per`でフィルタリング可能
 
 ### 3. 分析レイヤー (`backend/market_pipeline/analysis/`)
 
@@ -284,6 +295,19 @@ CREATE TABLE calculated_fundamentals (
     ROE REAL,
     ROA REAL,
     ...
+);
+
+CREATE TABLE yfinance_valuation (
+    code TEXT PRIMARY KEY,
+    cash_and_equivalents REAL,
+    interest_bearing_debt REAL,
+    bs_period_end TEXT,
+    market_cap REAL,
+    per REAL,
+    net_cash_ratio REAL,
+    cash_neutral_per REAL,
+    bs_updated_at TEXT,
+    updated_at TEXT
 );
 ```
 

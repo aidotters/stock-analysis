@@ -662,5 +662,188 @@ class TestStockScreenerWithFilter:
         assert all(results["composite_score"] >= 75.0)
 
 
+class TestStockScreenerValuation:
+    """Tests for StockScreener yfinance_valuation filters."""
+
+    @pytest.fixture
+    def temp_analysis_db(self):
+        """Create a temporary analysis database."""
+        temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
+        temp_db.close()
+
+        conn = sqlite3.connect(temp_db.name)
+        conn.execute(
+            """
+            CREATE TABLE integrated_scores (
+                Date TEXT NOT NULL,
+                Code TEXT NOT NULL,
+                composite_score REAL,
+                composite_score_rank INTEGER,
+                hl_ratio_rank INTEGER,
+                rsp_rank INTEGER,
+                PRIMARY KEY (Date, Code)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE hl_ratio (
+                Date TEXT NOT NULL, Code TEXT NOT NULL,
+                HlRatio REAL, MedianRatio REAL, Weeks INTEGER,
+                PRIMARY KEY (Date, Code)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE relative_strength (
+                Date TEXT NOT NULL, Code TEXT NOT NULL,
+                RelativeStrengthPercentage REAL, RelativeStrengthIndex REAL,
+                PRIMARY KEY (Date, Code)
+            )
+            """
+        )
+
+        test_date = "2026-03-01"
+        for i, code in enumerate(["2001", "2002", "2003", "2004"]):
+            score = 90 - i * 10
+            conn.execute(
+                "INSERT INTO integrated_scores (Date, Code, composite_score, composite_score_rank, hl_ratio_rank, rsp_rank) VALUES (?, ?, ?, ?, ?, ?)",
+                (test_date, code, score, i + 1, i + 1, i + 1),
+            )
+        conn.commit()
+        conn.close()
+
+        yield temp_db.name
+        os.unlink(temp_db.name)
+
+    @pytest.fixture
+    def temp_statements_db_with_valuation(self):
+        """Create statements DB with yfinance_valuation table."""
+        temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
+        temp_db.close()
+
+        conn = sqlite3.connect(temp_db.name)
+        conn.execute(
+            """
+            CREATE TABLE calculated_fundamentals (
+                code TEXT PRIMARY KEY, company_name TEXT, sector_33 TEXT,
+                market_cap REAL, per REAL, pbr REAL, dividend_yield REAL, roe REAL
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE yfinance_valuation (
+                code TEXT PRIMARY KEY,
+                cash_and_equivalents REAL,
+                interest_bearing_debt REAL,
+                bs_period_end TEXT,
+                market_cap REAL,
+                per REAL,
+                net_cash_ratio REAL,
+                cash_neutral_per REAL,
+                bs_updated_at TEXT,
+                updated_at TEXT
+            )
+            """
+        )
+        # Insert valuation data
+        valuations = [
+            ("2001", 0.5, 5.0),  # High net cash ratio, low CN-PER
+            ("2002", 0.3, 8.0),  # Medium
+            ("2003", 0.1, 12.0),  # Low net cash ratio
+            ("2004", -0.1, 15.0),  # Negative net cash ratio
+        ]
+        for code, ncr, cnper in valuations:
+            conn.execute(
+                "INSERT INTO yfinance_valuation (code, net_cash_ratio, cash_neutral_per, market_cap, per) VALUES (?, ?, ?, ?, ?)",
+                (code, ncr, cnper, 10_000_000_000, 10.0),
+            )
+        conn.commit()
+        conn.close()
+
+        yield temp_db.name
+        os.unlink(temp_db.name)
+
+    @pytest.fixture
+    def screener_with_valuation(
+        self, temp_analysis_db, temp_statements_db_with_valuation
+    ):
+        from technical_tools.screener import StockScreener
+
+        return StockScreener(
+            analysis_db_path=temp_analysis_db,
+            statements_db_path=temp_statements_db_with_valuation,
+        )
+
+    def test_filter_net_cash_ratio_min(self, screener_with_valuation):
+        """Test filtering by net_cash_ratio_min."""
+        results = screener_with_valuation.filter(net_cash_ratio_min=0.3)
+        assert len(results) == 2  # 2001 (0.5) and 2002 (0.3)
+        assert all(results["net_cash_ratio"] >= 0.3)
+
+    def test_filter_net_cash_ratio_max(self, screener_with_valuation):
+        """Test filtering by net_cash_ratio_max."""
+        results = screener_with_valuation.filter(net_cash_ratio_max=0.1)
+        assert len(results) == 2  # 2003 (0.1) and 2004 (-0.1)
+        assert all(results["net_cash_ratio"] <= 0.1)
+
+    def test_filter_cash_neutral_per_max(self, screener_with_valuation):
+        """Test filtering by cash_neutral_per_max."""
+        results = screener_with_valuation.filter(cash_neutral_per_max=10.0)
+        assert len(results) == 2  # 2001 (5.0) and 2002 (8.0)
+        assert all(results["cash_neutral_per"] <= 10.0)
+
+    def test_filter_cash_neutral_per_min(self, screener_with_valuation):
+        """Test filtering by cash_neutral_per_min."""
+        results = screener_with_valuation.filter(cash_neutral_per_min=10.0)
+        assert len(results) == 2  # 2003 (12.0) and 2004 (15.0)
+        assert all(results["cash_neutral_per"] >= 10.0)
+
+    def test_filter_combined_with_existing(self, screener_with_valuation):
+        """Test valuation filters combined with existing filters."""
+        results = screener_with_valuation.filter(
+            composite_score_min=70.0,
+            net_cash_ratio_min=0.3,
+        )
+        assert len(results) > 0
+        assert all(results["composite_score"] >= 70.0)
+        assert all(results["net_cash_ratio"] >= 0.3)
+
+    def test_filter_no_valuation_table(self, temp_analysis_db):
+        """Test that filter works when yfinance_valuation table does not exist."""
+        from technical_tools.screener import StockScreener
+
+        # Create statements DB without valuation table
+        temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
+        temp_db.close()
+        conn = sqlite3.connect(temp_db.name)
+        conn.execute(
+            "CREATE TABLE calculated_fundamentals (code TEXT PRIMARY KEY, per REAL)"
+        )
+        conn.commit()
+        conn.close()
+
+        # Insert some data into analysis DB
+        conn = sqlite3.connect(temp_analysis_db)
+        conn.execute(
+            "INSERT OR IGNORE INTO integrated_scores (Date, Code, composite_score, composite_score_rank, hl_ratio_rank, rsp_rank) VALUES ('2026-03-01', '3001', 80.0, 1, 1, 1)"
+        )
+        conn.commit()
+        conn.close()
+
+        screener = StockScreener(
+            analysis_db_path=temp_analysis_db,
+            statements_db_path=temp_db.name,
+        )
+
+        # Should not raise, just log warning and return results without valuation filters
+        results = screener.filter(net_cash_ratio_min=0.3)
+        assert isinstance(results, pd.DataFrame)
+
+        os.unlink(temp_db.name)
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

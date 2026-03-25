@@ -356,18 +356,20 @@ name = "stock-analysis"
 version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
-    "pandas>=2.0.0",
-    "numpy>=1.24.0",
-    "aiohttp>=3.8.0",
+    "pandas>=2.3.0",
+    "numpy>=2.2.6",
+    "aiohttp>=3.12.14",
+    "pydantic-settings>=2.0.0",
+    "plotly>=6.2.0",
+    "scikit-learn>=1.7.0",
+    "yfinance>=0.2.65",
+    "pyyaml>=6.0",
     # ...
 ]
 
 [project.optional-dependencies]
-dev = [
-    "pytest>=7.0.0",
-    "black>=23.0.0",
-    "ruff>=0.1.0",
-    "mypy>=1.0.0",
+chart-export = [
+    "kaleido>=1.0.0",
 ]
 ```
 

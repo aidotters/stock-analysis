@@ -59,7 +59,7 @@
 │   │   ├── master/      # 銘柄マスター関連の処理
 │   │   ├── news/        # ニュース巡回設定（YAML設定パーサー）
 │   │   ├── utils/       # ユーティリティ（キャッシュ、並列処理、Slack通知等）
-│   │   └── yfinance/    # yfinance連携（レガシー）
+│   │   └── yfinance/    # yfinance連携（バリュエーション指標取得）
 │   ├── market_reader/   # pandas_datareader風のデータアクセスAPI（旧stock_reader/）
 │   └── technical_tools/ # Jupyter Notebook用テクニカル分析ツール
 ├── data/                # データベースファイル（.sqlite, .db）を格納
@@ -92,6 +92,7 @@
     *   主なテーブル:
         *   `financial_statements`: 生の財務諸表データ（売上高、利益、EPS、BPS、キャッシュフロー等）
         *   `calculated_fundamentals`: 計算済み財務指標（PER、PBR、ROE、ROA、配当利回り等）
+        *   `yfinance_valuation`: yfinanceから取得したBS情報とバリュエーション指標（現金等、有利子負債、時価総額、PER、純ネットキャッシュ比率、キャッシュニュートラルPER）
 *   **`data/master.db`**:
     *   銘柄マスターデータ（`stocks_master`テーブルなど）が格納されます。
 *   **`data/analysis_results.db`**:
@@ -164,7 +165,14 @@
 - **日次分析フロー:**
     高値・安値比率、ミネルヴィニ戦略、相対力（RSP/RSI）の計算とデータベースへの保存、およびその日の分析サマリーのログ出力を実行します。
     ```bash
-    python scripts/run_daily_analysis.py
+    # 全モジュール実行
+    uv run python scripts/run_daily_analysis.py
+
+    # 特定モジュールのみ実行
+    uv run python scripts/run_daily_analysis.py --modules hl_ratio rsp
+
+    # yfinanceバリュエーション取得のみ（ローリング更新、デフォルト150銘柄/日）
+    uv run python scripts/run_daily_analysis.py --modules yfinance_valuation
     ```
 
 - **統合分析:**
@@ -605,6 +613,13 @@ config = ScreenerFilter(
 )
 results = screener.filter(config)
 
+# バリュエーション指標でフィルタリング（yfinance_valuation連携）
+results = screener.filter(
+    net_cash_ratio_min=0.3,          # 純ネットキャッシュ比率30%以上
+    cash_neutral_per_max=10.0,       # キャッシュニュートラルPER 10倍以下
+    composite_score_min=70.0,        # 既存テクニカル指標と組み合わせ
+)
+
 # チャートパターンでフィルタリング
 results = screener.filter(
     pattern_window=60,
@@ -622,6 +637,7 @@ history = screener.history("7203", days=30)
 - 統合スコア（composite_score）と順位の日次蓄積
 - テクニカル指標（HlRatio, RSI）でのフィルタリング
 - 財務指標（時価総額、PER、PBR、ROE、配当利回り）でのフィルタリング
+- バリュエーション指標（純ネットキャッシュ比率、キャッシュニュートラルPER）でのフィルタリング（yfinance_valuation連携）
 - チャートパターン（60日/120日など）でのフィルタリング
 - 順位変動分析（rank_changes）
 - 銘柄別時系列データ取得（history）
