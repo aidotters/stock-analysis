@@ -705,7 +705,8 @@ class TestStockScreenerValuation:
         )
 
         test_date = "2026-03-01"
-        for i, code in enumerate(["2001", "2002", "2003", "2004"]):
+        # Use 5-digit codes to match real integrated_scores format
+        for i, code in enumerate(["20010", "20020", "20030", "20040"]):
             score = 90 - i * 10
             conn.execute(
                 "INSERT INTO integrated_scores (Date, Code, composite_score, composite_score_rank, hl_ratio_rank, rsp_rank) VALUES (?, ?, ?, ?, ?, ?)",
@@ -719,7 +720,7 @@ class TestStockScreenerValuation:
 
     @pytest.fixture
     def temp_statements_db_with_valuation(self):
-        """Create statements DB with yfinance_valuation table."""
+        """Create statements DB with yfinance_valuation table (4-digit codes like real data)."""
         temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
         temp_db.close()
 
