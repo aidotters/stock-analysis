@@ -9,9 +9,9 @@ Provides a Jupyter Notebook-friendly interface for:
 
 import logging
 import sqlite3
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from pathlib import Path
-from typing import Optional
+from typing import ClassVar, Optional
 
 import pandas as pd
 
@@ -70,6 +70,71 @@ class ScreenerFilter:
     # Other
     sector: Optional[str] = None
     limit: int = 100
+
+    _FIELD_CATEGORIES: ClassVar[dict[str, str]] = {
+        "date": "日付",
+        "composite_score_min": "テクニカル",
+        "composite_score_max": "テクニカル",
+        "hl_ratio_min": "テクニカル",
+        "hl_ratio_max": "テクニカル",
+        "rsi_min": "テクニカル",
+        "rsi_max": "テクニカル",
+        "market_cap_min": "ファンダメンタル",
+        "market_cap_max": "ファンダメンタル",
+        "per_min": "ファンダメンタル",
+        "per_max": "ファンダメンタル",
+        "pbr_max": "ファンダメンタル",
+        "roe_min": "ファンダメンタル",
+        "dividend_yield_min": "ファンダメンタル",
+        "net_cash_ratio_min": "バリュエーション",
+        "net_cash_ratio_max": "バリュエーション",
+        "cash_neutral_per_min": "バリュエーション",
+        "cash_neutral_per_max": "バリュエーション",
+        "pattern_window": "チャートパターン",
+        "pattern_labels": "チャートパターン",
+        "sector": "その他",
+        "limit": "その他",
+    }
+
+    @classmethod
+    def available_filters(cls) -> pd.DataFrame:
+        """Return all available filter parameters as a DataFrame.
+
+        Returns:
+            DataFrame with columns: parameter, type, category, default
+        """
+        rows = []
+        for f in fields(cls):
+            if f.name.startswith("_"):
+                continue
+            raw = str(f.type).replace("typing.", "")
+            # Remove Optional wrapper: Optional[X] -> X
+            if raw.startswith("Optional[") and raw.endswith("]"):
+                raw = raw[len("Optional[") : -1]
+            type_str = raw
+            rows.append(
+                {
+                    "parameter": f.name,
+                    "type": type_str,
+                    "category": cls._FIELD_CATEGORIES.get(f.name, ""),
+                    "default": f.default if f.default is not field else None,
+                }
+            )
+        return pd.DataFrame(rows)
+
+    @classmethod
+    def available_categories(cls) -> list[str]:
+        """Return list of unique filter categories."""
+        return sorted(set(cls._FIELD_CATEGORIES.values()))
+
+    @classmethod
+    def filters_by_category(cls, category: str) -> list[str]:
+        """Return filter parameter names for a given category.
+
+        Args:
+            category: Category name (e.g., 'テクニカル', 'ファンダメンタル')
+        """
+        return [k for k, v in cls._FIELD_CATEGORIES.items() if v == category]
 
     def to_dict(self) -> dict:
         """Convert filter to dictionary for use with filter() method."""
@@ -353,7 +418,10 @@ class StockScreener:
                 with self._get_statements_connection() as conn:
                     valuation_query = """
                         SELECT
-                            code as Code,
+                            CASE
+                                WHEN LENGTH(code) = 4 THEN code || '0'
+                                ELSE code
+                            END as Code,
                             net_cash_ratio,
                             cash_neutral_per,
                             market_cap as yf_market_cap,
