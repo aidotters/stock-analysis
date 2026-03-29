@@ -655,8 +655,10 @@ StockScreener(
 
 **戻り値**: `pd.DataFrame` - Code, current_rank, past_rank, rank_change列を持つDataFrame
 
+**metricバリデーション**: `VALID_METRICS = {"composite_score", "hl_ratio", "rsp"}` に含まれない値を指定すると `ValueError` を送出。
+
 **例外**:
-- `ValueError`: metricが無効な値の場合
+- `ValueError`: metricが無効な値の場合（有効値: `"composite_score"`, `"hl_ratio"`, `"rsp"`）
 
 ##### `history(code, days=30) -> pd.DataFrame`
 
@@ -737,6 +739,26 @@ results = screener.filter(config)
 
 **パラメータ**:
 - `category` (`str`): カテゴリ名（例: `'テクニカル'`, `'ファンダメンタル'`, `'バリュエーション'`, `'パターン'`）
+
+### カスタム例外 (`backend/technical_tools/exceptions.py`)
+
+technical_toolsパッケージのカスタム例外クラス階層:
+
+| 例外クラス | 親クラス | 用途 |
+|-----------|---------|------|
+| `TechnicalToolsError` | `Exception` | パッケージ基底例外 |
+| `DataSourceError` | `TechnicalToolsError` | データ取得エラー |
+| `TickerNotFoundError` | `DataSourceError` | 銘柄が見つからない（`ticker`, `source` 属性） |
+| `InsufficientDataError` | `TechnicalToolsError` | データ不足（`required`, `actual` 属性） |
+| `BacktestError` | `TechnicalToolsError` | バックテスト基底例外 |
+| `BacktestInsufficientDataError` | `BacktestError` | バックテスト用データ不足（`symbol`, `required`, `actual` 属性） |
+| `InvalidSignalError` | `BacktestError` | 無効なシグナル名（`signal_name` 属性） |
+| `InvalidRuleError` | `BacktestError` | 無効なルール名（`rule_name` 属性） |
+| `PortfolioError` | `TechnicalToolsError` | ポートフォリオ基底例外 |
+| `OptimizerError` | `TechnicalToolsError` | オプティマイザ基底例外 |
+| `InvalidSearchSpaceError` | `OptimizerError` | 無効な探索空間定義 |
+| `NoValidParametersError` | `OptimizerError` | 制約適用後に有効パラメータなし |
+| `OptimizationTimeoutError` | `OptimizerError` | タイムアウト（`timeout`, `completed`, `total` 属性） |
 
 ### 指標計算関数 (`backend/technical_tools/indicators.py`)
 

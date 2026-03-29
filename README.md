@@ -652,7 +652,7 @@ history = screener.history("7203", days=30)
 - チャートパターン（60日/120日など）でのフィルタリング
 - 順位変動分析（rank_changes）
 - 銘柄別時系列データ取得（history）
-- ScreenerFilterクラスによる構造化されたパラメータ指定
+- ScreenerFilterクラスによる構造化されたパラメータ指定（`available_filters()`, `available_categories()`, `filters_by_category()` classmethodで利用可能フィルタを確認可能）
 - TechnicalAnalyzerとのシームレスな連携
 
 ## 依存ライブラリ
