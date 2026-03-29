@@ -5,6 +5,16 @@
 ## [Unreleased]
 
 ### Added
+- StockScreener.filter()に`include`パラメータとカラム最小化を追加
+  - `include`パラメータでカラムグループ("scores", "fundamentals", "valuation", "all")を指定可能
+  - デフォルトで常時5カラム(Date, Code, longName, sector, marketCap)のみ返却、フィルタ使用項目は自動追加
+  - marketCapはyfinance_valuation優先のCOALESCE(フォールバック: calculated_fundamentals)
+  - calculated_fundamentals/yfinance_valuationを常時JOINし基本情報を確保
+  - scores系テーブル(hl_ratio, relative_strength)は必要時のみJOIN(パフォーマンス維持)
+- StockScreenerに自己資本比率・ROA・ROE上限フィルターを追加
+  - `ScreenerFilter`に`equity_ratio_min/max`, `roa_min/max`, `roe_max`フィールド追加
+  - `StockScreener.filter()`でequity_ratio, roa, roe_maxによるフィルタリングが可能に
+  - テストDBフィクスチャをconftest.pyに共通化（`create_screener_analysis_db()`, `create_screener_statements_db()`）
 - yfinanceバリュエーション指標取得・スクリーニング機能
   - `backend/market_pipeline/yfinance/valuation_fetcher.py`: `ValuationFetcher`クラス新規追加
     - yfinance APIからBS情報（現金等・有利子負債）・時価総額・PERをローリング取得（デフォルト150銘柄/日）

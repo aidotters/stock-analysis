@@ -11,6 +11,96 @@ import os
 from datetime import datetime, timedelta
 
 
+def create_screener_analysis_db(db_path, *, include_classification=False):
+    """Create analysis DB tables used by StockScreener tests.
+
+    Args:
+        db_path: Path to the SQLite database file.
+        include_classification: If True, also create classification_results table.
+    """
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        """
+        CREATE TABLE integrated_scores (
+            Date TEXT NOT NULL,
+            Code TEXT NOT NULL,
+            composite_score REAL,
+            composite_score_rank INTEGER,
+            hl_ratio_rank INTEGER,
+            rsp_rank INTEGER,
+            created_at TEXT DEFAULT (datetime('now', 'localtime')),
+            PRIMARY KEY (Date, Code)
+        )
+    """
+    )
+    conn.execute(
+        """
+        CREATE TABLE hl_ratio (
+            Date TEXT NOT NULL,
+            Code TEXT NOT NULL,
+            HlRatio REAL,
+            MedianRatio REAL,
+            Weeks INTEGER,
+            PRIMARY KEY (Date, Code)
+        )
+    """
+    )
+    conn.execute(
+        """
+        CREATE TABLE relative_strength (
+            Date TEXT NOT NULL,
+            Code TEXT NOT NULL,
+            RelativeStrengthPercentage REAL,
+            RelativeStrengthIndex REAL,
+            PRIMARY KEY (Date, Code)
+        )
+    """
+    )
+    if include_classification:
+        conn.execute(
+            """
+            CREATE TABLE classification_results (
+                date TEXT NOT NULL,
+                ticker TEXT NOT NULL,
+                window INTEGER NOT NULL,
+                pattern_label TEXT NOT NULL,
+                score REAL NOT NULL,
+                PRIMARY KEY (date, ticker, window)
+            )
+        """
+        )
+    conn.commit()
+    conn.close()
+
+
+def create_screener_statements_db(db_path):
+    """Create statements DB tables used by StockScreener tests."""
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        """
+        CREATE TABLE calculated_fundamentals (
+            code TEXT PRIMARY KEY,
+            company_name TEXT,
+            sector_33 TEXT,
+            sector_17 TEXT,
+            market_segment TEXT,
+            market_cap REAL,
+            per REAL,
+            pbr REAL,
+            dividend_yield REAL,
+            roe REAL,
+            roa REAL,
+            equity_ratio REAL,
+            eps REAL,
+            bps REAL,
+            last_updated TEXT
+        )
+    """
+    )
+    conn.commit()
+    conn.close()
+
+
 @pytest.fixture(scope="session")
 def sample_stock_codes():
     """Standard set of stock codes for testing"""

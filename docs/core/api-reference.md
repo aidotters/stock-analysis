@@ -619,7 +619,12 @@ StockScreener(
 - `per_max` (`float | None`): 最大PER
 - `pbr_max` (`float | None`): 最大PBR
 - `roe_min` (`float | None`): 最小ROE
+- `roe_max` (`float | None`): 最大ROE
 - `dividend_yield_min` (`float | None`): 最小配当利回り
+- `equity_ratio_min` (`float | None`): 最小自己資本比率
+- `equity_ratio_max` (`float | None`): 最大自己資本比率
+- `roa_min` (`float | None`): 最小ROA
+- `roa_max` (`float | None`): 最大ROA
 - `net_cash_ratio_min` (`float | None`): 最小純ネットキャッシュ比率
 - `net_cash_ratio_max` (`float | None`): 最大純ネットキャッシュ比率
 - `cash_neutral_per_min` (`float | None`): 最小キャッシュニュートラルPER
@@ -627,9 +632,15 @@ StockScreener(
 - `pattern_window` (`int | None`): チャートパターンウィンドウ（20, 60, 120, 240, 960, 1200）
 - `pattern_labels` (`list[str] | None`): パターンラベルリスト（例: ["上昇", "急上昇"]）
 - `sector` (`str | None`): セクターフィルター
+- `include` (`list[str] | str | None`): 結果に含めるカラムグループ。"scores", "fundamentals", "valuation"のリスト、または"all"。フィルタ未使用でもグループ全カラムを返却。
 - `limit` (`int`): 最大結果数（デフォルト: 100）
 
-**戻り値**: `pd.DataFrame` - フィルタリング結果
+**戻り値**: `pd.DataFrame` - フィルタリング結果。常時返却カラム（Date, Code, longName, sector, marketCap）+ フィルタ使用カラム + includeグループカラム。
+
+**カラムグループ**:
+- `"scores"`: composite_score, composite_score_rank, hl_ratio_rank, rsp_rank, HlRatio, MedianRatio, RelativeStrengthPercentage, RelativeStrengthIndex
+- `"fundamentals"`: trailingPE, priceToBook, dividendYield, returnOnEquity, equityRatio, returnOnAssets
+- `"valuation"`: net_cash_ratio, cash_neutral_per, yf_per
 
 ##### `rank_changes(metric="composite_score", days=7, direction="up", min_change=1, limit=50) -> pd.DataFrame`
 
@@ -690,7 +701,12 @@ results = screener.filter(config)
 | 財務 | `per_max` | `float \| None` | None |
 | 財務 | `pbr_max` | `float \| None` | None |
 | 財務 | `roe_min` | `float \| None` | None |
+| 財務 | `roe_max` | `float \| None` | None |
 | 財務 | `dividend_yield_min` | `float \| None` | None |
+| 財務 | `equity_ratio_min` | `float \| None` | None |
+| 財務 | `equity_ratio_max` | `float \| None` | None |
+| 財務 | `roa_min` | `float \| None` | None |
+| 財務 | `roa_max` | `float \| None` | None |
 | バリュエーション | `net_cash_ratio_min` | `float \| None` | None |
 | バリュエーション | `net_cash_ratio_max` | `float \| None` | None |
 | バリュエーション | `cash_neutral_per_min` | `float \| None` | None |
@@ -698,11 +714,29 @@ results = screener.filter(config)
 | パターン | `pattern_window` | `int \| None` | None |
 | パターン | `pattern_labels` | `list[str] \| None` | None |
 | その他 | `sector` | `str \| None` | None |
+| その他 | `include` | `list[str] \| str \| None` | None |
 | その他 | `limit` | `int` | 100 |
 
 ##### `to_dict() -> dict`
 
 フィルター設定を辞書に変換（None値は除外）。
+
+##### `available_filters() -> pd.DataFrame` (classmethod)
+
+利用可能な全フィルターパラメータをDataFrameで返す。
+
+**戻り値**: `pd.DataFrame` - カラム: `parameter`, `type`, `category`, `default`
+
+##### `available_categories() -> list[str]` (classmethod)
+
+フィルターカテゴリの一覧を返す（ソート済み）。
+
+##### `filters_by_category(category: str) -> list[str]` (classmethod)
+
+指定カテゴリに属するフィルターパラメータ名のリストを返す。
+
+**パラメータ**:
+- `category` (`str`): カテゴリ名（例: `'テクニカル'`, `'ファンダメンタル'`, `'バリュエーション'`, `'パターン'`）
 
 ### 指標計算関数 (`backend/technical_tools/indicators.py`)
 
