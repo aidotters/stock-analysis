@@ -369,7 +369,7 @@ dependencies = [
 
 [project.optional-dependencies]
 chart-export = [
-    "kaleido>=1.0.0",
+    "kaleido>=1.0.0",  # チャートPNG画像エクスポート用（オプショナル）
 ]
 ```
 

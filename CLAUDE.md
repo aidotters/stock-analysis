@@ -278,7 +278,7 @@ signals = analyzer.detect_crosses("7203", patterns=[(5, 25), (25, 75)])
 existing = analyzer.load_existing_analysis("7203")
 ```
 
-**Features:**
+**機能:**
 - データソース統一（J-Quants via market_reader, yfinance）
 - 株式分割考慮済みの調整後価格を使用（AdjustmentOpen/High/Low/Close/Volume）
 - テクニカル指標計算（SMA, EMA, RSI, MACD, Bollinger Bands）
@@ -306,7 +306,9 @@ results = screener.filter(
     composite_score_min=70.0,
     market_cap_min=100000000000,  # 1000億円以上
     per_max=15.0,
-    roe_min=15.0
+    roe_min=15.0,
+    equity_ratio_min=40.0,       # 自己資本比率40%以上
+    roa_min=5.0,                 # ROA 5%以上
 )
 
 # ScreenerFilterオブジェクトを使用（パラメータの構造化）
@@ -324,6 +326,12 @@ results = screener.filter(
     composite_score_min=70.0,
 )
 
+# includeでカラムグループを追加（フィルタ未使用でもグループ全カラムを返却）
+results = screener.filter(include=["fundamentals"])              # 基本5 + fundamentals全6カラム
+results = screener.filter(composite_score_min=70.0, include=["fundamentals"])  # + composite_score
+results = screener.filter(include=["fundamentals", "valuation"]) # 複数グループ
+results = screener.filter(include="all")                         # 全22カラム
+
 # チャートパターンでフィルタリング
 results = screener.filter(
     pattern_window=60,
@@ -337,15 +345,18 @@ movers = screener.rank_changes(days=7, direction="up", min_change=50)
 history = screener.history("7203", days=30)
 ```
 
-**Features:**
+**機能:**
 - 統合スコア（composite_score）と順位の日次蓄積
 - テクニカル指標（HlRatio, RSI）でのフィルタリング
-- 財務指標（時価総額、PER、PBR、ROE、配当利回り）でのフィルタリング
+- 財務指標（時価総額、PER、PBR、ROE、ROA、自己資本比率、配当利回り）でのフィルタリング
 - バリュエーション指標（net_cash_ratio, cash_neutral_per）でのフィルタリング（yfinance_valuation連携）
+- `include`パラメータによるカラムグループ制御（"scores", "fundamentals", "valuation", "all"）
+- デフォルトでフィルタ使用項目のみ返却（常時5カラム: Date, Code, longName, sector, marketCap）
+- marketCapはyfinance_valuation優先のCOALESCE（フォールバック: calculated_fundamentals）
 - チャートパターン（60日/120日など）でのフィルタリング
 - 順位変動分析（rank_changes）：metricバリデーション対応
 - 銘柄別時系列データ取得（history）
-- ScreenerFilterクラスによる構造化されたパラメータ指定
+- ScreenerFilterクラスによる構造化されたパラメータ指定（`available_filters()`, `available_categories()`, `filters_by_category()` classmethodで利用可能フィルタを確認可能）
 - TechnicalAnalyzerとのシームレスな連携
 
 ### Backtester (backend/technical_tools/backtester.py)
@@ -566,7 +577,7 @@ config = ScreenerFilter(composite_score_min=80, hl_ratio_min=75)
 vp.buy_from_screener(screener_filter=config)
 ```
 
-**Features:**
+**機能:**
 - JSON永続化（data/portfolios/*.json）
 - 平均取得単価の自動計算
 - スクリーナー結果からの一括銘柄追加
@@ -594,7 +605,7 @@ df = reader.get_prices(["7203", "9984"], start="2024-01-01", end="2024-12-31")
 df = reader.get_prices("7203", columns=["Open", "Close"])
 ```
 
-**Features:**
+**機能:**
 - Automatic date defaults (end=latest in DB, start=5 years before end)
 - 4/5-digit code normalization (output always 4-digit)
 - `strict=True` raises exceptions, `strict=False` (default) returns empty DataFrame with warning
@@ -604,11 +615,14 @@ df = reader.get_prices("7203", columns=["Open", "Close"])
 Centralized Pydantic Settings-based configuration system:
 
 ```python
-from market_pipeline.config import get_settings
+from market_pipeline.config import get_settings, reload_settings
 
 settings = get_settings()
 db_path = settings.paths.jquants_db
 statements_db = settings.paths.statements_db
+
+# 設定をキャッシュクリアして再読み込み
+settings = reload_settings()
 ```
 
 **Configuration categories:**
