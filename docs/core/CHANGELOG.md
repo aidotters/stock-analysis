@@ -7,8 +7,9 @@
 ### Added
 - StockScreener.filter()に`include`パラメータとカラム最小化を追加
   - `include`パラメータでカラムグループ("scores", "fundamentals", "valuation", "all")を指定可能
-  - デフォルトで常時5カラム(Date, Code, longName, sector, marketCap)のみ返却、フィルタ使用項目は自動追加
-  - marketCapはyfinance_valuation優先のCOALESCE(フォールバック: calculated_fundamentals)
+  - デフォルトで常時5カラム(date, code, long_name, sector, market_cap)のみ返却、フィルタ使用項目は自動追加
+  - 出力カラム名は全てsnake_case
+  - market_capはyfinance_valuation優先のCOALESCE(フォールバック: calculated_fundamentals)
   - calculated_fundamentals/yfinance_valuationを常時JOINし基本情報を確保
   - scores系テーブル(hl_ratio, relative_strength)は必要時のみJOIN(パフォーマンス維持)
 - StockScreenerに自己資本比率・ROA・ROE上限フィルターを追加
@@ -32,6 +33,7 @@
   - `.env.example`: `YFINANCE_VALUATION_*`環境変数追加
 
 ### Changed
+- Backtester.run_with_screener()、VirtualPortfolio.buy_from_screener()のカラム参照を`Code`→`code`に修正（StockScreenerのsnake_case出力に追従）
 - `.claude/skills/analyze-stock/SKILL.md`: レポートテンプレートに財務状況（2.2）・キャッシュフロー（2.3）・ネットキャッシュ分析（2.4）セクションを追加、四季報データ抽出JSを強化
 
 ### Added

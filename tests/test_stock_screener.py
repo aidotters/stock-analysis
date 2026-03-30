@@ -168,11 +168,11 @@ class TestStockScreener:
         assert len(results) > 0
         # Without filters or include, only ALWAYS_COLUMNS are returned
         assert set(results.columns) == {
-            "Date",
-            "Code",
-            "longName",
+            "date",
+            "code",
+            "long_name",
             "sector",
-            "marketCap",
+            "market_cap",
         }
 
     def test_filter_composite_score_min(self, screener):
@@ -188,57 +188,57 @@ class TestStockScreener:
     def test_filter_hl_ratio_min(self, screener):
         """Test filter with hl_ratio_min."""
         results = screener.filter(hl_ratio_min=80.0)
-        assert all(results["HlRatio"] >= 80.0)
+        assert all(results["hl_ratio"] >= 80.0)
 
     def test_filter_hl_ratio_max(self, screener):
         """Test filter with hl_ratio_max."""
         results = screener.filter(hl_ratio_max=90.0)
-        assert all(results["HlRatio"] <= 90.0)
+        assert all(results["hl_ratio"] <= 90.0)
 
     def test_filter_rsi_min(self, screener):
         """Test filter with rsi_min."""
         results = screener.filter(rsi_min=60.0)
-        assert all(results["RelativeStrengthIndex"] >= 60.0)
+        assert all(results["rsi"] >= 60.0)
 
     def test_filter_rsi_max(self, screener):
         """Test filter with rsi_max."""
         results = screener.filter(rsi_max=65.0)
-        assert all(results["RelativeStrengthIndex"] <= 65.0)
+        assert all(results["rsi"] <= 65.0)
 
     def test_filter_market_cap_min(self, screener):
         """Test filter with market_cap_min."""
         results = screener.filter(market_cap_min=2000000000)  # 2B
-        assert all(results["marketCap"] >= 2000000000)
+        assert all(results["market_cap"] >= 2000000000)
 
     def test_filter_market_cap_max(self, screener):
         """Test filter with market_cap_max."""
         results = screener.filter(market_cap_max=3000000000)  # 3B
-        assert all(results["marketCap"] <= 3000000000)
+        assert all(results["market_cap"] <= 3000000000)
 
     def test_filter_per_min(self, screener):
         """Test filter with per_min."""
         results = screener.filter(per_min=12.0)
-        assert all(results["trailingPE"] >= 12.0)
+        assert all(results["trailing_pe"] >= 12.0)
 
     def test_filter_per_max(self, screener):
         """Test filter with per_max."""
         results = screener.filter(per_max=14.0)
-        assert all(results["trailingPE"] <= 14.0)
+        assert all(results["trailing_pe"] <= 14.0)
 
     def test_filter_pbr_max(self, screener):
         """Test filter with pbr_max."""
         results = screener.filter(pbr_max=1.5)
-        assert all(results["priceToBook"] <= 1.5)
+        assert all(results["price_to_book"] <= 1.5)
 
     def test_filter_roe_min(self, screener):
         """Test filter with roe_min."""
         results = screener.filter(roe_min=16.0)
-        assert all(results["returnOnEquity"] >= 16.0)
+        assert all(results["return_on_equity"] >= 16.0)
 
     def test_filter_dividend_yield_min(self, screener):
         """Test filter with dividend_yield_min."""
         results = screener.filter(dividend_yield_min=2.0)
-        assert all(results["dividendYield"] >= 2.0)
+        assert all(results["dividend_yield"] >= 2.0)
 
     def test_filter_pattern_window(self, screener):
         """Test filter with pattern_window."""
@@ -259,7 +259,7 @@ class TestStockScreener:
     def test_filter_specific_date(self, screener):
         """Test filter with specific date."""
         results = screener.filter(date="2026-02-01")
-        assert all(results["Date"] == "2026-02-01")
+        assert all(results["date"] == "2026-02-01")
 
     def test_filter_combined_criteria(self, screener):
         """Test filter with multiple criteria."""
@@ -267,8 +267,8 @@ class TestStockScreener:
             composite_score_min=70.0, hl_ratio_min=85.0, market_cap_min=1000000000
         )
         assert all(results["composite_score"] >= 70.0)
-        assert all(results["HlRatio"] >= 85.0)
-        assert all(results["marketCap"] >= 1000000000)
+        assert all(results["hl_ratio"] >= 85.0)
+        assert all(results["market_cap"] >= 1000000000)
 
     def test_filter_no_results(self, screener):
         """Test filter with impossible criteria."""
@@ -282,35 +282,35 @@ class TestStockScreener:
         # equity_ratio: 60, 50, 40, 30, 20 → >= 40: 3 stocks
         results = screener.filter(equity_ratio_min=40.0)
         assert len(results) == 3
-        assert all(results["equityRatio"] >= 40.0)
+        assert all(results["equity_ratio"] >= 40.0)
 
     def test_filter_equity_ratio_max(self, screener):
         """Test filter with equity_ratio_max."""
         # equity_ratio: 60, 50, 40, 30, 20 → <= 50: 4 stocks
         results = screener.filter(equity_ratio_max=50.0)
         assert len(results) == 4
-        assert all(results["equityRatio"] <= 50.0)
+        assert all(results["equity_ratio"] <= 50.0)
 
     def test_filter_roa_min(self, screener):
         """Test filter with roa_min."""
         # roa: 10, 8, 6, 4, 2 → >= 6: 3 stocks
         results = screener.filter(roa_min=6.0)
         assert len(results) == 3
-        assert all(results["returnOnAssets"] >= 6.0)
+        assert all(results["return_on_assets"] >= 6.0)
 
     def test_filter_roa_max(self, screener):
         """Test filter with roa_max."""
         # roa: 10, 8, 6, 4, 2 → <= 8: 4 stocks
         results = screener.filter(roa_max=8.0)
         assert len(results) == 4
-        assert all(results["returnOnAssets"] <= 8.0)
+        assert all(results["return_on_assets"] <= 8.0)
 
     def test_filter_roe_max(self, screener):
         """Test filter with roe_max."""
         # roe: 20, 18, 16, 14, 12 → <= 18: 4 stocks
         results = screener.filter(roe_max=18.0)
         assert len(results) == 4
-        assert all(results["returnOnEquity"] <= 18.0)
+        assert all(results["return_on_equity"] <= 18.0)
 
     def test_filter_combined_new_filters(self, screener):
         """Test combining new filters with existing filters."""
@@ -322,9 +322,9 @@ class TestStockScreener:
         )
         assert len(results) > 0
         assert all(results["composite_score"] >= 60.0)
-        assert all(results["equityRatio"] >= 30.0)
-        assert all(results["returnOnAssets"] >= 4.0)
-        assert all(results["returnOnEquity"] <= 20.0)
+        assert all(results["equity_ratio"] >= 30.0)
+        assert all(results["return_on_assets"] >= 4.0)
+        assert all(results["return_on_equity"] <= 20.0)
 
     def test_screener_filter_new_fields(self):
         """Test ScreenerFilter has new fields and they appear in categories."""
@@ -423,7 +423,7 @@ class TestStockScreener:
         results = screener.history("1001", days=30)
         assert isinstance(results, pd.DataFrame)
         assert len(results) > 0
-        assert all(results["Code"] == "1001")
+        assert all(results["code"] == "1001")
 
     def test_history_limited_days(self, screener):
         """Test history with days limit."""
@@ -440,8 +440,8 @@ class TestStockScreener:
         """Test that history includes all required columns."""
         results = screener.history("1001", days=30)
         required_columns = [
-            "Date",
-            "Code",
+            "date",
+            "code",
             "composite_score",
             "composite_score_rank",
         ]
@@ -589,7 +589,7 @@ class TestStockScreenerWithFilter:
         assert isinstance(results, pd.DataFrame)
         if len(results) > 0:
             assert all(results["composite_score"] >= 70.0)
-            assert all(results["HlRatio"] >= 85.0)
+            assert all(results["hl_ratio"] >= 85.0)
         assert len(results) <= 10
 
     def test_filter_keyword_args_still_work(self, screener):
@@ -855,11 +855,11 @@ class TestStockScreenerInclude:
         """No filters or include → only 5 base columns."""
         results = screener.filter()
         assert set(results.columns) == {
-            "Date",
-            "Code",
-            "longName",
+            "date",
+            "code",
+            "long_name",
             "sector",
-            "marketCap",
+            "market_cap",
         }
         assert len(results) == 3
 
@@ -867,42 +867,42 @@ class TestStockScreenerInclude:
         """marketCap prefers yf_market_cap over cf_marketCap."""
         results = screener.filter()
         # yfinance_valuation.market_cap = 5e9 for code 10010 (from "1001" padded), cf = 3e9
-        row = results[results["Code"] == "10010"]
+        row = results[results["code"] == "10010"]
         assert not row.empty
         # yf_market_cap (5e9) should take precedence over cf (3e9 from fundamentals)
-        assert row["marketCap"].iloc[0] == 5e9
+        assert row["market_cap"].iloc[0] == 5e9
 
     def test_filter_returns_only_used_filter_columns(self, screener):
         """composite_score_min → base 5 + composite_score only."""
         results = screener.filter(composite_score_min=70.0)
         assert "composite_score" in results.columns
         # Should not include other scores columns not used in filter
-        assert "HlRatio" not in results.columns
-        assert "RelativeStrengthIndex" not in results.columns
+        assert "hl_ratio" not in results.columns
+        assert "rsi" not in results.columns
 
     def test_filter_does_not_return_unused_score_columns(self, screener):
         """composite_score_min → HlRatio NOT included."""
         results = screener.filter(composite_score_min=70.0)
         assert "composite_score" in results.columns
-        assert "HlRatio" not in results.columns
-        assert "MedianRatio" not in results.columns
+        assert "hl_ratio" not in results.columns
+        assert "median_ratio" not in results.columns
 
     def test_filter_fundamentals_only_used_columns(self, screener):
         """roe_min → returnOnEquity included, trailingPE NOT included."""
         results = screener.filter(roe_min=16.0)
-        assert "returnOnEquity" in results.columns
-        assert all(results["returnOnEquity"] >= 16.0)
-        assert "trailingPE" not in results.columns
-        assert "priceToBook" not in results.columns
+        assert "return_on_equity" in results.columns
+        assert all(results["return_on_equity"] >= 16.0)
+        assert "trailing_pe" not in results.columns
+        assert "price_to_book" not in results.columns
 
     def test_filter_multiple_filters_multiple_columns(self, screener):
         """Multiple filters → multiple corresponding columns."""
         results = screener.filter(composite_score_min=70.0, roe_min=16.0)
         assert "composite_score" in results.columns
-        assert "returnOnEquity" in results.columns
+        assert "return_on_equity" in results.columns
         # Unrelated columns not included
-        assert "trailingPE" not in results.columns
-        assert "HlRatio" not in results.columns
+        assert "trailing_pe" not in results.columns
+        assert "hl_ratio" not in results.columns
 
     def test_filter_include_scores(self, screener):
         """include=["scores"] → all 8 scores columns."""
@@ -960,11 +960,11 @@ class TestStockScreenerInclude:
         assert "Unknown include group 'invalid'" in caplog.text
         # Should still return base columns
         assert set(results.columns) == {
-            "Date",
-            "Code",
-            "longName",
+            "date",
+            "code",
+            "long_name",
             "sector",
-            "marketCap",
+            "market_cap",
         }
 
     def test_filter_include_multiple_groups(self, screener):
@@ -1011,7 +1011,7 @@ class TestStockScreenerInclude:
             for col in ALWAYS_COLUMNS:
                 assert col in results.columns, f"Missing ALWAYS column: {col}"
             # longName and sector should be NaN (no fundamentals data)
-            assert results["longName"].isna().all()
+            assert results["long_name"].isna().all()
             assert results["sector"].isna().all()
         finally:
             os.unlink(temp_stmt.name)

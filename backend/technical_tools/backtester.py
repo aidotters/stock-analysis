@@ -607,7 +607,7 @@ class Backtester:
             )
 
         # Extract symbols
-        symbols = results_df["Code"].tolist()
+        symbols = results_df["code"].tolist()
         logger.info(f"Running backtest on {len(symbols)} symbols from screener")
 
         # Clear existing signals and add screener-based signal

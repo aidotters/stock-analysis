@@ -401,7 +401,7 @@ class TestVirtualPortfolioBuyFromScreener:
         mock_screener = mocker.MagicMock()
         mock_screener.filter.return_value = pd.DataFrame(
             {
-                "Code": ["7203", "9984"],
+                "code": ["7203", "9984"],
                 "composite_score": [85.0, 80.0],
             }
         )
@@ -433,7 +433,7 @@ class TestVirtualPortfolioBuyFromScreener:
         mock_screener = mocker.MagicMock()
         mock_screener.filter.return_value = pd.DataFrame(
             {
-                "Code": ["7203"],
+                "code": ["7203"],
                 "composite_score": [85.0],
             }
         )
@@ -466,7 +466,7 @@ class TestVirtualPortfolioBuyFromScreener:
         mock_screener = mocker.MagicMock()
         mock_screener.filter.return_value = pd.DataFrame(
             {
-                "Code": ["7203", "9984", "6758"],
+                "code": ["7203", "9984", "6758"],
                 "composite_score": [85.0, 80.0, 75.0],
             }
         )
@@ -516,7 +516,7 @@ class TestVirtualPortfolioBuyFromScreener:
         mock_screener = mocker.MagicMock()
         mock_screener.filter.return_value = pd.DataFrame(
             {
-                "Code": ["7203"],
+                "code": ["7203"],
                 "composite_score": [85.0],
             }
         )
