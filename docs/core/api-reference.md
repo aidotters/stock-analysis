@@ -635,11 +635,11 @@ StockScreener(
 - `include` (`list[str] | str | None`): 結果に含めるカラムグループ。"scores", "fundamentals", "valuation"のリスト、または"all"。フィルタ未使用でもグループ全カラムを返却。
 - `limit` (`int`): 最大結果数（デフォルト: 100）
 
-**戻り値**: `pd.DataFrame` - フィルタリング結果。常時返却カラム（Date, Code, longName, sector, marketCap）+ フィルタ使用カラム + includeグループカラム。
+**戻り値**: `pd.DataFrame` - フィルタリング結果。常時返却カラム（date, code, long_name, sector, market_cap）+ フィルタ使用カラム + includeグループカラム。全カラム名はsnake_case。
 
 **カラムグループ**:
-- `"scores"`: composite_score, composite_score_rank, hl_ratio_rank, rsp_rank, HlRatio, MedianRatio, RelativeStrengthPercentage, RelativeStrengthIndex
-- `"fundamentals"`: trailingPE, priceToBook, dividendYield, returnOnEquity, equityRatio, returnOnAssets
+- `"scores"`: composite_score, composite_score_rank, hl_ratio_rank, rsp_rank, hl_ratio, median_ratio, rsp, rsi
+- `"fundamentals"`: trailing_pe, price_to_book, dividend_yield, return_on_equity, equity_ratio, return_on_assets
 - `"valuation"`: net_cash_ratio, cash_neutral_per, yf_per
 
 ##### `rank_changes(metric="composite_score", days=7, direction="up", min_change=1, limit=50) -> pd.DataFrame`

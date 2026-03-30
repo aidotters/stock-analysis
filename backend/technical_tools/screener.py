@@ -23,22 +23,22 @@ logger = logging.getLogger(__name__)
 FILTER_TO_COLUMN = {
     "composite_score_min": "composite_score",
     "composite_score_max": "composite_score",
-    "hl_ratio_min": "HlRatio",
-    "hl_ratio_max": "HlRatio",
-    "rsi_min": "RelativeStrengthIndex",
-    "rsi_max": "RelativeStrengthIndex",
-    "market_cap_min": "marketCap",
-    "market_cap_max": "marketCap",
-    "per_min": "trailingPE",
-    "per_max": "trailingPE",
-    "pbr_max": "priceToBook",
-    "roe_min": "returnOnEquity",
-    "roe_max": "returnOnEquity",
-    "dividend_yield_min": "dividendYield",
-    "equity_ratio_min": "equityRatio",
-    "equity_ratio_max": "equityRatio",
-    "roa_min": "returnOnAssets",
-    "roa_max": "returnOnAssets",
+    "hl_ratio_min": "hl_ratio",
+    "hl_ratio_max": "hl_ratio",
+    "rsi_min": "rsi",
+    "rsi_max": "rsi",
+    "market_cap_min": "market_cap",
+    "market_cap_max": "market_cap",
+    "per_min": "trailing_pe",
+    "per_max": "trailing_pe",
+    "pbr_max": "price_to_book",
+    "roe_min": "return_on_equity",
+    "roe_max": "return_on_equity",
+    "dividend_yield_min": "dividend_yield",
+    "equity_ratio_min": "equity_ratio",
+    "equity_ratio_max": "equity_ratio",
+    "roa_min": "return_on_assets",
+    "roa_max": "return_on_assets",
     "net_cash_ratio_min": "net_cash_ratio",
     "net_cash_ratio_max": "net_cash_ratio",
     "cash_neutral_per_min": "cash_neutral_per",
@@ -52,18 +52,18 @@ INCLUDE_GROUPS = {
         "composite_score_rank",
         "hl_ratio_rank",
         "rsp_rank",
-        "HlRatio",
-        "MedianRatio",
-        "RelativeStrengthPercentage",
-        "RelativeStrengthIndex",
+        "hl_ratio",
+        "median_ratio",
+        "rsp",
+        "rsi",
     ],
     "fundamentals": [
-        "trailingPE",
-        "priceToBook",
-        "dividendYield",
-        "returnOnEquity",
-        "equityRatio",
-        "returnOnAssets",
+        "trailing_pe",
+        "price_to_book",
+        "dividend_yield",
+        "return_on_equity",
+        "equity_ratio",
+        "return_on_assets",
     ],
     "valuation": [
         "net_cash_ratio",
@@ -73,7 +73,7 @@ INCLUDE_GROUPS = {
 }
 
 # Columns always returned
-ALWAYS_COLUMNS = ["Date", "Code", "longName", "sector", "marketCap"]
+ALWAYS_COLUMNS = ["date", "code", "long_name", "sector", "market_cap"]
 
 # Scores-group columns (used to determine if scores tables need JOIN)
 _SCORES_COLUMNS = set(INCLUDE_GROUPS["scores"])
@@ -293,8 +293,8 @@ class StockScreener:
         """Filter stocks by multiple criteria.
 
         Returns only the columns relevant to the applied filters and include
-        groups, plus the 5 always-returned columns (Date, Code, longName,
-        sector, marketCap).
+        groups, plus the 5 always-returned columns (date, code, long_name,
+        sector, market_cap).
 
         Args:
             filter_config: ScreenerFilter object with filter parameters.
@@ -421,11 +421,11 @@ class StockScreener:
             else:
                 logger.warning(f"Unknown include group '{group}', ignoring.")
 
-        # --- Base query: Date, Code only ---
+        # --- Base query: date, code only ---
         base_query = """
             SELECT
-                i.Date,
-                i.Code
+                i.Date as date,
+                i.Code as code
             FROM integrated_scores i
             WHERE i.Date = ?
         """
@@ -448,27 +448,27 @@ class StockScreener:
         if df.empty:
             return df
 
-        # --- Always JOIN: fundamentals (longName, sector, cf_marketCap) ---
+        # --- Always JOIN: fundamentals (long_name, sector, cf_market_cap) ---
         try:
             with self._get_statements_connection() as conn:
                 fundamentals_query = """
                     SELECT
-                        code as Code,
-                        company_name as longName,
+                        code,
+                        company_name as long_name,
                         sector_33 as sector,
-                        market_cap as cf_marketCap,
-                        per as trailingPE,
-                        pbr as priceToBook,
-                        dividend_yield as dividendYield,
-                        roe as returnOnEquity,
-                        equity_ratio as equityRatio,
-                        roa as returnOnAssets
+                        market_cap as cf_market_cap,
+                        per as trailing_pe,
+                        pbr as price_to_book,
+                        dividend_yield,
+                        roe as return_on_equity,
+                        equity_ratio,
+                        roa as return_on_assets
                     FROM calculated_fundamentals
                 """
                 fundamentals_df = pd.read_sql(fundamentals_query, conn)
 
             if not fundamentals_df.empty:
-                df = df.merge(fundamentals_df, on="Code", how="left")
+                df = df.merge(fundamentals_df, on="code", how="left")
         except Exception as e:
             logger.warning(f"Could not load fundamentals data: {e}")
 
@@ -480,7 +480,7 @@ class StockScreener:
                         CASE
                             WHEN LENGTH(code) = 4 THEN code || '0'
                             ELSE code
-                        END as Code,
+                        END as code,
                         net_cash_ratio,
                         cash_neutral_per,
                         market_cap as yf_market_cap,
@@ -490,17 +490,17 @@ class StockScreener:
                 valuation_df = pd.read_sql(valuation_query, conn)
 
             if not valuation_df.empty:
-                df = df.merge(valuation_df, on="Code", how="left")
+                df = df.merge(valuation_df, on="code", how="left")
         except Exception as e:
             logger.warning(f"Could not load valuation data: {e}")
 
-        # --- COALESCE marketCap: yf_market_cap preferred, fallback cf_marketCap ---
-        if "yf_market_cap" in df.columns and "cf_marketCap" in df.columns:
-            df["marketCap"] = df["yf_market_cap"].fillna(df["cf_marketCap"])
-        elif "cf_marketCap" in df.columns:
-            df["marketCap"] = df["cf_marketCap"]
+        # --- COALESCE market_cap: yf_market_cap preferred, fallback cf_market_cap ---
+        if "yf_market_cap" in df.columns and "cf_market_cap" in df.columns:
+            df["market_cap"] = df["yf_market_cap"].fillna(df["cf_market_cap"])
+        elif "cf_market_cap" in df.columns:
+            df["market_cap"] = df["cf_market_cap"]
         elif "yf_market_cap" in df.columns:
-            df["marketCap"] = df["yf_market_cap"]
+            df["market_cap"] = df["yf_market_cap"]
 
         # Ensure ALWAYS_COLUMNS exist (NaN if no data available)
         for col in ALWAYS_COLUMNS:
@@ -508,30 +508,30 @@ class StockScreener:
                 df[col] = pd.NA
 
         # --- Apply fundamental filters ---
-        if market_cap_min is not None and "marketCap" in df.columns:
-            df = df[df["marketCap"] >= market_cap_min]
-        if market_cap_max is not None and "marketCap" in df.columns:
-            df = df[df["marketCap"] <= market_cap_max]
-        if per_min is not None and "trailingPE" in df.columns:
-            df = df[df["trailingPE"] >= per_min]
-        if per_max is not None and "trailingPE" in df.columns:
-            df = df[df["trailingPE"] <= per_max]
-        if pbr_max is not None and "priceToBook" in df.columns:
-            df = df[df["priceToBook"] <= pbr_max]
-        if roe_min is not None and "returnOnEquity" in df.columns:
-            df = df[df["returnOnEquity"] >= roe_min]
-        if roe_max is not None and "returnOnEquity" in df.columns:
-            df = df[df["returnOnEquity"] <= roe_max]
-        if dividend_yield_min is not None and "dividendYield" in df.columns:
-            df = df[df["dividendYield"] >= dividend_yield_min]
-        if equity_ratio_min is not None and "equityRatio" in df.columns:
-            df = df[df["equityRatio"] >= equity_ratio_min]
-        if equity_ratio_max is not None and "equityRatio" in df.columns:
-            df = df[df["equityRatio"] <= equity_ratio_max]
-        if roa_min is not None and "returnOnAssets" in df.columns:
-            df = df[df["returnOnAssets"] >= roa_min]
-        if roa_max is not None and "returnOnAssets" in df.columns:
-            df = df[df["returnOnAssets"] <= roa_max]
+        if market_cap_min is not None and "market_cap" in df.columns:
+            df = df[df["market_cap"] >= market_cap_min]
+        if market_cap_max is not None and "market_cap" in df.columns:
+            df = df[df["market_cap"] <= market_cap_max]
+        if per_min is not None and "trailing_pe" in df.columns:
+            df = df[df["trailing_pe"] >= per_min]
+        if per_max is not None and "trailing_pe" in df.columns:
+            df = df[df["trailing_pe"] <= per_max]
+        if pbr_max is not None and "price_to_book" in df.columns:
+            df = df[df["price_to_book"] <= pbr_max]
+        if roe_min is not None and "return_on_equity" in df.columns:
+            df = df[df["return_on_equity"] >= roe_min]
+        if roe_max is not None and "return_on_equity" in df.columns:
+            df = df[df["return_on_equity"] <= roe_max]
+        if dividend_yield_min is not None and "dividend_yield" in df.columns:
+            df = df[df["dividend_yield"] >= dividend_yield_min]
+        if equity_ratio_min is not None and "equity_ratio" in df.columns:
+            df = df[df["equity_ratio"] >= equity_ratio_min]
+        if equity_ratio_max is not None and "equity_ratio" in df.columns:
+            df = df[df["equity_ratio"] <= equity_ratio_max]
+        if roa_min is not None and "return_on_assets" in df.columns:
+            df = df[df["return_on_assets"] >= roa_min]
+        if roa_max is not None and "return_on_assets" in df.columns:
+            df = df[df["return_on_assets"] <= roa_max]
         if sector is not None and "sector" in df.columns:
             df = df[df["sector"] == sector]
 
@@ -554,7 +554,7 @@ class StockScreener:
             with self._get_analysis_connection() as conn:
                 # Fetch scores columns from integrated_scores
                 scores_query = """
-                    SELECT Code, composite_score, composite_score_rank,
+                    SELECT Code as code, composite_score, composite_score_rank,
                            hl_ratio_rank, rsp_rank
                     FROM integrated_scores
                     WHERE Date = ?
@@ -562,44 +562,47 @@ class StockScreener:
                 scores_df = pd.read_sql(scores_query, conn, params=[date])
 
                 hl_query = """
-                    SELECT Code, HlRatio, MedianRatio
+                    SELECT Code as code, HlRatio as hl_ratio,
+                           MedianRatio as median_ratio
                     FROM hl_ratio
                     WHERE Date = ?
                 """
                 hl_df = pd.read_sql(hl_query, conn, params=[date])
 
                 rs_query = """
-                    SELECT Code, RelativeStrengthPercentage, RelativeStrengthIndex
+                    SELECT Code as code,
+                           RelativeStrengthPercentage as rsp,
+                           RelativeStrengthIndex as rsi
                     FROM relative_strength
                     WHERE Date = ?
                 """
                 rs_df = pd.read_sql(rs_query, conn, params=[date])
 
             if not scores_df.empty:
-                df = df.merge(scores_df, on="Code", how="left")
+                df = df.merge(scores_df, on="code", how="left")
             if not hl_df.empty:
-                df = df.merge(hl_df, on="Code", how="left")
+                df = df.merge(hl_df, on="code", how="left")
             if not rs_df.empty:
-                df = df.merge(rs_df, on="Code", how="left")
+                df = df.merge(rs_df, on="code", how="left")
 
             # Apply HL ratio filters
-            if hl_ratio_min is not None and "HlRatio" in df.columns:
-                df = df[df["HlRatio"] >= hl_ratio_min]
-            if hl_ratio_max is not None and "HlRatio" in df.columns:
-                df = df[df["HlRatio"] <= hl_ratio_max]
+            if hl_ratio_min is not None and "hl_ratio" in df.columns:
+                df = df[df["hl_ratio"] >= hl_ratio_min]
+            if hl_ratio_max is not None and "hl_ratio" in df.columns:
+                df = df[df["hl_ratio"] <= hl_ratio_max]
 
             # Apply RSI filters
-            if rsi_min is not None and "RelativeStrengthIndex" in df.columns:
-                df = df[df["RelativeStrengthIndex"] >= rsi_min]
-            if rsi_max is not None and "RelativeStrengthIndex" in df.columns:
-                df = df[df["RelativeStrengthIndex"] <= rsi_max]
+            if rsi_min is not None and "rsi" in df.columns:
+                df = df[df["rsi"] >= rsi_min]
+            if rsi_max is not None and "rsi" in df.columns:
+                df = df[df["rsi"] <= rsi_max]
 
         # --- JOIN with pattern data if needed ---
         if pattern_window is not None and not df.empty:
             try:
                 with self._get_analysis_connection() as conn:
                     pattern_query = """
-                        SELECT ticker as Code, pattern_label, score
+                        SELECT ticker as code, pattern_label, score
                         FROM classification_results
                         WHERE date = ? AND window = ?
                     """
@@ -608,7 +611,7 @@ class StockScreener:
                     )
 
                 if not pattern_df.empty:
-                    df = df.merge(pattern_df, on="Code", how="inner")
+                    df = df.merge(pattern_df, on="code", how="inner")
 
                     if pattern_labels is not None:
                         df = df[df["pattern_label"].isin(pattern_labels)]
@@ -623,33 +626,33 @@ class StockScreener:
         select_cols: list[str] = []
         preferred_order = [
             # Basic info (always)
-            "Code",
-            "longName",
+            "code",
+            "long_name",
             "sector",
-            "marketCap",
+            "market_cap",
             # Scores
             "composite_score",
             "composite_score_rank",
             # Technical indicators
-            "HlRatio",
+            "hl_ratio",
             "hl_ratio_rank",
-            "RelativeStrengthPercentage",
-            "RelativeStrengthIndex",
+            "rsp",
+            "rsi",
             "rsp_rank",
-            "MedianRatio",
+            "median_ratio",
             # Fundamentals
-            "trailingPE",
-            "priceToBook",
-            "dividendYield",
-            "returnOnEquity",
-            "equityRatio",
-            "returnOnAssets",
+            "trailing_pe",
+            "price_to_book",
+            "dividend_yield",
+            "return_on_equity",
+            "equity_ratio",
+            "return_on_assets",
             # Valuation
             "net_cash_ratio",
             "cash_neutral_per",
             "yf_per",
             # Meta
-            "Date",
+            "date",
         ]
 
         # Build the allowed column set: always columns + requested columns
@@ -730,7 +733,7 @@ class StockScreener:
                     )
                 )
                 SELECT
-                    l.Code,
+                    l.Code as code,
                     l.current_rank,
                     h.past_rank,
                     (h.past_rank - l.current_rank) as rank_change
@@ -776,8 +779,8 @@ class StockScreener:
         with self._get_analysis_connection() as conn:
             query = """
                 SELECT
-                    Date,
-                    Code,
+                    Date as date,
+                    Code as code,
                     composite_score,
                     composite_score_rank,
                     hl_ratio_rank,

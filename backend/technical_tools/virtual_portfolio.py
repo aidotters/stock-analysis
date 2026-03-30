@@ -550,7 +550,7 @@ class VirtualPortfolio:
         # Add each stock to portfolio
         added_count = 0
         for _, row in results_df.iterrows():
-            symbol = row["Code"]
+            symbol = row["code"]
 
             try:
                 self.buy(symbol, amount=amount_per_stock)

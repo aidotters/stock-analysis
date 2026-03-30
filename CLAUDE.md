@@ -347,12 +347,13 @@ history = screener.history("7203", days=30)
 
 **機能:**
 - 統合スコア（composite_score）と順位の日次蓄積
-- テクニカル指標（HlRatio, RSI）でのフィルタリング
+- テクニカル指標（hl_ratio, rsi）でのフィルタリング
 - 財務指標（時価総額、PER、PBR、ROE、ROA、自己資本比率、配当利回り）でのフィルタリング
 - バリュエーション指標（net_cash_ratio, cash_neutral_per）でのフィルタリング（yfinance_valuation連携）
 - `include`パラメータによるカラムグループ制御（"scores", "fundamentals", "valuation", "all"）
-- デフォルトでフィルタ使用項目のみ返却（常時5カラム: Date, Code, longName, sector, marketCap）
-- marketCapはyfinance_valuation優先のCOALESCE（フォールバック: calculated_fundamentals）
+- デフォルトでフィルタ使用項目のみ返却（常時5カラム: date, code, long_name, sector, market_cap）
+- 出力カラム名は全てsnake_case（例: trailing_pe, return_on_equity, hl_ratio, rsp, rsi）
+- market_capはyfinance_valuation優先のCOALESCE（フォールバック: calculated_fundamentals）
 - チャートパターン（60日/120日など）でのフィルタリング
 - 順位変動分析（rank_changes）：metricバリデーション対応
 - 銘柄別時系列データ取得（history）
