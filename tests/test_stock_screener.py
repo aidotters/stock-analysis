@@ -42,7 +42,7 @@ class TestStockScreener:
 
         # Insert integrated_scores data for multiple dates
         test_date = "2026-02-01"
-        codes = ["1001", "1002", "1003", "1004", "1005"]
+        codes = ["10010", "10020", "10030", "10040", "10050"]
 
         for i, code in enumerate(codes):
             composite_score = 90 - i * 10  # 90, 80, 70, 60, 50
@@ -81,8 +81,8 @@ class TestStockScreener:
             )
             for i, code in enumerate(codes):
                 # Simulate rank changes over time
-                if code == "1003":
-                    # Code 1003 improves rank significantly
+                if code == "10030":
+                    # Code 10030 improves rank significantly
                     rank = max(1, 5 - days_back)
                 else:
                     rank = i + 1
@@ -423,7 +423,14 @@ class TestStockScreener:
         results = screener.history("1001", days=30)
         assert isinstance(results, pd.DataFrame)
         assert len(results) > 0
-        assert all(results["code"] == "1001")
+        assert all(results["code"] == "10010")
+
+    def test_history_with_5digit_code(self, screener):
+        """Test history with 5-digit code (no normalization needed)."""
+        results = screener.history("10010", days=30)
+        assert isinstance(results, pd.DataFrame)
+        assert len(results) > 0
+        assert all(results["code"] == "10010")
 
     def test_history_limited_days(self, screener):
         """Test history with days limit."""
@@ -515,7 +522,7 @@ class TestStockScreenerWithFilter:
         # Insert test data
         conn = sqlite3.connect(temp_db.name)
         test_date = "2026-02-01"
-        for i, code in enumerate(["1001", "1002", "1003"]):
+        for i, code in enumerate(["10010", "10020", "10030"]):
             score = 90 - i * 10
             conn.execute(
                 """

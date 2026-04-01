@@ -250,6 +250,8 @@ temp/*
 
 .claude/
 .steering/
+.playwright-mcp/
+.playwright-mcp/**
 
 output/*
 !output/.gitkeep

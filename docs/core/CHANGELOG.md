@@ -5,6 +5,16 @@
 ## [Unreleased]
 
 ### Added
+- `/analyze-stock` スキルにDeep Research統合を追加（Phase 2）
+  - `--deep-research`: 確認プロンプトをスキップしてGemini Advanced Deep Researchを即実行
+  - `--merge-deep-research`: 既存レポートにDeep Research結果を後から統合
+  - Playwright MCP + CDP接続でGemini Advanced Web UIを自動操作
+  - Deep Research結果を`base_report.md`のセクション2, 5, 7, 8に統合
+  - 全エラーでPhase 1レポートを保全するフォールバック設計
+- レポート出力先を`output/reports/stocks/YYYYMMDD-HHMM-{code}-analysis/`に移行
+  - タイムスタンプ付きディレクトリで過去分析結果を保持
+  - `base_report.md`, `deep_research_report.md`, `chart.png` を同一ディレクトリに格納
+
 - StockScreener.filter()に`include`パラメータとカラム最小化を追加
   - `include`パラメータでカラムグループ("scores", "fundamentals", "valuation", "all")を指定可能
   - デフォルトで常時5カラム(date, code, long_name, sector, market_cap)のみ返却、フィルタ使用項目は自動追加
@@ -35,8 +45,12 @@
 ### Changed
 - Backtester.run_with_screener()、VirtualPortfolio.buy_from_screener()のカラム参照を`Code`→`code`に修正（StockScreenerのsnake_case出力に追従）
 - `.claude/skills/analyze-stock/SKILL.md`: レポートテンプレートに財務状況（2.2）・キャッシュフロー（2.3）・ネットキャッシュ分析（2.4）セクションを追加、四季報データ抽出JSを強化
+- `.claude/skills/analyze-stock/SKILL.md`: レポート構成を8セクションに拡張（事業構造・セグメント分析、四季報ライバル比較テーブル、gemini CLIプロンプト強化）
+  - 新セクション「2. 事業構造・セグメント分析」追加（セグメント別売上・利益構成、成長性・競争力、CAGR）
+  - 四季報ライバル比較セクションからデータ抽出（`browser_run_code` JavaScript拡張）
+  - gemini CLIプロンプトを5→8セクション構成に拡張（セグメント分析・プロダクト別競争力評価・セグメント別成長性追加）
+  - 投資判断サマリーにセグメント分析・成長性の判断根拠を追加
 
-### Added
 - `/analyze-stock` チャートPNG画像生成機能
   - `TechnicalAnalyzer.plot_chart()` + `fig.write_image()` でローソク足+SMA+RSI+MACD+GC/DCシグナルのチャートPNG画像を自動生成
   - 保存先: `docs/reports/stocks/images/{code}-chart-YYYYMMDD-HHMM.png`（1200x800px）
@@ -56,7 +70,6 @@
 - `.claude/skills/analyze-stock/SKILL.md`: `/research-stock-news`相当のニュース情報を自動統合
 - `backend/market_pipeline/news/__init__.py`: `FilterKeywords`エクスポート追加
 
-### Added
 - `backend/market_pipeline/news/config_parser.py`: ニュース巡回先設定パーサーモジュール
   - `NewsSource` frozenデータクラス: 巡回先サイト情報（name, auth, url, selector等）
   - `NewsConfig`データクラス: カテゴリ別ソース管理

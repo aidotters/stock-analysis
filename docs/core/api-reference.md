@@ -1352,7 +1352,7 @@ JSONファイルから結果を読み込み。
 JSONLファイル（ストリーミング出力）から結果を読み込み。
 
 **パラメータ**:
-- `path` (`str | Path`): 入力JONLファイルパス
+- `path` (`str | Path`): 入力JSONLファイルパス
 - `metric` (`str | dict[str, float]`): ソート用評価指標
 
 **戻り値**: `OptimizationResults`

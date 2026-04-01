@@ -118,6 +118,16 @@ Stock-Analysis/
 │   ├── test_fixes.py
 │   ├── test_stock_reader.py          # market_readerパッケージテスト
 │   ├── test_slack_notifier.py       # SlackNotifier/JobContext/JobResult
+│   ├── test_technical_tools.py      # TechnicalAnalyzerクラステスト
+│   ├── test_integrated_scores.py    # IntegratedScoresRepositoryテスト
+│   ├── test_stock_screener.py       # StockScreenerクラステスト
+│   ├── test_backtester.py           # Backtesterクラステスト
+│   ├── test_backtest_results.py     # BacktestResultsクラステスト
+│   ├── test_backtest_signals.py     # バックテストシグナルテスト
+│   ├── test_virtual_portfolio.py    # VirtualPortfolioクラステスト
+│   ├── test_optimizer.py            # StrategyOptimizerクラステスト
+│   ├── test_optimization_results.py # OptimizationResultsクラステスト
+│   ├── test_news_config.py          # ニュース巡回先設定パーサーテスト
 │   ├── simple_test.py
 │   ├── benchmark_integrated_analysis_optimization.py  # パフォーマンスベンチマーク
 │   ├── benchmark_jquants_performance.py               # J-Quantsパフォーマンスベンチマーク
@@ -134,6 +144,11 @@ Stock-Analysis/
 │
 ├── output/                           # 出力ファイル
 │   ├── analysis_YYYY-MM-DD.xlsx      # 日次分析レポート
+│   ├── reports/stocks/               # 銘柄詳細分析レポート（analyze-stock出力）
+│   │   └── YYYYMMDD-HHMM-{code}-analysis/  # タイムスタンプ付きディレクトリ
+│   │       ├── base_report.md        # Phase 1レポート
+│   │       ├── deep_research_report.md  # Deep Research結果（実行時のみ）
+│   │       └── chart.png             # 株価チャート（kaleido利用可能時のみ）
 │   └── errors/                       # エラーログ
 │
 ├── logs/                             # 実行ログ
@@ -157,8 +172,7 @@ Stock-Analysis/
 │   ├── ideas/                        # アイデア・検討用ドキュメント
 │   └── reports/                      # レポート出力
 │       ├── adhoc/                    # アドホック分析レポート（discover-stocks等）
-│       └── stocks/                   # 銘柄詳細分析レポート（analyze-stock出力）
-│           └── images/               # チャートPNG画像（{code}-chart-YYYYMMDD-HHMM.png）
+│       └── stocks/                   # 銘柄ニュース調査レポート（research-stock-news出力）
 │
 ├── notebooks/                        # Jupyter Notebook（分析・可視化用）
 │   └── *.ipynb

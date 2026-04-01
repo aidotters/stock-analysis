@@ -212,6 +212,17 @@ class ScreenerFilter:
         return {k: v for k, v in self.__dict__.items() if v is not None}
 
 
+def _normalize_code(code: str) -> str:
+    """Normalize stock code to 5-digit format (with trailing '0').
+
+    The analysis_results.db stores codes in J-Quants 5-digit format (e.g., '36630'),
+    but users typically pass 4-digit codes (e.g., '3663').
+    """
+    if len(code) == 4 and code.isdigit():
+        return code + "0"
+    return code
+
+
 class StockScreener:
     """Stock screener for integrated analysis results."""
 
@@ -770,12 +781,13 @@ class StockScreener:
         """Get historical scores for a specific stock.
 
         Args:
-            code: Stock code.
+            code: Stock code (4-digit or 5-digit).
             days: Number of days of history.
 
         Returns:
             DataFrame with historical scores.
         """
+        db_code = _normalize_code(code)
         with self._get_analysis_connection() as conn:
             query = """
                 SELECT
@@ -790,6 +802,6 @@ class StockScreener:
                 ORDER BY Date DESC
                 LIMIT ?
             """
-            df = pd.read_sql(query, conn, params=[code, days])
+            df = pd.read_sql(query, conn, params=[db_code, days])
 
         return df
