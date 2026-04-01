@@ -33,8 +33,9 @@
 
 - **銘柄詳細分析 (`/analyze-stock`):**
     - 銘柄コードまたはPhase 1候補リストから、企業分析・財務分析・テクニカル分析を統合した投資判断レポートを生成します。
-    - 会社四季報銘柄ページ（CDP経由）、企業IR情報、既存テクニカルツール（StockScreener, TechnicalAnalyzer, DataReader）を情報ソースとして活用します。
-    - 5段階投資判断評価（強気/やや強気/中立/やや弱気/弱気）を含むレポートを `docs/reports/stocks/` に出力します。
+    - 会社四季報銘柄ページ（CDP経由）、gemini CLI（セグメント分析・業界分析・SWOT分析）、既存テクニカルツールを情報ソースとして活用します。
+    - Gemini Advanced Deep Researchによる深掘り分析に対応（`--deep-research`オプション）。
+    - 8セクション構成（企業概要、事業構造・セグメント分析、財務分析、テクニカル分析、業界・競合分析、適時開示・ニュース、リスク要因、投資判断サマリー）のレポートを `output/reports/stocks/` に出力します。
 
 ## 分析機能の詳細
 
@@ -64,7 +65,8 @@
 │   └── technical_tools/ # Jupyter Notebook用テクニカル分析ツール
 ├── data/                # データベースファイル（.sqlite, .db）を格納
 ├── logs/                # launchdジョブの実行ログ
-├── output/              # 分析結果のExcelファイルやエラーログなどを格納
+├── output/              # 分析結果のExcelファイル、銘柄分析レポートなどを格納
+│   └── reports/stocks/  # 銘柄詳細分析レポート（analyze-stock出力、タイムスタンプ付きディレクトリ）
 ├── notebooks/           # Jupyter Notebook（分析・可視化用）
 ├── scripts/             # 定期実行用のスクリプト群
 ├── tests/               # テストコード
@@ -74,8 +76,7 @@
 │   ├── core/            # コア設計ドキュメント
 │   ├── reports/         # レポート出力
 │   │   ├── adhoc/       # アドホック分析レポート（discover-stocks等）
-│   │   └── stocks/      # 銘柄詳細分析レポート（analyze-stock出力）
-│   │       └── images/  # チャートPNG画像
+│   │   └── stocks/      # 銘柄ニュース調査レポート（research-stock-news出力）
 │   └── refs/            # 参考資料
 ├── pyproject.toml       # プロジェクトの依存関係定義
 └── README.md            # このファイル
@@ -308,25 +309,50 @@ SLACK_WEBHOOK_URL=https://hooks.slack.com/services/xxx/yyy/zzz
 
 # Phase 1候補リストから特定銘柄のみ分析
 /analyze-stock --from-report docs/reports/adhoc/2026-02-28-candidates.md 7203 9984
+
+# Deep Researchも含めて即実行（確認プロンプトをスキップ）
+/analyze-stock 7203 --deep-research
+
+# 既存レポートにDeep Research結果を後から統合
+/analyze-stock 7203 --merge-deep-research
 ```
 
 **情報ソース:**
 - 会社四季報銘柄ページ（CDP経由、フォールバック: WebSearch）
-- 企業IR情報・業界動向（WebSearch）
+- 企業IR・業界分析・セグメント分析・SWOT分析（gemini CLI、フォールバック: WebSearch）
 - 既存テクニカルツール（StockScreener, TechnicalAnalyzer, DataReader）
+- Gemini Advanced Deep Research（`--deep-research`オプション時、Playwright MCP + CDP経由）
 
-**レポート内容:**
-- 企業概要、財務分析（PER/PBR/ROE等）、財務状況（総資産/自己資本/有利子負債等）、キャッシュフロー、ネットキャッシュ分析（ネットキャッシュ/ネットキャッシュ比率/キャッシュニュートラルPER）、テクニカル分析（統合スコア/Minervini/RSP）
-- 株価チャートPNG画像（ローソク足+SMA+RSI+MACD+GC/DCシグナル、直近2年、`docs/reports/stocks/images/{code}-chart.png`）
-- 業界・競合分析、リスク要因
-- 直近の適時開示・ニュース（`/research-stock-news`相当の情報を自動統合）
-- 投資判断サマリー（5段階評価: 強気/やや強気/中立/やや弱気/弱気）
+**出力ディレクトリ構成:**
+```
+output/reports/stocks/YYYYMMDD-HHMM-{code}-analysis/
+├── base_report.md              # Phase 1レポート
+├── deep_research_report.md     # Deep Research結果（--deep-research実行時のみ）
+└── chart.png                   # 株価チャート（kaleido利用可能時のみ）
+```
+
+**レポート内容（8セクション構成）:**
+- 1. 企業概要
+- 2. 事業構造・セグメント分析（セグメント別売上・利益構成、成長性・競争力、CAGR）
+- 3. 財務分析（PER/PBR/ROE等、財務状況、キャッシュフロー、ネットキャッシュ分析、業績推移）
+- 4. テクニカル分析（統合スコア/Minervini/RSP、株価チャートPNG）
+- 5. 業界・競合分析（業界動向、四季報ライバル比較テーブル、SWOT分析）
+- 6. 直近の適時開示・ニュース（`/research-stock-news`相当の情報を自動統合）
+- 7. リスク要因
+- 8. 投資判断サマリー（5段階評価、セグメント分析・成長性を含む判断根拠）
+
+**Deep Research前提条件:**
+- Gemini Advanced有料会員であること
+- Chrome が `--remote-debugging-port=9222` で起動中であること（CDP接続）
+- Deep Researchは5〜15分の実行時間を要する（タイムアウト: 1500秒）
+- Deep Research失敗時もPhase 1レポートは保持される
 
 **チャート生成依存:** `kaleido`（オプショナル）。未インストール時はチャート生成をスキップし、テキストのみのレポートを生成する。
 
 **構成ファイル:**
 - `.claude/skills/analyze-stock/SKILL.md`: スキル定義
-- `docs/reports/stocks/`: レポート出力先（`images/`サブディレクトリにチャートPNG画像）
+- `config/news_sources.yaml`: `financial`カテゴリの銘柄ページ設定
+- `output/reports/stocks/`: レポート出力先（タイムスタンプ付きディレクトリ）
 
 ## Market Reader パッケージ
 
