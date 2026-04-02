@@ -237,7 +237,7 @@ pytest tests/test_minervini.py
 pytest -v
 
 # カバレッジ付き
-pytest --cov=backend
+pytest --cov=src
 ```
 
 ## エラーハンドリング
@@ -384,8 +384,8 @@ chart-export = [
 
 ## 新機能追加時のチェックリスト
 
-1. [ ] `backend/market_pipeline/` に適切なモジュールを作成
-2. [ ] 設定が必要な場合は `backend/market_pipeline/config/settings.py` に追加
+1. [ ] `src/market_pipeline/` に適切なモジュールを作成
+2. [ ] 設定が必要な場合は `src/market_pipeline/config/settings.py` に追加
 3. [ ] テストを `tests/` に作成
 4. [ ] 必要に応じて `scripts/` に実行スクリプトを追加
 5. [ ] `CLAUDE.md` を更新

@@ -39,7 +39,7 @@
 
 ## 分析機能の詳細
 
-`backend/market_pipeline/analysis` ディレクトリには、以下の分析プログラムが含まれており、それぞれが特定の分析手法を実装しています。
+`src/market_pipeline/analysis` ディレクトリには、以下の分析プログラムが含まれており、それぞれが特定の分析手法を実装しています。
 
 - **`minervini.py`**: マーク・ミネルヴィニの株式スクリーニング戦略を実装しています。株価と移動平均線の関係、52週高値・安値からの乖離率などを基に、銘柄のトレンドと強さを評価します。計算結果は `data/analysis_results.db` の `minervini` テーブルに保存されます。
 - **`high_low_ratio.py`**: 銘柄の高値・安値比率を計算するロジックです。過去52週間の高値と安値の範囲内で、現在の株価がどの位置にあるかを示します。結果は `data/analysis_results.db` の `hl_ratio` テーブルに保存されます。
@@ -52,7 +52,7 @@
 
 ```
 .
-├── backend/             # バックエンドパッケージ群
+├── src/             # バックエンドパッケージ群
 │   ├── market_pipeline/ # データ処理のコアロジック（旧core/）
 │   │   ├── analysis/    # 各種分析ロジック
 │   │   ├── config/      # 設定管理（Pydantic Settings）
@@ -179,23 +179,23 @@
 - **統合分析:**
     `integrated_analysis2.py` を直接実行することで、統合分析を行い、結果をExcelファイルに出力します。
     ```bash
-    python backend/market_pipeline/analysis/integrated_analysis2.py
+    python src/market_pipeline/analysis/integrated_analysis2.py
     ```
 
 - **チャートパターン分類:**
     チャートパターンの分類分析を実行します。複数の実行モードが利用可能です。
     ```bash
     # サンプル実行（基本的なパターン分析）
-    python backend/market_pipeline/analysis/chart_classification.py --mode sample
+    python src/market_pipeline/analysis/chart_classification.py --mode sample
 
     # アダプティブウィンドウのサンプル実行（1200/960日の動的選択をテスト）
-    python backend/market_pipeline/analysis/chart_classification.py --mode sample-adaptive
+    python src/market_pipeline/analysis/chart_classification.py --mode sample-adaptive
 
     # 全銘柄での高性能分析（アダプティブウィンドウ付き）
-    python backend/market_pipeline/analysis/chart_classification.py --mode full-optimized
+    python src/market_pipeline/analysis/chart_classification.py --mode full-optimized
 
     # バッチサイズの調整（メモリ使用量の制御）
-    python backend/market_pipeline/analysis/chart_classification.py --mode full --batch-size 50
+    python src/market_pipeline/analysis/chart_classification.py --mode full --batch-size 50
     ```
 
 ### launchdによる自動実行
@@ -266,7 +266,7 @@ SLACK_WEBHOOK_URL=https://hooks.slack.com/services/xxx/yyy/zzz
 **構成ファイル:**
 - `config/news_sources.yaml`: 巡回先サイト設定（カテゴリ別）
 - `.claude/skills/discover-stocks/SKILL.md`: スキル定義
-- `backend/market_pipeline/news/config_parser.py`: YAML設定パーサー
+- `src/market_pipeline/news/config_parser.py`: YAML設定パーサー
 - `docs/reports/adhoc/`: レポート出力先
 
 ## 銘柄ニュース調査 (`/research-stock-news`)

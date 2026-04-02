@@ -53,10 +53,10 @@ chart-export = [
 ]
 
 [tool.setuptools.packages.find]
-where = ["backend"]
+where = ["src"]
 
 [tool.pytest.ini_options]
-pythonpath = ["backend", "."]
+pythonpath = ["src", "."]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
 ]
@@ -67,12 +67,12 @@ warn_return_any = false
 warn_unused_ignores = false
 exclude = [
     "^scripts/_old/",
-    "^backend/market_pipeline/analysis/_old/",
-    "^backend/market_pipeline/jquants/_old/",
+    "^src/market_pipeline/analysis/_old/",
+    "^src/market_pipeline/jquants/_old/",
     "^output/",
     "^tests/benchmark_",
 ]
-mypy_path = ["backend"]
+mypy_path = ["src"]
 explicit_package_bases = true
 ignore_missing_imports = true
 no_implicit_optional = false
@@ -87,14 +87,14 @@ module = "tests.*"
 ignore_errors = true
 
 [tool.ruff.lint.per-file-ignores]
-"backend/market_pipeline/analysis/high_low_ratio.py" = ["E402"]
-"backend/market_pipeline/analysis/minervini.py" = ["E402"]
-"backend/market_pipeline/analysis/relative_strength.py" = ["E402"]
-"backend/market_pipeline/jquants/data_processor.py" = ["E402"]
+"src/market_pipeline/analysis/high_low_ratio.py" = ["E402"]
+"src/market_pipeline/analysis/minervini.py" = ["E402"]
+"src/market_pipeline/analysis/relative_strength.py" = ["E402"]
+"src/market_pipeline/jquants/data_processor.py" = ["E402"]
 "notebooks/**" = ["E402"]
 
 [tool.coverage.run]
-source = ["backend"]
+source = ["src"]
 branch = true
 omit = [
     "*/tests/*",
@@ -118,5 +118,5 @@ skip_covered = false
 
 [tool.coverage.paths]
 source = [
-    "backend/",
+    "src/",
 ]

@@ -51,10 +51,10 @@ python scripts/run_monthly_master.py
 ### Chart Classification
 ```bash
 # Sample run with adaptive windows
-python backend/market_pipeline/analysis/chart_classification.py --mode sample-adaptive
+python src/market_pipeline/analysis/chart_classification.py --mode sample-adaptive
 
 # Full optimized analysis for all stocks
-python backend/market_pipeline/analysis/chart_classification.py --mode full-optimized
+python src/market_pipeline/analysis/chart_classification.py --mode full-optimized
 ```
 
 ### Database Setup
@@ -76,7 +76,7 @@ mypy .
 1. **Price Collection** (scripts/run_daily_jquants.py) -> J-Quants API -> data/jquants.db
 2. **Financial Data** (scripts/run_weekly_tasks.py) -> J-Quants Statements API -> data/statements.db
 3. **Analysis** (scripts/run_daily_analysis.py) -> reads jquants.db -> writes to data/analysis_results.db (includes integrated_scores daily)
-4. **Integration** (backend/market_pipeline/analysis/integrated_analysis2.py) -> reads analysis_results.db + statements.db -> outputs to DB/CSV/Excel
+4. **Integration** (src/market_pipeline/analysis/integrated_analysis2.py) -> reads analysis_results.db + statements.db -> outputs to DB/CSV/Excel
 
 ### Key Databases (data/)
 - `jquants.db`: Daily stock prices (daily_quotes table)
@@ -84,12 +84,12 @@ mypy .
 - `analysis_results.db`: Analysis outputs (minervini, hl_ratio, relative_strength, classification_results, integrated_scores tables)
 - `master.db`: Stock master data
 
-### J-Quants Modules (backend/market_pipeline/jquants/)
+### J-Quants Modules (src/market_pipeline/jquants/)
 - `data_processor.py`: Daily price data fetcher with async processing
 - `statements_processor.py`: Financial statements API fetcher
 - `fundamentals_calculator.py`: Calculates PER, PBR, ROE, ROA, etc. from raw statements
 
-### yfinance Valuation (backend/market_pipeline/yfinance/)
+### yfinance Valuation (src/market_pipeline/yfinance/)
 - `valuation_fetcher.py`: `ValuationFetcher` class for rolling yfinance BS data collection
   - Fetches cash & equivalents, total debt, market cap, PER from yfinance
   - Calculates net_cash_ratio and cash_neutral_per
@@ -97,13 +97,13 @@ mypy .
   - Data stored in `statements.db` → `yfinance_valuation` table
   - Integrated into `run_daily_analysis.py` as `yfinance_valuation` module
 
-### Master Modules (backend/market_pipeline/master/)
+### Master Modules (src/market_pipeline/master/)
 - `master_db.py`: `StockMasterDB` class for managing stock master data (TSE listed stocks)
   - Downloads and parses TSE stock list Excel files
   - Manages `stocks_master` table (code, name, sector, market, yfinance_symbol, jquants_code, is_active)
   - Query methods: `get_all_stocks()`, `get_stock_by_code()`, `get_stocks_by_sector()`, `get_stocks_by_market()`, `get_statistics()`
 
-### Analysis Modules (backend/market_pipeline/analysis/)
+### Analysis Modules (src/market_pipeline/analysis/)
 - `minervini.py`: Minervini trend screening strategy
 - `high_low_ratio.py`: 52-week high/low position ratio
 - `relative_strength.py`: RSP (relative strength percentage) and RSI calculations
@@ -114,14 +114,14 @@ mypy .
 
 ### Performance Optimizations
 The codebase has been heavily optimized (5 hours -> 15-20 minutes):
-- Parallel processing via `backend/market_pipeline/utils/parallel_processor.py`
-- Async API calls with aiohttp in `backend/market_pipeline/jquants/data_processor.py`
+- Parallel processing via `src/market_pipeline/utils/parallel_processor.py`
+- Async API calls with aiohttp in `src/market_pipeline/jquants/data_processor.py`
 - Batch database operations
 - Vectorized calculations with NumPy/Pandas
 - Template caching for chart classification
 - Database indexes (run `scripts/create_database_indexes.py`)
 
-### Slack Notifications (backend/market_pipeline/utils/slack_notifier.py)
+### Slack Notifications (src/market_pipeline/utils/slack_notifier.py)
 launchdスクリプトの実行結果をSlack Incoming Webhookで通知:
 
 ```python
@@ -166,7 +166,7 @@ with JobContext("ジョブ名") as job:
 **構成ファイル:**
 - `config/news_sources.yaml`: 巡回先サイト設定（カテゴリ別）
 - `.claude/skills/discover-stocks/SKILL.md`: スキル定義
-- `backend/market_pipeline/news/config_parser.py`: YAML設定パーサー
+- `src/market_pipeline/news/config_parser.py`: YAML設定パーサー
 - `docs/reports/adhoc/`: レポート出力先
 
 **巡回先カテゴリ:**
@@ -279,7 +279,7 @@ Claude Codeスキルとして、ドキュメント作成と品質管理のため
 
 **構成ファイル:** `.claude/skills/<skill-name>/SKILL.md`
 
-### Technical Tools Package (backend/technical_tools/)
+### Technical Tools Package (src/technical_tools/)
 Jupyter Notebook用のテクニカル分析ツール。日本株(J-Quants)と米国株(yfinance)の統一インターフェースを提供:
 
 ```python
@@ -310,7 +310,7 @@ existing = analyzer.load_existing_analysis("7203")
 - plotlyによるインタラクティブチャート
 - 既存分析結果（Minervini, RSP）との連携
 
-### StockScreener (backend/technical_tools/screener.py)
+### StockScreener (src/technical_tools/screener.py)
 Jupyter Notebook用の銘柄スクリーニングツール。統合分析結果をDBから取得し、柔軟にフィルタリング:
 
 ```python
@@ -384,7 +384,7 @@ history = screener.history("7203", days=30)
 - ScreenerFilterクラスによる構造化されたパラメータ指定（`available_filters()`, `available_categories()`, `filters_by_category()` classmethodで利用可能フィルタを確認可能）
 - TechnicalAnalyzerとのシームレスな連携
 
-### Backtester (backend/technical_tools/backtester.py)
+### Backtester (src/technical_tools/backtester.py)
 シグナルベースのバックテストを実行し、投資戦略の有効性を評価:
 
 ```python
@@ -450,7 +450,7 @@ results.monthly_returns()  # 月次リターン
 results.yearly_returns()   # 年次リターン
 ```
 
-### StrategyOptimizer (backend/technical_tools/optimizer.py)
+### StrategyOptimizer (src/technical_tools/optimizer.py)
 投資戦略のパラメータを自動最適化し、最適な戦略を発見:
 
 ```python
@@ -557,7 +557,7 @@ from technical_tools import OptimizationResults
 loaded = OptimizationResults.load_streaming("results.jsonl", metric="sharpe_ratio")
 ```
 
-### VirtualPortfolio (backend/technical_tools/virtual_portfolio.py)
+### VirtualPortfolio (src/technical_tools/virtual_portfolio.py)
 仮想ポートフォリオを作成し、パフォーマンスを追跡:
 
 ```python
@@ -610,7 +610,7 @@ vp.buy_from_screener(screener_filter=config)
 - 取引履歴の記録
 - plotlyによるインタラクティブチャート
 
-### Market Reader Package (backend/market_reader/)
+### Market Reader Package (src/market_reader/)
 pandas_datareader-like interface for accessing J-Quants price data:
 
 ```python
@@ -636,7 +636,7 @@ df = reader.get_prices("7203", columns=["Open", "Close"])
 - `strict=True` raises exceptions, `strict=False` (default) returns empty DataFrame with warning
 - PRAGMA optimizations for read performance (WAL mode, cache settings)
 
-### Configuration (backend/market_pipeline/config/)
+### Configuration (src/market_pipeline/config/)
 Centralized Pydantic Settings-based configuration system:
 
 ```python
@@ -665,7 +665,7 @@ settings = reload_settings()
 ## Testing
 - Tests use pytest with fixtures defined in `tests/conftest.py`
 - Mock databases are created in memory/temp files for isolation
-- `pythonpath = ["backend", "."]` is set in pyproject.toml for imports
+- `pythonpath = ["src", "."]` is set in pyproject.toml for imports
 - Key test files:
   - `tests/test_minervini.py`: Minervini分析テスト
   - `tests/test_high_low_ratio.py`: HL比率計算テスト

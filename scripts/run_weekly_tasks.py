@@ -115,7 +115,7 @@ def main():
                 print(f"=== 統合分析処理開始 {datetime.now()} ===")
                 analysis_script_path = (
                     settings.paths.base_dir
-                    / "backend"
+                    / "src"
                     / "market_pipeline"
                     / "analysis"
                     / "integrated_analysis2.py"
