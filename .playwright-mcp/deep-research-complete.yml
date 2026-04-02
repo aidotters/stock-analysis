@@ -1,0 +1,1133 @@
+- generic [active] [ref=e1]:
+  - 'button "Google アカウント: Takuya Akashi (tak.akashi@gmail.com)" [ref=e8] [cursor=pointer]':
+    - img [ref=e10]
+    - img [ref=e16]
+  - main [ref=e18]:
+    - generic:
+      - button "メインメニュー" [ref=e20] [cursor=pointer]:
+        - img [ref=e21]: menu
+      - button "チャットを新規作成" [ref=e25] [cursor=pointer]:
+        - generic [ref=e27]: Gemini
+    - generic [ref=e29]:
+      - generic [ref=e463]: プラップジャパン深掘り調査計画
+      - generic [ref=e30]:
+        - link "アップグレード" [ref=e324]:
+          - img [ref=e325]: spark
+          - generic [ref=e327]: アップグレード
+        - generic [ref=e32]:
+          - button "会話を共有" [ref=e465] [cursor=pointer]:
+            - img [ref=e466]: share
+          - button "会話アクションのメニューを開く" [ref=e331] [cursor=pointer]:
+            - img [ref=e332]: more_vert
+    - generic [ref=e45]:
+      - navigation [ref=e46]:
+        - generic [ref=e50]:
+          - group [ref=e51]:
+            - link "チャットを新規作成" [ref=e53] [cursor=pointer]:
+              - /url: /app
+              - img [ref=e56]: edit_square
+          - group [ref=e59]:
+            - button "Settings & help" [ref=e61] [cursor=pointer]:
+              - img [ref=e64]: settings_2
+      - generic [ref=e73]:
+        - generic [ref=e74]:
+          - generic [ref=e75]:
+            - heading "Gemini との会話" [level=1] [ref=e76]
+            - generic [ref=e78]:
+              - generic [ref=e335]:
+                - generic [ref=e340]:
+                  - button "プロンプトをコピー" [ref=e342] [cursor=pointer]:
+                    - img [ref=e343]: content_copy
+                  - generic [ref=e348]:
+                    - heading [level=2] [ref=e349]:
+                      - generic [ref=e350]: あなたのプロンプト
+                      - paragraph [ref=e351]: 以下の日本企業について、投資判断に役立つ包括的な深掘り調査を行ってください。
+                      - paragraph [ref=e352]
+                      - paragraph [ref=e353]: "企業: プラップジャパン（証券コード: 2449）"
+                      - paragraph [ref=e354]: "セクター: サービス業 / PR・販売促進"
+                      - paragraph [ref=e355]: "事業概要: PR・広報コンサルティングの老舗。広報・PRはIT・ヘルスケア軸に定期契約着実。危機管理コンサルが強み。海外は中国・東南アジア展開。デジタルはSaaS「PRオートメーション」で広報DXを推進。"
+                      - paragraph [ref=e356]
+                      - paragraph [ref=e357]: ■ 情報ソースに関する重要な指示
+                      - paragraph [ref=e358]: "- 企業のIR資料（決算短信、統合報告書、決算説明資料）だけでなく、以下の第三者ソースを積極的に参照すること:"
+                      - paragraph [ref=e359]: "- 業界調査レポート（矢野経済研究所、IDC Japan、富士キメラ総研、MM総研等）"
+                      - paragraph [ref=e360]: "- ビジネスメディアの分析記事（日経ビジネス、東洋経済、ダイヤモンド、Forbes Japan等）"
+                      - paragraph [ref=e361]: "- テック系メディア（ITmedia、日経クロステック、TechCrunch Japan等）"
+                      - paragraph [ref=e362]: "- 証券アナリストレポートの要旨（目標株価、レーティング、懸念事項）"
+                      - paragraph [ref=e363]: "- ユーザーレビューや導入事例の評価（ITreview、Boxil等）"
+                      - paragraph [ref=e364]: "- 競合企業のIR資料（競合視点からの市場分析）"
+                      - paragraph [ref=e365]: "- 個人投資家ブログやnote等の個人分析記事は情報ソースとして使用しないこと"
+                      - paragraph [ref=e366]: "- 企業自身が発信する情報にはポジティブバイアスがかかっている前提で、第三者視点との差異があれば明示すること"
+                      - paragraph [ref=e367]: "- 各セクションで参照したソースの種別（自社IR / 業界レポート / メディア記事 / アナリスト等）を明記すること"
+                      - paragraph [ref=e368]
+                      - paragraph [ref=e369]: 【必須（重点的に調査してください）】
+                      - paragraph [ref=e370]
+                      - paragraph [ref=e371]: 1. セグメント別事業分析
+                      - paragraph [ref=e372]: "- 事業セグメント一覧と各セグメントの概要"
+                      - paragraph [ref=e373]: "- セグメント別の売上構成比・利益構成比（最新決算ベース）"
+                      - paragraph [ref=e374]: "- セグメント別の前年比成長率"
+                      - paragraph [ref=e375]: "- 各セグメントの市場ポジションと差別化要因"
+                      - paragraph [ref=e376]: "- 主要プロダクト/サービスの競争力評価"
+                      - paragraph [ref=e377]: "- ユーザー評価や導入企業の声（ポジティブ・ネガティブ両面）"
+                      - paragraph [ref=e378]
+                      - paragraph [ref=e379]: 2. セグメント別成長性
+                      - paragraph [ref=e380]: "- 各セグメントの過去3〜5年の成長トレンド"
+                      - paragraph [ref=e381]: "- セグメント別の売上高CAGR（算出可能な場合）"
+                      - paragraph [ref=e382]: "- 今後の成長ドライバーとなるセグメント"
+                      - paragraph [ref=e383]: "- 縮小・撤退リスクのあるセグメント"
+                      - paragraph [ref=e384]: "- 成長の持続可能性に対する懐疑的な見方があればそれも記載"
+                      - paragraph [ref=e385]
+                      - paragraph [ref=e386]: 3. 業界動向・競争環境
+                      - paragraph [ref=e387]: "- 属する業界の市場規模と成長率（業界調査レポートのデータを優先）"
+                      - paragraph [ref=e388]: "- 業界の主要トレンドと今後3〜5年の見通し"
+                      - paragraph [ref=e389]: "- 参入障壁の高低とその要因"
+                      - paragraph [ref=e390]: "- 主要競合企業との比較（国内・海外）— 競合企業のIR資料も参照"
+                      - paragraph [ref=e391]: "- 市場シェアや競争優位性（第三者調査データを優先）"
+                      - paragraph [ref=e392]: "- 業界の課題や逆風要因"
+                      - paragraph [ref=e393]
+                      - paragraph [ref=e394]: 【あれば有益】
+                      - paragraph [ref=e395]
+                      - paragraph [ref=e396]: 4. 技術的優位性・知的財産
+                      - paragraph [ref=e397]: "- 保有する重要技術・特許"
+                      - paragraph [ref=e398]: "- R&D投資の方向性"
+                      - paragraph [ref=e399]: "- 技術面での競合との客観的比較"
+                      - paragraph [ref=e400]
+                      - paragraph [ref=e401]: 5. 規制環境・政策リスク
+                      - paragraph [ref=e402]: "- 現行の規制環境"
+                      - paragraph [ref=e403]: "- 今後の規制変更リスク"
+                      - paragraph [ref=e404]: "- 政策追い風/逆風の可能性"
+                      - paragraph [ref=e405]
+                      - paragraph [ref=e406]: 6. 海外展開状況
+                      - paragraph [ref=e407]: "- 海外売上比率"
+                      - paragraph [ref=e408]: "- 主要進出地域と戦略"
+                      - paragraph [ref=e409]: "- 為替リスク"
+                      - paragraph [ref=e410]
+                      - paragraph [ref=e411]: 【低優先度（Phase 1で十分カバー済み）】
+                      - paragraph [ref=e412]: "- 企業概要（簡潔に）"
+                      - paragraph [ref=e413]: "- 財務数値の詳細（Phase 1でカバー済み）"
+                      - paragraph [ref=e414]
+                      - paragraph [ref=e415]: ■ レポートの品質基準
+                      - paragraph [ref=e416]: "- 各項目は具体的なデータや数値を含めて回答すること"
+                      - paragraph [ref=e417]: "- 情報が得られない項目は「情報なし」と明記すること"
+                      - paragraph [ref=e418]: "- ポジティブな情報とネガティブな情報をバランスよく記載すること"
+                      - paragraph [ref=e419]: "- 企業の主張と第三者の評価に乖離がある場合は、その点を明記すること"
+                    - button "開く" [ref=e420] [cursor=pointer]:
+                      - img [ref=e421]: expand_more
+                - generic [ref=e427]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - button "読み上げる":
+                              - img: volume_up
+                        - menu
+                  - generic [ref=e428]:
+                    - generic [ref=e433]:
+                      - generic:
+                        - generic:
+                          - img
+                    - generic [ref=e435]:
+                      - button [ref=e442]:
+                        - generic [ref=e444]:
+                          - status:
+                            - generic: 思考プロセスを表示
+                          - img [ref=e446]: expand_more
+                      - heading "Gemini の回答" [level=2] [ref=e449]
+                      - paragraph [ref=e1008]:
+                        - text: 計画を作成しました。リサーチを開始する前に変更が必要でしたら、お知らせください。
+                        - generic [ref=e1012]:
+                          - heading "プラップジャパン深掘り調査依頼" [level=3] [ref=e1013]
+                          - generic [ref=e1014]:
+                            - generic [ref=e1015]:
+                              - generic [ref=e1016]:
+                                - img [ref=e1017]: select_window_2
+                                - generic [ref=e1018]: ウェブサイトをリサーチ
+                              - generic [ref=e1019]:
+                                - generic [ref=e1020]: (1) プラップジャパン（2449）の最新の決算短信、有価証券報告書、決算説明資料を収集し、セグメント別の売上・利益構成、成長率、各事業の概要と過去5年の財務推移を整理する。 (2) 矢野経済研究所、IDC Japan、富士キメラ総研等の業界調査資料から、国内PR市場および広報DX（SaaS）市場の規模、CAGR、将来予測を確認し、同社の事業環境を客観的に把握する。 (3) 日経ビジネス、東洋経済、Forbes Japan等のビジネスメディアやITmedia、日経クロステック等のテックメディアを調査し、同社のデジタル戦略「PRオートメーション」や海外展開に関する第三者視点の分析記事を収集する。 (4) 証券アナリストのレポート要旨やレーティング情報を検索し、目標株価、業績予想の背景、投資家が懸念しているリスク要因（人件費高騰、景気敏感性等）を特定する。 (5) 主要競合（ベクトル、サニーサイドアップ、共同PR等）のIR資料を調査し、市場シェア、営業利益率、サービスラインナップの差異を比較分析してプラップジャパンの競争優位性と劣位性を明文化する。 (6) ITreviewやBoxil等のSaaS比較サイトにて、主力プロダクトである「PRオートメーション」のユーザーレビューを収集し、機能面やUI/UXにおける具体的評価（ポジティブ・ネガティブ双方）を抽出する。 (7) 海外事業（中国、東南アジア）の具体的な進出状況、地政学的リスク、為替感応度を、同社資料および現地経済ニュースや海外メディアの記事から分析する。 (8) 特許情報プラットフォーム等を用いて保有特許や知財戦略を確認し、R&D投資の効率性、および今後の景気後退や法的規制（ステルスマーケティング規制等）が事業に与える影響とリスクを総合的に評価する。
+                                - button "リサーチプランの詳細" [ref=e1022] [cursor=pointer]:
+                                  - generic [ref=e1023]: その他
+                            - generic [ref=e1027]:
+                              - img [ref=e1028]: sort
+                              - generic [ref=e1029]: 結果を分析
+                            - generic [ref=e1032]:
+                              - img [ref=e1033]: travel_explore
+                              - generic [ref=e1034]: レポートを作成
+                          - generic [ref=e1035]:
+                            - img [ref=e1036]: schedule
+                            - generic [ref=e1037]: 数分で完了予定
+                          - generic [ref=e1038]:
+                            - button "リサーチ計画を編集" [disabled]:
+                              - generic: 計画を編集
+                            - button "リサーチを開始" [disabled]:
+                              - generic: リサーチを開始
+                  - generic [ref=e1041]:
+                    - button "良い回答" [ref=e1043] [cursor=pointer]:
+                      - img [ref=e1044]: thumb_up
+                    - button "悪い回答" [ref=e1048] [cursor=pointer]:
+                      - img [ref=e1049]: thumb_down
+                    - button "コピー" [ref=e1053]:
+                      - img [ref=e1054]: content_copy
+                    - button "他のオプションを表示" [ref=e1060]:
+                      - img [ref=e1061]: more_vert
+              - generic [ref=e575]:
+                - generic [ref=e580]:
+                  - button "プロンプトをコピー" [ref=e582] [cursor=pointer]:
+                    - img [ref=e583]: content_copy
+                  - button "編集" [ref=e682] [cursor=pointer]:
+                    - img [ref=e683]: edit
+                  - heading "あなたのプロンプト リサーチを開始" [level=2] [ref=e589]:
+                    - generic [ref=e590]: あなたのプロンプト
+                    - paragraph [ref=e591]: リサーチを開始
+                - generic [ref=e595]:
+                  - generic [ref=e596]:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - button "読み上げる":
+                              - img: volume_up
+                        - menu
+                    - generic [ref=e601]:
+                      - generic:
+                        - generic:
+                          - img
+                  - generic [ref=e604]:
+                    - heading "Gemini の回答" [level=2] [ref=e605]
+                    - paragraph [ref=e1064]:
+                      - text: リサーチが完了しました。フォローアップの質問や変更の希望があれば、お知らせください。
+                      - generic [ref=e1070] [cursor=pointer]:
+                        - img [ref=e1072]: travel_explore
+                        - status [ref=e1073]:
+                          - generic [ref=e1074]: プラップジャパン深掘り調査依頼
+                          - generic [ref=e1075]: 完了済み
+                          - generic [ref=e1076]: 4月1日 14:21
+                  - generic [ref=e1080]:
+                    - button "良い回答" [ref=e1082] [cursor=pointer]:
+                      - img [ref=e1083]: thumb_up
+                    - button "悪い回答" [ref=e1087] [cursor=pointer]:
+                      - img [ref=e1088]: thumb_down
+                    - button "コピー" [ref=e1092]:
+                      - img [ref=e1093]: content_copy
+                    - button "他のオプションを表示" [ref=e1099]:
+                      - img [ref=e1100]: more_vert
+          - generic [ref=e101]:
+            - group [ref=e102]:
+              - generic [ref=e105]:
+                - textbox "Gemini へのプロンプトを入力" [ref=e249]:
+                  - text: 調べたい内容を入力
+                  - paragraph [ref=e452]
+                - generic [ref=e112]:
+                  - button "[ファイルをアップロード] メニューを開く" [ref=e117] [cursor=pointer]:
+                    - img [ref=e118]: add_2
+                  - generic [ref=e123]:
+                    - text: page_info
+                    - button "Deep Researchの選択を解除" [ref=e256]:
+                      - img [ref=e257]: travel_explore
+                      - img [ref=e259]: close
+                - generic [ref=e131]:
+                  - button "モード選択ツールを開く" [ref=e134]:
+                    - generic [ref=e136]:
+                      - generic [ref=e137]: 思考モード
+                      - img [ref=e138]: keyboard_arrow_down
+                  - generic [ref=e141]:
+                    - button "マイク" [ref=e144] [cursor=pointer]:
+                      - img [ref=e146]: mic
+                    - text: send
+            - paragraph [ref=e459]: Gemini は AI であり、間違えることがあります。
+        - generic [ref=e629]:
+          - generic [ref=e631]:
+            - generic [ref=e632]:
+              - img [ref=e633]: travel_explore
+              - heading "プラップジャパン深掘り調査依頼" [level=2] [ref=e634]
+            - generic [ref=e641]:
+              - button "目次メニュー" [ref=e1104]:
+                - generic [ref=e1105]: 目次
+                - img [ref=e1106]: keyboard_arrow_down
+              - button "共有とエクスポート" [ref=e1109]:
+                - generic [ref=e1110]: 共有とエクスポート
+                - img [ref=e1111]: keyboard_arrow_down
+              - button "作成" [ref=e1116]:
+                - generic [ref=e1117]: 作成
+                - img [ref=e1118]: keyboard_arrow_down
+              - button "パネルを閉じる" [ref=e642] [cursor=pointer]:
+                - img [ref=e643]: close
+          - generic [ref=e1124]:
+            - generic [ref=e1128]:
+              - heading "プラップジャパン（2449）における戦略的価値と持続的成長の包括的分析：PR業界のデジタル転換とアジア市場の地政学的リスクへの対応" [level=1] [ref=e1129]
+              - paragraph [ref=e1130]: 日本のコミュニケーション戦略市場において、株式会社プラップジャパン（以下、プラップジャパン）は、半世紀以上の歴史を持つ独立系PRコンサルティングの雄として独自の地位を築いている。1970年の創業以来、メディアリレーションズを核とした伝統的なパブリックリレーションズ（PR）から、最新のデジタルソリューション、さらには高度な専門性を要する危機管理コンサルティングに至るまで、企業の経営課題に直結する多角的な支援を展開してきた。本レポートでは、投資判断の核心となるセグメント別の収益構造、デジタル変革（DX）の進捗、競合他社との差別化要因、そして地政学的な影響を強く受ける海外事業の動向について、第三者機関の調査データと最新の市場分析を交えながら、10,000字を超える詳細な記述をもって論じる。
+              - heading "第1章：セグメント別事業構造の精緻な分析と市場ポジショニング" [level=2] [ref=e1131]
+              - paragraph [ref=e1132]: プラップジャパンの事業ポートフォリオは、長年の信頼に基づく「コミュニケーションサービス事業」と、次世代の成長エンジンとして期待される「デジタルソリューション事業」の二本柱で構成されている。これらのセグメントは、相互に補完し合う関係にあり、伝統的なコンサルティングによる高付加価値化と、デジタルツールによる業務効率化の両輪を回すことで、PR業界特有の労働集約型モデルからの脱却を図っている。
+              - heading "1.1 コミュニケーションサービス事業：安定収益の源泉と専門領域の深化" [level=3] [ref=e1133]
+              - paragraph [ref=e1134]:
+                - text: コミュニケーションサービス事業は、グループ全体の売上の大半を占める中核セグメントである。この事業の最大の特徴は、顧客との「リテーナー契約（継続契約）」を主軸としている点にある。自社IR資料および第三者機関の分析（インベストメントブリッジ等）によれば、同社の顧客数は800社を超え、その約9割が国内外の上場企業である
+                - superscript [ref=e1135]
+                - text: 。さらに、売上の約9割が顧客との直接取引（元請け）であり、広告代理店を介さないことによる高い利益率と、深いコンサルティングへの関与を実現している。
+                - button "詳細" [ref=e1138] [cursor=pointer]:
+                  - img [ref=e1139]: expand_more
+              - paragraph [ref=e1140]:
+                - text: 最新の2025年8月期第2四半期決算（自社IR資料）におけるセグメント実績を概観すると、売上高は前年同四半期比で12.0％増の11億8,300万円、セグメント利益は27.7％増の1億2,000万円と、極めて好調な推移を見せている
+                - superscript [ref=e1141]
+                - text: 。この成長を牽引しているのは、ヘルスケア業界向け案件の着実な受注と、危機管理広報コンサルティングに対する需要の急増である。
+                - button "詳細" [ref=e1144] [cursor=pointer]:
+                  - img [ref=e1145]: expand_more
+              - paragraph [ref=e1146]: ヘルスケア領域におけるPRは、薬機法や医療法、さらには製薬業界独自のプロモーションコードといった厳格な法規制が存在するため、一般的なPR会社が容易に参入できない高度な障壁が形成されている。プラップジャパンは長年にわたり外資系製薬大手や国内医療機器メーカーとのリレーションを構築しており、この「法規制への深い理解」が差別化の源泉となっている。
+              - paragraph [ref=e1147]:
+                - text: また、危機管理コンサルティングにおいては、昨今のSNS炎上やコンプライアンス違反、品質不正といった企業のレピュテーション（名声）を揺るがす事案の増加を背景に、予防的なメディアトレーニングや発生時の初動対応支援に対する引き合いが絶えない
+                - superscript [ref=e1148]
+                - text: 。これは単発の「スポット案件」としての側面を持つが、一度危機対応で信頼を勝ち取れば、その後のリテーナー契約に繋がる強力なフックとなる。
+                - button "詳細" [ref=e1151] [cursor=pointer]:
+                  - img [ref=e1152]: expand_more
+              - table [ref=e1154]:
+                - rowgroup [ref=e1155]:
+                  - row "項目 2025年8月期 第2四半期実績 前年同期比（YoY） セグメントの特徴" [ref=e1156]:
+                    - columnheader "項目" [ref=e1157]
+                    - columnheader "2025年8月期 第2四半期実績" [ref=e1158]
+                    - columnheader "前年同期比（YoY）" [ref=e1159]
+                    - columnheader "セグメントの特徴" [ref=e1160]
+                - rowgroup [ref=e1161]:
+                  - row "売上高 11.83億円 +12.0% ヘルスケア・危機管理が牽引" [ref=e1162]:
+                    - cell "売上高" [ref=e1163]
+                    - cell "11.83億円" [ref=e1164]
+                    - cell "+12.0%" [ref=e1165]
+                    - cell "ヘルスケア・危機管理が牽引" [ref=e1166]:
+                      - paragraph [ref=e1167]:
+                        - text: ヘルスケア・危機管理が牽引
+                        - superscript [ref=e1168]
+                  - row "セグメント利益 1.20億円 +27.7% 収益性の高い専門案件の増加" [ref=e1169]:
+                    - cell "セグメント利益" [ref=e1170]
+                    - cell "1.20億円" [ref=e1171]
+                    - cell "+27.7%" [ref=e1172]
+                    - cell "収益性の高い専門案件の増加" [ref=e1173]:
+                      - paragraph [ref=e1174]:
+                        - text: 収益性の高い専門案件の増加
+                        - superscript [ref=e1175]
+                  - row "主要ターゲット 上場企業、外資系製薬 - 直接取引比率9割" [ref=e1176]:
+                    - cell "主要ターゲット" [ref=e1177]
+                    - cell "上場企業、外資系製薬" [ref=e1178]
+                    - cell "-" [ref=e1179]
+                    - cell "直接取引比率9割" [ref=e1180]:
+                      - paragraph [ref=e1181]:
+                        - text: 直接取引比率9割
+                        - superscript [ref=e1182]
+              - button "詳細" [ref=e1185] [cursor=pointer]:
+                - img [ref=e1186]: expand_more
+              - heading "1.2 デジタルソリューション事業：SaaS「PRオートメーション」による変革" [level=3] [ref=e1187]
+              - paragraph [ref=e1188]: デジタルソリューション事業は、広報実務のデジタルトランスフォーメーション（DX）を推進するセグメントであり、同社が「労働集約型からの脱却」を掲げる上での最重要戦略領域である。その中核をなすのが、プラップノード株式会社が提供するSaaS型オールインワン広報ツール「PRオートメーション」である。
+              - paragraph [ref=e1189]:
+                - text: このツールは、プレスリリースの作成・配信から、メディアリストの管理、掲載確認（クリッピング）、さらには広告換算を含む効果測定までをデジタル上で一元管理する機能を持つ
+                - superscript [ref=e1190]
+                - text: 。第三者メディア（ITmediaや日経クロステック等）の分析視点から見れば、従来のPR業務は担当者の「個人の人脈（名刺）」や「手作業の掲載確認」に依存しており、極めて属人的な領域であった。PRオートメーションは、これらのアナログなプロセスをデータ化することで、チーム内での情報共有を促進し、広報活動の「見える化」を実現している
+                - superscript [ref=e1191]
+                - text: 。
+                - button "詳細" [ref=e1194] [cursor=pointer]:
+                  - img [ref=e1195]: expand_more
+              - paragraph [ref=e1196]:
+                - text: ユーザー評価の観点では、ITreview等の比較サイトにおいて、類似サービスである「PR TIMES」や「＠Press」と対比されることが多い。PR TIMESが「情報の拡散（リーチ）」に特化したメディアプラットフォームであるのに対し、PRオートメーションは「広報部内の業務効率化（CRM/ワークフロー）」に強みを持つという棲み分けがなされている
+                - superscript [ref=e1197]
+                - text: 。ただし、ITreview上のレビュー実績はまだ限定的であり、先行する配信サービスに比べると市場認知度の向上と導入事例のさらなる蓄積が課題となっている。
+                - button "詳細" [ref=e1200] [cursor=pointer]:
+                  - img [ref=e1201]: expand_more
+              - paragraph [ref=e1202]:
+                - text: 料金体系は月額5万円からのサブスクリプション型を採用しており、初期費用と合わせた積み上げ型の収益モデルを構築している
+                - superscript [ref=e1203]
+                - text: 。この事業は、成功すれば高い限界利益率を享受できる「ストック型ビジネス」への転換を意味し、従来のコンサルティング手数料に依存する不安定な収益構造を是正する役割を担っている。
+                - button "詳細" [ref=e1206] [cursor=pointer]:
+                  - img [ref=e1207]: expand_more
+              - heading "第2章：セグメント別成長性と中期経営計画の蓋然性" [level=2] [ref=e1208]
+              - paragraph [ref=e1209]:
+                - text: プラップジャパンは、2025年8月期から2027年8月期までを対象とした3ヵ年の中期経営計画を推進しており、最終年度に「売上高100億円、営業利益11億円、ROE 8.0％以上」という野心的な目標を掲げている
+                - superscript [ref=e1210]
+                - text: 。
+                - button "詳細" [ref=e1213] [cursor=pointer]:
+                  - img [ref=e1214]: expand_more
+              - heading "2.1 過去のトレンドと成長ドライバーの分析" [level=3] [ref=e1215]
+              - paragraph [ref=e1216]: 過去3〜5年の業績トレンドを振り返ると、同社はコロナ禍におけるイベントの中止や広告予算の削減という逆風を経験したが、デジタルシフトへの早期対応と危機管理需要の捕捉により、V字回復を果たしている。特にコミュニケーションサービス事業の売上高CAGR（年平均成長率）は、安定したリテーナー顧客に支えられ、堅調な推移を見せている。
+              - paragraph [ref=e1217]: 今後の成長を牽引するのは、以下の3つのドライバーである。
+              - list [ref=e1218]:
+                - listitem [ref=e1219]:
+                  - paragraph [ref=e1220]: "既存コンサルティングの単価向上: 危機管理やESG・サステナビリティ広報といった、高度な知見を要するコンサルティングの比重を高めることで、プロジェクトあたりの収益性を向上させる。"
+                - listitem [ref=e1221]:
+                  - paragraph [ref=e1222]: "デジタル領域のストック収益拡大: PRオートメーションの導入社数を拡大し、コンサルティングとツールのクロスセル（抱き合わせ販売）を強化する。"
+                - listitem [ref=e1223]:
+                  - paragraph [ref=e1224]:
+                    - generic [ref=e1225]: "M&Aによる非連続な成長: 同社は中期経営計画期間中に計30億円の投資枠（M&Aに20億円、新規事業に10億円）を設定しており、自社に不足するテクノロジーや新たな顧客基盤を持つ企業の買収を積極的に検討している"
+                    - superscript [ref=e1226]
+                    - text: 。
+                    - button "詳細" [ref=e1229] [cursor=pointer]:
+                      - img [ref=e1230]: expand_more
+              - heading "2.2 成長の持続可能性に対する懐疑的視点とリスク" [level=3] [ref=e1231]
+              - paragraph [ref=e1232]: 一方で、目標達成に対しては慎重な見方も存在する。売上高100億円の達成には、現在の成長ペースに加え、大規模なM&Aの成功が前提となる。PR業界は「人材」が最大の資産であるため、買収先の人材流出リスクや、文化の統合（PMI）の難しさが常に付きまとう。また、デジタルソリューション事業において、後発のテック企業がさらに安価でAIを活用した自動化ツールを投入してきた場合、PRオートメーションの優位性が相対的に低下する懸念もある。
+              - paragraph [ref=e1233]:
+                - text: アナリストレポート（みんかぶ等の要旨）によれば、同社は財務的に極めて健全（自己資本比率75.8％）である反面、過剰なキャッシュ保有がROEを押し下げる要因となっており、資本効率の向上が投資家からの厳しい要求事項となっている
+                - superscript [ref=e1234]
+                - text: 。これに対し、同社は「累進配当」を掲げ、安定的な還元と成長投資のバランスを取る方針を示しているが、市場は具体的な投資先とそのリターンを注視している。
+                - button "詳細" [ref=e1237] [cursor=pointer]:
+                  - img [ref=e1238]: expand_more
+              - heading "第3章：業界動向と競争環境：4強激突と「ステマ規制」の影" [level=2] [ref=e1239]
+              - paragraph [ref=e1240]:
+                - text: 日本のPR市場は、大手4社（ベクトル、サニーサイドアップ、電通PRコンサルティング、プラップジャパン）および共同ピーアールを加えた数社による寡占化が進んでいる。日本パブリックリレーションズ協会の調査によると、2024年度のPR業市場規模は推計1,391億円であり、前回調査から微減したものの、デジタルPRや危機管理のニーズは根強い
+                - superscript [ref=e1241]
+                - text: 。
+                - button "詳細" [ref=e1244] [cursor=pointer]:
+                  - img [ref=e1245]: expand_more
+              - heading "3.1 競合他社との定量的比較" [level=3] [ref=e1246]
+              - paragraph [ref=e1247]:
+                - text: 業界首位の株式会社ベクトル（6058）は、PRを起点とした「マーケティングの高速回転」を得意とし、動画制作や投資事業、さらには「PR TIMES」という巨大なプラットフォームを傘下に持つことで、売上高592億円（2024年2月期）という圧倒的な規模を誇る
+                - superscript [ref=e1248]
+                - text: 。ベクトルの営業利益率は13.6％と高く、規模の経済を最大限に活かした戦略を展開している。
+                - button "詳細" [ref=e1251] [cursor=pointer]:
+                  - img [ref=e1252]: expand_more
+              - paragraph [ref=e1253]:
+                - text: 対して、共同ピーアール株式会社（2436）は、伝統的なメディアリレーションズに強みを持ちつつ、最近ではAI・ビッグデータソリューション事業に注力しており、同セグメントの利益率は19.3％に達している
+                - superscript [ref=e1254]
+                - text: 。2026年12月期には売上高100億円を目指しており、プラップジャパンとは「中堅規模からの脱却」という文脈で直接的な競合関係にある。
+                - button "詳細" [ref=e1257] [cursor=pointer]:
+                  - img [ref=e1258]: expand_more
+              - table [ref=e1260]:
+                - rowgroup [ref=e1261]:
+                  - row "企業名 売上高（直近通期） 営業利益率 重点戦略領域" [ref=e1262]:
+                    - columnheader "企業名" [ref=e1263]
+                    - columnheader "売上高（直近通期）" [ref=e1264]
+                    - columnheader "営業利益率" [ref=e1265]
+                    - columnheader "重点戦略領域" [ref=e1266]
+                - rowgroup [ref=e1267]:
+                  - row "ベクトル 592.1億円 11.7% デジタル配信、投資、海外" [ref=e1268]:
+                    - cell "ベクトル" [ref=e1269]
+                    - cell "592.1億円" [ref=e1270]:
+                      - paragraph [ref=e1271]:
+                        - text: 592.1億円
+                        - superscript [ref=e1272]
+                    - cell "11.7%" [ref=e1273]
+                    - cell "デジタル配信、投資、海外" [ref=e1274]:
+                      - paragraph [ref=e1275]:
+                        - text: デジタル配信、投資、海外
+                        - superscript [ref=e1276]
+                  - row "サニーサイドアップ 179.0億円 8.2% ブランド構築、商業施設PR" [ref=e1277]:
+                    - cell "サニーサイドアップ" [ref=e1278]
+                    - cell "179.0億円" [ref=e1279]:
+                      - paragraph [ref=e1280]:
+                        - text: 179.0億円
+                        - superscript [ref=e1281]
+                    - cell "8.2%" [ref=e1282]
+                    - cell "ブランド構築、商業施設PR" [ref=e1283]:
+                      - paragraph [ref=e1284]:
+                        - text: ブランド構築、商業施設PR
+                        - superscript [ref=e1285]
+                  - row "共同ピーアール 73.2億円 14.7% 伝統的PR、AI、IM" [ref=e1286]:
+                    - cell "共同ピーアール" [ref=e1287]
+                    - cell "73.2億円" [ref=e1288]:
+                      - paragraph [ref=e1289]:
+                        - text: 73.2億円
+                        - superscript [ref=e1290]
+                    - cell "14.7%" [ref=e1291]
+                    - cell "伝統的PR、AI、IM" [ref=e1292]:
+                      - paragraph [ref=e1293]:
+                        - text: 伝統的PR、AI、IM
+                        - superscript [ref=e1294]
+                  - row "プラップジャパン 62.7億円 (2022年度) 9.0%前後 (推定) 危機管理、ヘルスケア、中国" [ref=e1295]:
+                    - cell "プラップジャパン" [ref=e1296]
+                    - cell "62.7億円 (2022年度)" [ref=e1297]:
+                      - paragraph [ref=e1298]:
+                        - text: 62.7億円 (2022年度)
+                        - superscript [ref=e1299]
+                    - cell "9.0%前後 (推定)" [ref=e1300]
+                    - cell "危機管理、ヘルスケア、中国" [ref=e1301]:
+                      - paragraph [ref=e1302]:
+                        - text: 危機管理、ヘルスケア、中国
+                        - superscript [ref=e1303]
+              - button "詳細" [ref=e1306] [cursor=pointer]:
+                - img [ref=e1307]: expand_more
+              - paragraph [ref=e1308]:
+                - text: ※プラップジャパンの直近（2025年8月期）予想売上高は73.7億円であり、成長軌道にある
+                - superscript [ref=e1309]
+                - text: 。
+                - button "詳細" [ref=e1312] [cursor=pointer]:
+                  - img [ref=e1313]: expand_more
+              - heading "3.2 参入障壁と業界の課題" [level=3] [ref=e1314]
+              - paragraph [ref=e1315]: PR業界の参入障壁は、情報の「送り手（メディア側）」との信頼関係に依存するため、新規参入者が短期間で大手企業の重要案件を獲得することは困難である。特に、プラップジャパンが得意とする「経営層向けのメディアトレーニング」や「不祥事発生時の緊急対応」は、過去の事例蓄積とベテランコンサルタントのノウハウが不可欠であり、これが強力な防壁となっている。
+              - paragraph [ref=e1316]:
+                - text: しかし、業界全体への「逆風」として看過できないのが、2023年10月に施行された「ステルスマーケティング規制（ステマ規制）」である。ビジネスメディアの分析記事によれば、インフルエンサーを活用したプロモーションにおいて、広告である旨の明示が厳格化され、違反した場合には企業名が公表される等の社会的制裁を受けるリスクが高まった
+                - superscript [ref=e1317]
+                - text: 。プラップジャパンのようなコンプライアンスを重視する老舗企業にとっては、適正なPR活動の価値が再認識される「追い風」となる側面もあるが、運用コストの増大やインフルエンサーの選別という課題も生じている。
+                - button "詳細" [ref=e1320] [cursor=pointer]:
+                  - img [ref=e1321]: expand_more
+              - heading "第4章：技術的優位性と知的財産戦略：AI時代のPR" [level=2] [ref=e1322]
+              - paragraph [ref=e1323]:
+                - text: プラップジャパンは、伝統的な手法に固執することなく、最新テクノロジーの導入にも意欲的である。特に、生成AIの活用に関する研究開発費を計上しており、広報実務の高度化を狙っている
+                - superscript [ref=e1324]
+                - text: 。
+                - button "詳細" [ref=e1327] [cursor=pointer]:
+                  - img [ref=e1328]: expand_more
+              - heading "4.1 PRオートメーションの特許と技術的壁" [level=3] [ref=e1329]
+              - paragraph [ref=e1330]:
+                - text: 同社は「PR Automation（β版）」のリリースに際し、ビジネスモデルやシステムに関する特許を出願している（特願2020-141271号）
+                - superscript [ref=e1331]
+                - text: 。このツールの核心は、単なるメール配信システムではなく、メディア記者ごとの「記事化傾向」や「過去の接触履歴」を蓄積し、最適なアプローチタイミングをAIが示唆する点にある。
+                - button "詳細" [ref=e1334] [cursor=pointer]:
+                  - img [ref=e1335]: expand_more
+              - paragraph [ref=e1336]: デジタルPRの領域において、競合他社は「拡散力（量）」を追求する傾向があるが、プラップジャパンは「掲載精度（質）」を追求している。これは、同社が抱える大手クライアント（特にヘルスケアや金融等の慎重な情報発信を要する企業）のニーズに合致している。R&D投資の方向性としては、生成AIを活用したプレスリリースの一次草案作成や、メディア露出の論調分析（ポジティブ・ネガティブ判定）の自動化が進められており、これが完成すればコンサルタント1人あたりの生産性は劇的に向上する。
+              - heading "4.2 技術面での客観的比較" [level=3] [ref=e1337]
+              - paragraph [ref=e1338]:
+                - text: テック系メディアの評価やユーザーレビューを総合すると、PRオートメーションのUI/UXは「広報実務者にとって直感的である」とされている
+                - superscript [ref=e1339]
+                - text: 。一方で、セキュリティ面での要求が厳しい大手企業向けに、ISMS認証（ISO/IEC 27001）を取得するなど、非機能要件においても競合との差別化を図っている。しかし、IT分野の専門ベンダーが提供するCRM（Salesforce等）を広報用にカスタマイズして利用する動きもあり、広報専用ツールとしての専門性をいかに研ぎ澄ませるかが今後の課題である。
+                - button "詳細" [ref=e1342] [cursor=pointer]:
+                  - img [ref=e1343]: expand_more
+              - heading "第5章：規制環境と政策リスク：変化する情報伝達のルール" [level=2] [ref=e1344]
+              - paragraph [ref=e1345]: PR活動は常に「表現の自由」と「消費者保護」の境界線上にあり、規制環境の変化は事業の根幹を揺るがすリスクとなり得る。
+              - heading "5.1 ステマ規制後のコンプライアンス" [level=3] [ref=e1346]
+              - paragraph [ref=e1347]:
+                - text: 景品表示法の改正に伴うステマ規制の本格適用により、広報担当者は「単なる表現の管理」ではなく、「経営リスクの管理」としての役割を強化せざるを得なくなっている
+                - superscript [ref=e1348]
+                - text: 。プラップジャパンは、日本パブリックリレーションズ協会の会員企業として、ガイドラインの策定にも関与する立場にあり、業界内での倫理基準の確立を主導している。この「清廉潔白さ」は、特にESG経営を重視する機関投資家や大手企業からの信頼獲得において、定量化しにくいが強力な資産となっている。
+                - button "詳細" [ref=e1351] [cursor=pointer]:
+                  - img [ref=e1352]: expand_more
+              - heading "5.2 プライバシー保護とデータ活用の制約" [level=3] [ref=e1353]
+              - paragraph [ref=e1354]:
+                - text: デジタルPRを推進する上で、Cookie規制や改正個人情報保護法の影響も無視できない。メディアリストの管理において記者の個人情報を扱うため、同社は厳格な管理体制を敷いている。今後、さらにデータ活用に関する規制が強化された場合、PRオートメーションのようなデータベース型サービスの利便性が制限される可能性もあるが、現時点ではISMS認証等の取得により、法令遵守と利便性の両立を図っている
+                - superscript [ref=e1355]
+                - text: 。
+                - button "詳細" [ref=e1358] [cursor=pointer]:
+                  - img [ref=e1359]: expand_more
+              - heading "第6章：海外展開状況：中国の回復と東南アジア・インドの成長可能性" [level=2] [ref=e1360]
+              - paragraph [ref=e1361]: プラップジャパンの海外事業は、日系PR会社としては極めて早い段階（1990年代）から中国に進出しており、現地での知名度は非常に高い。
+              - heading "6.1 中国事業の現状と地政学的リスク" [level=3] [ref=e1362]
+              - paragraph [ref=e1363]:
+                - text: 2025年8月期上期の決算発表によれば、中国における大手クライアントの離脱により、海外事業は一時的に減収となった
+                - superscript [ref=e1364]
+                - text: 。しかし、JETROの最新調査によれば、中国に進出する日系企業の営業利益見通しは4年ぶりに改善しており、現地企業のPR意欲も回復の兆しを見せている
+                - superscript [ref=e1365]
+                - text: 。プラップジャパンは、北京、上海を拠点に、中国国内のSNS環境（WeChat, RED等）に精通した現地スタッフを多数抱えており、日系企業の「中国でのブランディング」だけでなく、中国企業の「海外進出（出海）」の支援にも注力している。
+                - button "詳細" [ref=e1368] [cursor=pointer]:
+                  - img [ref=e1369]: expand_more
+              - paragraph [ref=e1370]:
+                - text: 為替リスクについては、元やドルの変動が連結業績に影響を与えるものの、現地での収益を現地での投資に充てることで、ネットでの影響を最小限に抑える工夫がなされている。最大の懸念事項は、米中対立に伴う地政学的リスクであり、サプライチェーンの変更に伴う広告予算の削減や、日系ブランドに対するボイコット等の不確実性は常に存在する
+                - superscript [ref=e1371]
+                - text: 。
+                - button "詳細" [ref=e1374] [cursor=pointer]:
+                  - img [ref=e1375]: expand_more
+              - heading "6.2 東南アジアおよびインドへの進出戦略" [level=3] [ref=e1376]
+              - paragraph [ref=e1377]:
+                - text: 中国一辺倒のリスクを回避するため、同社はASEAN地域（シンガポール、ベトナム、タイ等）への展開を加速させている。ASEAN諸国ではデジタル技術の活用が急速に進んでおり、日本の「丁寧なPR手法」と「最新のデジタルツール」を組み合わせたサービスの需要が高い
+                - superscript [ref=e1378]
+                - text: 。
+                - button "詳細" [ref=e1381] [cursor=pointer]:
+                  - img [ref=e1382]: expand_more
+              - paragraph [ref=e1383]:
+                - text: また、注目すべきはインド市場である。JETROの報告書によれば、インドは日系企業が今後最も拡大を予定する地域であり、同社も現地のパートナーとの提携や拠点設置を通じて、巨大な内需市場を取り込む準備を進めている
+                - superscript [ref=e1384]
+                - text: 。
+                - button "詳細" [ref=e1387] [cursor=pointer]:
+                  - img [ref=e1388]: expand_more
+              - table [ref=e1390]:
+                - rowgroup [ref=e1391]:
+                  - row "地域 戦略の優先度 主な課題 将来展望" [ref=e1392]:
+                    - columnheader "地域" [ref=e1393]
+                    - columnheader "戦略の優先度" [ref=e1394]
+                    - columnheader "主な課題" [ref=e1395]
+                    - columnheader "将来展望" [ref=e1396]
+                - rowgroup [ref=e1397]:
+                  - row "中国 高（既存維持） 地政学的リスク、景気後退 デジタルPR、中国企業の海外支援" [ref=e1398]:
+                    - cell "中国" [ref=e1399]
+                    - cell "高（既存維持）" [ref=e1400]
+                    - cell "地政学的リスク、景気後退" [ref=e1401]:
+                      - paragraph [ref=e1402]:
+                        - text: 地政学的リスク、景気後退
+                        - superscript [ref=e1403]
+                    - cell "デジタルPR、中国企業の海外支援" [ref=e1404]
+                  - row "ASEAN 高（成長投資） 各国の法規制の違い PRオートメーションの横展開" [ref=e1405]:
+                    - cell "ASEAN" [ref=e1406]
+                    - cell "高（成長投資）" [ref=e1407]
+                    - cell "各国の法規制の違い" [ref=e1408]:
+                      - paragraph [ref=e1409]:
+                        - text: 各国の法規制の違い
+                        - superscript [ref=e1410]
+                    - cell "PRオートメーションの横展開" [ref=e1411]
+                  - row "インド 中（新規開拓） 商習慣の差異、人材確保 日系企業の進出支援" [ref=e1412]:
+                    - cell "インド" [ref=e1413]
+                    - cell "中（新規開拓）" [ref=e1414]
+                    - cell "商習慣の差異、人材確保" [ref=e1415]:
+                      - paragraph [ref=e1416]:
+                        - text: 商習慣の差異、人材確保
+                        - superscript [ref=e1417]
+                    - cell "日系企業の進出支援" [ref=e1418]
+              - button "詳細" [ref=e1421] [cursor=pointer]:
+                - img [ref=e1422]: expand_more
+              - heading "第7章：財務健全性と株主還元：投資家へのメッセージ" [level=2] [ref=e1423]
+              - paragraph [ref=e1424]: 投資判断において、プラップジャパンの財務指標は極めて魅力的な側面を持つ一方で、効率性の観点からは課題も浮き彫りになっている。
+              - heading "7.1 圧倒的なキャッシュポジションと「累進配当」" [level=3] [ref=e1425]
+              - paragraph [ref=e1426]:
+                - text: 2026年8月期の配当予想は41円であり、安定配当を維持している
+                - superscript [ref=e1427]
+                - text: 。特筆すべきは、同社が「累進配当方針」を明確に打ち出したことである。これは、原則として減配を行わず、配当の維持または増配を継続するというコミットメントであり、下値不安を和らげる効果がある
+                - superscript [ref=e1428]
+                - text: 。
+                - button "詳細" [ref=e1431] [cursor=pointer]:
+                  - img [ref=e1432]: expand_more
+              - paragraph [ref=e1433]:
+                - text: 財務健全性を示す自己資本比率は75.8％と、PR・サービス業界の中でも突出して高い
+                - superscript [ref=e1434]
+                - text: 。これは無借金経営に近い状態を意味し、不況時の耐性が非常に強いことを示唆している。しかし、潤沢な現預金がバランスシートを重くしており、ROE 8.0％の達成には、これらの資金をいかに効率的な投資（M&A）に回せるかが焦点となる。
+                - button "詳細" [ref=e1437] [cursor=pointer]:
+                  - img [ref=e1438]: expand_more
+              - heading "7.2 市場の評価とアナリストの視点" [level=3] [ref=e1439]
+              - paragraph [ref=e1440]:
+                - text: 証券アナリストの評価によれば、SBI証券はプラップジャパンの格付けを「買い」とし、目標株価を1,250円に設定している（2024年10月時点）
+                - superscript [ref=e1441]
+                - text: 。現在の株価がPBR（株価純資産倍率）0.8倍程度で推移していることは、同社の解散価値すら下回る評価を受けていることを意味し、伝統的な割安株（バリュー株）としての側面が強い
+                - superscript [ref=e1442]
+                - text: 。
+                - button "詳細" [ref=e1445] [cursor=pointer]:
+                  - img [ref=e1446]: expand_more
+              - paragraph [ref=e1447]:
+                - text: マネックス証券の「銘柄スカウター」による定量分析でも、同社の財務健全性は最高レベルの評価を受けており、配当利回りの高さも相まって、ディフェンシブな投資先としての適格性が高いことが示されている
+                - superscript [ref=e1448]
+                - text: 。
+                - button "詳細" [ref=e1451] [cursor=pointer]:
+                  - img [ref=e1452]: expand_more
+              - heading "第8章：総合的な結論と将来の展望" [level=2] [ref=e1453]
+              - paragraph [ref=e1454]: 本調査を通じて浮き彫りになったプラップジャパンの姿は、「伝統と革新のジレンマ」を抱えながらも、着実に次世代への脱皮を図る老舗企業の姿である。
+              - heading "8.1 本業の堅実さとデジタルへの期待" [level=3] [ref=e1455]
+              - paragraph [ref=e1456]: コミュニケーションサービス事業におけるヘルスケア・危機管理というニッチかつ高単価な領域での支配力は、同社の収益の岩盤となっている。この岩盤があるからこそ、デジタルソリューション事業への先行投資や、不確実性の高い海外展開に挑戦できるのである。PRオートメーションが今後、単なる「ツール」を超えて、広報業界の標準プラットフォーム（OS）となることができれば、同社の企業価値は再定義されることになるだろう。
+              - heading "8.2 投資判断におけるポジティブ・ネガティブ要因の整理" [level=3] [ref=e1457]
+              - paragraph [ref=e1458]: "ポジティブ要因:"
+              - list [ref=e1459]:
+                - listitem [ref=e1460]:
+                  - paragraph [ref=e1461]: "高い専門性と障壁: ヘルスケア・危機管理広報における圧倒的な実績。"
+                - listitem [ref=e1462]:
+                  - paragraph [ref=e1463]:
+                    - generic [ref=e1464]: "強固な財務基盤: 自己資本比率75％超、豊富なキャッシュによる買収余力"
+                    - superscript [ref=e1465]
+                    - text: 。
+                    - button "詳細" [ref=e1468] [cursor=pointer]:
+                      - img [ref=e1469]: expand_more
+                - listitem [ref=e1470]:
+                  - paragraph [ref=e1471]:
+                    - generic [ref=e1472]: "株主還元姿勢: 累進配当の導入と、PBR1倍割れによる割安感"
+                    - superscript [ref=e1473]
+                    - text: 。
+                    - button "詳細" [ref=e1476] [cursor=pointer]:
+                      - img [ref=e1477]: expand_more
+                - listitem [ref=e1478]:
+                  - paragraph [ref=e1479]:
+                    - generic [ref=e1480]: "直接取引比率の高さ: 顧客の9割が上場企業であり、直接取引による高利益率"
+                    - superscript [ref=e1481]
+                    - text: 。
+                    - button "詳細" [ref=e1484] [cursor=pointer]:
+                      - img [ref=e1485]: expand_more
+              - paragraph [ref=e1486]: "ネガティブ要因/リスク:"
+              - list [ref=e1487]:
+                - listitem [ref=e1488]:
+                  - paragraph [ref=e1489]: "労働集約型からの転換速度: デジタル事業の成長が期待に追いつかないリスク。"
+                - listitem [ref=e1490]:
+                  - paragraph [ref=e1491]:
+                    - generic [ref=e1492]: "地政学的リスク: 中国事業の不確実性と、日系企業の海外予算の変動"
+                    - superscript [ref=e1493]
+                    - text: 。
+                    - button "詳細" [ref=e1496] [cursor=pointer]:
+                      - img [ref=e1497]: expand_more
+                - listitem [ref=e1498]:
+                  - paragraph [ref=e1499]: "人材の獲得競争: PR業界全体での人材不足と、大手競合（ベクトル等）との採用競争。"
+                - listitem [ref=e1500]:
+                  - paragraph [ref=e1501]: "資本効率の低さ: 低いROEを改善するための具体的な投資リターンがまだ見えにくい。"
+              - heading "8.3 最終的な投資家への示唆" [level=3] [ref=e1502]
+              - paragraph [ref=e1503]: プラップジャパンは、短期的な爆発的成長を求める投資家よりも、中長期的な安定性と、デジタル転換による「化ける可能性」を期待する投資家に適した銘柄である。中期経営計画で掲げられた「売上高100億円、営業利益11億円」の達成に向けた進捗を、特にM&Aの発表やPRオートメーションの導入社数推移を通じて監視することが重要である。
+              - paragraph [ref=e1504]: 現在のPBR 0.8倍という評価は、同社が持つ「無形資産（メディアとの信頼関係や専門知見）」が株価に十分に反映されていないことを示唆している。東証による「資本コストや株価を意識した経営」の要請を背景に、今後は余剰資金の有効活用や株主還元のさらなる強化が期待される。総じて、同社は「財務の安全性を確保しつつ、DXによる収益構造の変革を待つ」という、時間軸を長く持った投資戦略において有力な候補となり得る。
+              - paragraph [ref=e1505]: 本レポートが、プラップジャパン（2449）に対する深い理解と、適切な投資判断の一助となることを願う。業界の構造変化とテクノロジーの進化が交差する中で、同社がどのような「あしたの常識」をつくっていくのか、その過程を注視していく必要がある。
+            - generic [ref=e1506]:
+              - button "レポートに使用されているソース" [expanded] [ref=e1508]:
+                - generic [ref=e1509]: レポートに使用されているソース
+                - img [ref=e1510]: expand_less
+              - generic [ref=e1513]:
+                - link "bridge-salon.jp ブリッジレポート：（2449）プラップジャパン 2025年8月期第2 ... 新しいウィンドウで開く" [ref=e1515] [cursor=pointer]:
+                  - /url: https://www.bridge-salon.jp/report_bridge/archives/2025/06/250604_2449.html
+                  - generic [ref=e1518]:
+                    - generic [ref=e1519]: bridge-salon.jp
+                    - generic [ref=e1520]: ブリッジレポート：（2449）プラップジャパン 2025年8月期第2 ...
+                  - generic [ref=e1521]: 新しいウィンドウで開く
+                - link "finance.yahoo.co.jp (株)プラップジャパン【2449】：決算情報 - Yahoo!ファイナンス 新しいウィンドウで開く" [ref=e1523] [cursor=pointer]:
+                  - /url: https://finance.yahoo.co.jp/quote/2449.T/financials
+                  - generic [ref=e1526]:
+                    - generic [ref=e1527]: finance.yahoo.co.jp
+                    - generic [ref=e1528]: (株)プラップジャパン【2449】：決算情報 - Yahoo!ファイナンス
+                  - generic [ref=e1529]: 新しいウィンドウで開く
+                - link "prap.co.jp PR Automation | PR会社 | プラップジャパン | PRAP JAPAN 新しいウィンドウで開く" [ref=e1531] [cursor=pointer]:
+                  - /url: https://www.prap.co.jp/pr/service/solution/4282840
+                  - generic [ref=e1534]:
+                    - generic [ref=e1535]: prap.co.jp
+                    - generic [ref=e1536]: PR Automation | PR会社 | プラップジャパン | PRAP JAPAN
+                  - generic [ref=e1537]: 新しいウィンドウで開く
+                - link "itreview.jp レビュー募集中！PRオートメーションを紹介・競合製品の評判を ... 新しいウィンドウで開く" [ref=e1539] [cursor=pointer]:
+                  - /url: https://www.itreview.jp/products/pr-automation/reviews
+                  - generic [ref=e1542]:
+                    - generic [ref=e1543]: itreview.jp
+                    - generic [ref=e1544]: レビュー募集中！PRオートメーションを紹介・競合製品の評判を ...
+                  - generic [ref=e1545]: 新しいウィンドウで開く
+                - 'link "minkabu.jp プラップジャパン (2449) : 今後の予想・売買予想・AI株価診断 ... 新しいウィンドウで開く" [ref=e1547] [cursor=pointer]':
+                  - /url: https://minkabu.jp/stock/2449/analysis
+                  - generic [ref=e1550]:
+                    - generic [ref=e1551]: minkabu.jp
+                    - generic [ref=e1552]: "プラップジャパン (2449) : 今後の予想・売買予想・AI株価診断 ..."
+                  - generic [ref=e1553]: 新しいウィンドウで開く
+                - link "advertimes.com PR業の24年度売上高1391億円、今後ニーズ増は「危機管理」 新しいウィンドウで開く" [ref=e1555] [cursor=pointer]:
+                  - /url: https://www.advertimes.com/20250627/article503311/
+                  - generic [ref=e1558]:
+                    - generic [ref=e1559]: advertimes.com
+                    - generic [ref=e1560]: PR業の24年度売上高1391億円、今後ニーズ増は「危機管理」
+                  - generic [ref=e1561]: 新しいウィンドウで開く
+                - link "buffett-code.com ベクトルの業績・財務 - 6058 / プライム / サービス業 | バフェット ... 新しいウィンドウで開く" [ref=e1563] [cursor=pointer]:
+                  - /url: https://www.buffett-code.com/company/6058/financial
+                  - generic [ref=e1566]:
+                    - generic [ref=e1567]: buffett-code.com
+                    - generic [ref=e1568]: ベクトルの業績・財務 - 6058 / プライム / サービス業 | バフェット ...
+                  - generic [ref=e1569]: 新しいウィンドウで開く
+                - 'link "media-innovation.jp 【メディア企業徹底考察 #158】ベクトルは売上高過去最高を更新も「あしたのチーム」不調が鮮明に 新しいウィンドウで開く" [ref=e1571] [cursor=pointer]':
+                  - /url: https://media-innovation.jp/article/2024/05/10/141521.html
+                  - generic [ref=e1574]:
+                    - generic [ref=e1575]: media-innovation.jp
+                    - generic [ref=e1576]: "【メディア企業徹底考察 #158】ベクトルは売上高過去最高を更新も「あしたのチーム」不調が鮮明に"
+                  - generic [ref=e1577]: 新しいウィンドウで開く
+                - link "buffett-code.com 共同ピーアールの業績・財務 - 2436 / ｽﾀﾝﾀﾞｰﾄﾞ / サービス業 ... 新しいウィンドウで開く" [ref=e1579] [cursor=pointer]:
+                  - /url: https://www.buffett-code.com/company/2436/financial
+                  - generic [ref=e1582]:
+                    - generic [ref=e1583]: buffett-code.com
+                    - generic [ref=e1584]: 共同ピーアールの業績・財務 - 2436 / ｽﾀﾝﾀﾞｰﾄﾞ / サービス業 ...
+                  - generic [ref=e1585]: 新しいウィンドウで開く
+                - link "fisco.co.jp 株式会社サニーサイドアップグループ 新しいウィンドウで開く" [ref=e1587] [cursor=pointer]:
+                  - /url: https://www.fisco.co.jp/wordpress/wp-content/uploads/FISCO/report20241122_2180_JP.pdf
+                  - generic [ref=e1590]:
+                    - generic [ref=e1591]: fisco.co.jp
+                    - generic [ref=e1592]: 株式会社サニーサイドアップグループ
+                  - generic [ref=e1593]: 新しいウィンドウで開く
+                - link "finance.logmi.jp 【QAあり】サニーサイドアップグループ、24年はブランドコミュニケーション事業での手堅い成長に注力、統合効果の創出加速へ - ログミーファイナンス - logmi Business 新しいウィンドウで開く" [ref=e1595] [cursor=pointer]:
+                  - /url: https://finance.logmi.jp/articles/379179
+                  - generic [ref=e1598]:
+                    - generic [ref=e1599]: finance.logmi.jp
+                    - generic [ref=e1600]: 【QAあり】サニーサイドアップグループ、24年はブランドコミュニケーション事業での手堅い成長に注力、統合効果の創出加速へ - ログミーファイナンス - logmi Business
+                  - generic [ref=e1601]: 新しいウィンドウで開く
+                - link "frontier-pr.jp 【2026年】PR会社おすすめ20選！現役記者が得意分野や選び方を解説 新しいウィンドウで開く" [ref=e1603] [cursor=pointer]:
+                  - /url: https://frontier-pr.jp/10162.html
+                  - generic [ref=e1606]:
+                    - generic [ref=e1607]: frontier-pr.jp
+                    - generic [ref=e1608]: 【2026年】PR会社おすすめ20選！現役記者が得意分野や選び方を解説
+                  - generic [ref=e1609]: 新しいウィンドウで開く
+                - link "effectual.co.jp 景品表示法改正とステルスマーケティング規制広報担当者が押さえるべき最新動向と実務対策 新しいウィンドウで開く" [ref=e1611] [cursor=pointer]:
+                  - /url: https://effectual.co.jp/sorila/blog/keihyoho-kaisei-stemama-kisei/
+                  - generic [ref=e1614]:
+                    - generic [ref=e1615]: effectual.co.jp
+                    - generic [ref=e1616]: 景品表示法改正とステルスマーケティング規制広報担当者が押さえるべき最新動向と実務対策
+                  - generic [ref=e1617]: 新しいウィンドウで開く
+                - link "digitalpr.jp PRをデジタルで変革する「PR Automation（β版）」 提供開始から1か月で利用企業数が60社を突破 新しいウィンドウで開く" [ref=e1619] [cursor=pointer]:
+                  - /url: https://digitalpr.jp/r/42001
+                  - generic [ref=e1622]:
+                    - generic [ref=e1623]: digitalpr.jp
+                    - generic [ref=e1624]: PRをデジタルで変革する「PR Automation（β版）」 提供開始から1か月で利用企業数が60社を突破
+                  - generic [ref=e1625]: 新しいウィンドウで開く
+                - link "jetro.go.jp FY2025 Survey on Business Conditions of Japanese Companies Operating Overseas (Asia and Oceania) 新しいウィンドウで開く" [ref=e1627] [cursor=pointer]:
+                  - /url: https://www.jetro.go.jp/ext_images/en/reports/survey/pdf/2025/EN_Asia_and_Oceania_2025_r.pdf
+                  - generic [ref=e1630]:
+                    - generic [ref=e1631]: jetro.go.jp
+                    - generic [ref=e1632]: FY2025 Survey on Business Conditions of Japanese Companies Operating Overseas (Asia and Oceania)
+                  - generic [ref=e1633]: 新しいウィンドウで開く
+                - link "jetro.go.jp FY2025 JETRO Survey on Business Conditions of Japanese Companies Operating Overseas（Asia and Oceania） | News & Updates - Japan External Trade Organization 新しいウィンドウで開く" [ref=e1635] [cursor=pointer]:
+                  - /url: https://www.jetro.go.jp/en/news/releases/2026/7dc6068af2960be9.html
+                  - generic [ref=e1638]:
+                    - generic [ref=e1639]: jetro.go.jp
+                    - generic [ref=e1640]: FY2025 JETRO Survey on Business Conditions of Japanese Companies Operating Overseas（Asia and Oceania） | News & Updates - Japan External Trade Organization
+                  - generic [ref=e1641]: 新しいウィンドウで開く
+                - 'link "lowyinstitute.org Navigating the storm: Southeast Asia and the global trade shocks | Lowy Institute 新しいウィンドウで開く" [ref=e1643] [cursor=pointer]':
+                  - /url: https://www.lowyinstitute.org/publications/navigating-storm-southeast-asia-global-trade-shocks
+                  - generic [ref=e1646]:
+                    - generic [ref=e1647]: lowyinstitute.org
+                    - generic [ref=e1648]: "Navigating the storm: Southeast Asia and the global trade shocks | Lowy Institute"
+                  - generic [ref=e1649]: 新しいウィンドウで開く
+              - button "参照されたもののレポートには使用されていないソース" [ref=e1651]:
+                - generic [ref=e1652]: 参照されたもののレポートには使用されていないソース
+                - img [ref=e1653]: expand_more
+              - generic:
+                - link [ref=e1657] [cursor=pointer]:
+                  - /url: https://www.yano.co.jp/press-release/show/press_id/3959
+                  - generic [ref=e1660]:
+                    - generic [ref=e1661]: yano.co.jp
+                    - generic [ref=e1662]: インターネット広告市場に関する調査を実施（2025年） | ニュース・トピックス
+                  - generic [ref=e1663]: 新しいウィンドウで開く
+                - link [ref=e1665] [cursor=pointer]:
+                  - /url: https://www.itreview.jp/products/boxil/reviews
+                  - generic [ref=e1668]:
+                    - generic [ref=e1669]: itreview.jp
+                    - generic [ref=e1670]: Boxilの評判・口コミ 全35件【ITreview】IT製品のレビュー・比較サイト
+                  - generic [ref=e1671]: 新しいウィンドウで開く
+                - link [ref=e1673] [cursor=pointer]:
+                  - /url: https://www.openwork.jp/a0910000000Fqkt/compa/a0910000006PlON/
+                  - generic [ref=e1676]:
+                    - generic [ref=e1677]: openwork.jp
+                    - generic [ref=e1678]: プラップジャパンとサニーサイドアップ（PR）の比較 「社員クチコミ」 OpenWork
+                  - generic [ref=e1679]: 新しいウィンドウで開く
+                - link [ref=e1681] [cursor=pointer]:
+                  - /url: https://finance.logmi.jp/articles/379229
+                  - generic [ref=e1684]:
+                    - generic [ref=e1685]: finance.logmi.jp
+                    - generic [ref=e1686]: サニーサイドアップグループ、3Q累計営業利益は34％増益で過去最高を更新 ブランドコミュニケーション事業で統合効果が拡大 - ログミーファイナンス - logmi Business
+                  - generic [ref=e1687]: 新しいウィンドウで開く
+                - link [ref=e1689] [cursor=pointer]:
+                  - /url: https://finance-frontend-pc-dist.west.edge.storage-yahoo.jp/disclosure/20260212/20260212556673.pdf
+                  - generic [ref=e1692]:
+                    - generic [ref=e1693]: finance-frontend-pc-dist.west.edge.storage-yahoo.jp
+                    - generic [ref=e1694]: 2025年12月期（第62期） 決算説明資料
+                  - generic [ref=e1695]: 新しいウィンドウで開く
+                - link [ref=e1697] [cursor=pointer]:
+                  - /url: https://support.google.com/knowledgepanel/answer/9787176
+                  - generic [ref=e1700]:
+                    - generic [ref=e1701]: support.google.com
+                    - generic [ref=e1702]: Google Sports Data
+                  - generic [ref=e1703]: 新しいウィンドウで開く
+                - link [ref=e1705] [cursor=pointer]:
+                  - /url: https://www.jbic.go.jp/en/information/press/press-2025/image/000014411.pdf
+                  - generic [ref=e1708]:
+                    - generic [ref=e1709]: jbic.go.jp
+                    - generic [ref=e1710]: Survey Report on Overseas Business Operations by Japanese Companies (JFY2025)
+                  - generic [ref=e1711]: 新しいウィンドウで開く
+                - link [ref=e1713] [cursor=pointer]:
+                  - /url: https://www.aoshearman.com/en/insights/global-ma-insights/asia-pacific-dealmaking-fueled-by-strong-activity-in-japan-and-china
+                  - generic [ref=e1716]:
+                    - generic [ref=e1717]: aoshearman.com
+                    - generic [ref=e1718]: Asia-Pacific dealmaking fueled by strong activity in Japan and China - A&O Shearman
+                  - generic [ref=e1719]: 新しいウィンドウで開く
+                - link [ref=e1721] [cursor=pointer]:
+                  - /url: https://www.tis.co.jp/documents/jp/ir/finance/meeting/250508_1.pdf
+                  - generic [ref=e1724]:
+                    - generic [ref=e1725]: tis.co.jp
+                    - generic [ref=e1726]: 2025年3月期 決算説明資料
+                  - generic [ref=e1727]: 新しいウィンドウで開く
+                - link [ref=e1729] [cursor=pointer]:
+                  - /url: https://irtv.jp/wp-content/uploads/2024/07/%E3%83%98%E3%82%99%E3%82%AF%E3%83%88%E3%83%AB-2025%E5%B9%B42%E6%9C%88%E6%9C%9F-%E7%AC%AC1%E5%9B%9B%E5%8D%8A%E6%9C%9F%E6%B1%BA%E7%AE%97%E8%AA%AC%E6%98%8E%E8%B3%87%E6%96%99.pdf
+                  - generic [ref=e1732]:
+                    - generic [ref=e1733]: irtv.jp
+                    - generic [ref=e1734]: ベクトル 2025年2月期 第1四半期決算説明資料 - IRTV
+                  - generic [ref=e1735]: 新しいウィンドウで開く
+                - link [ref=e1737] [cursor=pointer]:
+                  - /url: https://www.kyodo-pr.co.jp/wp/wp-content/uploads/2025/03/20250322%E3%80%90%E5%85%B1%E5%90%8CPR%E3%80%91%E5%80%8B%E4%BA%BA%E6%8A%95%E8%B3%87%E5%AE%B6%E5%90%91%E3%81%91%E8%AA%AC%E6%98%8E%E4%BC%9A%E8%B3%87%E6%96%99_2024%E5%B9%B412%E6%9C%88%E6%9C%9F%E9%80%9A%E6%9C%9F.pdf
+                  - generic [ref=e1740]:
+                    - generic [ref=e1741]: kyodo-pr.co.jp
+                    - generic [ref=e1742]: 個人投資家向け説明会 会社説明資料 - 共同ピーアール
+                  - generic [ref=e1743]: 新しいウィンドウで開く
+                - link [ref=e1745] [cursor=pointer]:
+                  - /url: https://finance.logmi.jp/articles/383704
+                  - generic [ref=e1748]:
+                    - generic [ref=e1749]: finance.logmi.jp
+                    - generic [ref=e1750]: 共同ピーアール（2436）全セグメントで過去最高を達成し増収増益 AICセンター設立で「AIで勝つ会社」へ体制を構築 - ログミーファイナンス
+                  - generic [ref=e1751]: 新しいウィンドウで開く
+                - link [ref=e1753] [cursor=pointer]:
+                  - /url: https://finance.matsui.co.jp/stock/2436/settlement/index
+                  - generic [ref=e1756]:
+                    - generic [ref=e1757]: finance.matsui.co.jp
+                    - generic [ref=e1758]: 共同ピーアール(2436) 東証スタンダード 決算 | マーケット情報 | 松井証券
+                  - generic [ref=e1759]: 新しいウィンドウで開く
+                - link [ref=e1761] [cursor=pointer]:
+                  - /url: https://syncad.jp/news/63429/
+                  - generic [ref=e1764]:
+                    - generic [ref=e1765]: syncad.jp
+                    - generic [ref=e1766]: 【調査レポート】インフルエンサーマーケティング企業toridoriが、ステルスマーケティングの法規制に関する企業の反応を徹底調査！法規制後、95％の企業で“SNS業務に関する意識”が大きく変化！ | syncAD（シンクアド）｜ Web広告・デジタルマーケティングのいまをお届けするメディア
+                  - generic [ref=e1767]: 新しいウィンドウで開く
+                - link [ref=e1769] [cursor=pointer]:
+                  - /url: https://prtimes.jp/main/html/rd/p/000000451.000011944.html
+                  - generic [ref=e1772]:
+                    - generic [ref=e1773]: prtimes.jp
+                    - generic [ref=e1774]: 【ステマ最新調査】「勝手にPRを付けたことはない」96.4%のインフルエンサーが回答。規制後の影響は？どんな悪質なステマ依頼が？調査結果レポート | LIDDELL株式会社のプレスリリース - PR TIMES
+                  - generic [ref=e1775]: 新しいウィンドウで開く
+                - link [ref=e1777] [cursor=pointer]:
+                  - /url: https://frontier-pr.jp/9443.html
+                  - generic [ref=e1780]:
+                    - generic [ref=e1781]: frontier-pr.jp
+                    - generic [ref=e1782]: PR業界とは？広告とPRの違いや将来性、人気大手5社をまとめて解説
+                  - generic [ref=e1783]: 新しいウィンドウで開く
+                - link [ref=e1785] [cursor=pointer]:
+                  - /url: https://vectorinc.co.jp/groupservice/marketing-picks/public_relations/pr/1126291
+                  - generic [ref=e1788]:
+                    - generic [ref=e1789]: vectorinc.co.jp
+                    - generic [ref=e1790]: PR会社の売上ランキング上位7社！利用するメリットやデメリットも解説 | MARKETING PICKS
+                  - generic [ref=e1791]: 新しいウィンドウで開く
+                - link [ref=e1793] [cursor=pointer]:
+                  - /url: https://okanechips.mei-kyu.com/riwochi-job/11099/
+                  - generic [ref=e1796]:
+                    - generic [ref=e1797]: okanechips.mei-kyu.com
+                    - generic [ref=e1798]: 【2026年最新】PR会社おすすめランキング26選！選び方と注意点を徹底解説 - おかねチップス
+                  - generic [ref=e1799]: 新しいウィンドウで開く
+            - button "思考プロセス" [ref=e1801]:
+              - generic [ref=e1802]: 思考プロセス
+              - img [ref=e1803]: expand_more
+            - generic [ref=e1806]:
+              - generic [ref=e1807]:
+                - generic [ref=e1808]:
+                  - img [ref=e1810]: spark
+                  - separator [ref=e1811]
+                - generic [ref=e1812]:
+                  - generic [ref=e1813]: 公式開示情報と市場データの収集開始
+                  - generic [ref=e1814]: プラップジャパンの投資判断に不可欠な最新の決算説明資料、有価証券報告書、および中期経営計画の精査に着手しました。特に、セグメント別の収益構造や、デジタル変革（DX）の核となるSaaS事業「PRオートメーション」の進捗状況を重点的に確認し、同社の主張する強みの客観性を評価する準備を整えています。
+              - generic [ref=e1815]:
+                - separator [ref=e1817]
+                - generic [ref=e1818]:
+                  - generic [ref=e1819]: 競合比較と業界内ポジションの検証
+                  - generic [ref=e1820]: 国内PR業界における主要プレイヤーであるベクトル、サニーサイドアップ、共同PRといった競合他社との差別化要因を明らかにすべく、第三者機関による市場規模データや業界レポートを統合しています。プラップジャパンが強みとする危機管理広報やヘルスケア分野での市場シェア、および参入障壁の高さについて、競合他社の開示情報と照らし合わせることで多角的な分析を試みています。
+              - generic [ref=e1821]:
+                - separator [ref=e1823]
+                - generic [ref=e1824]:
+                  - generic [ref=e1825]: 今後の調査アクション
+                  - generic [ref=e1826]: 今後は「PRオートメーション」のユーザー評価をITreview等の外部プラットフォームで掘り下げ、機能面での優位性と課題を抽出します。あわせて、ステルスマーケティング規制等の法的リスクが事業成長に与える影響や、中国・東南アジア市場での展開スピードについても、ビジネスメディアやアナリストの視点を取り入れて深掘りしていく予定です。
+              - generic [ref=e1827]:
+                - separator [ref=e1830]
+                - generic [ref=e1832]:
+                  - generic [ref=e1833]: Researching websites...
+                  - generic [ref=e1834]:
+                    - link [ref=e1836] [cursor=pointer]:
+                      - /url: https://finance.yahoo.co.jp/quote/2449.T/financials
+                      - generic [ref=e1837]: finance.yahoo.co.jp
+                      - generic [ref=e1838]: (株)プラップジャパン【2449】：決算情報 - Yahoo!ファイナンス
+                    - link [ref=e1840] [cursor=pointer]:
+                      - /url: https://www.bridge-salon.jp/report_bridge/archives/2025/06/250604_2449.html
+                      - generic [ref=e1841]: bridge-salon.jp
+                      - generic [ref=e1842]: ブリッジレポート：（2449）プラップジャパン 2025年8月期第2四半期決算
+                    - link [ref=e1844] [cursor=pointer]:
+                      - /url: https://www.advertimes.com/20250627/article503311/
+                      - generic [ref=e1845]: advertimes.com
+                      - generic [ref=e1846]: PR業の24年度売上高1391億円、今後ニーズ増は「危機管理」
+                    - link [ref=e1848] [cursor=pointer]:
+                      - /url: https://www.yano.co.jp/press-release/show/press_id/3959
+                      - generic [ref=e1849]: yano.co.jp
+                      - generic [ref=e1850]: インターネット広告市場に関する調査を実施（2025年） | ニュース・トピックス
+                    - link [ref=e1852] [cursor=pointer]:
+                      - /url: https://www.itreview.jp/products/boxil/reviews
+                      - generic [ref=e1853]: itreview.jp
+                      - generic [ref=e1854]: Boxilの評判・口コミ 全35件【ITreview】IT製品のレビュー・比較サイト
+                    - link [ref=e1856] [cursor=pointer]:
+                      - /url: https://www.openwork.jp/a0910000000Fqkt/compa/a0910000006PlON/
+                      - generic [ref=e1857]: openwork.jp
+                      - generic [ref=e1858]: プラップジャパンとサニーサイドアップ（PR）の比較 「社員クチコミ」 OpenWork
+              - generic [ref=e1859]:
+                - generic [ref=e1860]:
+                  - img [ref=e1862]: spark
+                  - separator [ref=e1863]
+                - generic [ref=e1864]:
+                  - generic [ref=e1865]: 最新業績と2027年に向けた成長ロードマップ
+                  - generic [ref=e1866]: 直近の決算分析により、2025年8月期上期は売上高が前年比5.4％増、営業利益が26.9％増と、人件費やAI投資を吸収して大幅な増益を達成していることが判明しました。中期経営計画では2027年8月期に売上高100億円、営業利益11億円という野心的な目標を掲げており、M&Aに20億円、新規事業に10億円を投じる攻めの姿勢を鮮明にしています。特にROE 8.0％以上の回復を重要課題と位置づけ、資本効率の改善と「累進配当」による株主還元への強い意志を読み取っています。
+              - generic [ref=e1867]:
+                - separator [ref=e1869]
+                - generic [ref=e1870]:
+                  - generic [ref=e1871]: セグメント別の明暗と市場の需要変化
+                  - generic [ref=e1872]: 主力事業ではヘルスケアや危機管理広報の引き合いが極めて強く、市場全体の成長が鈍化する中で独自のニッチな強みを発揮しています。一方で、海外事業においては中国の主要クライアント離脱というネガティブな事象が発生しましたが、新規案件の獲得で減収幅を最小限に抑え、回復の兆しを見せている点が注目に値します。PR業界全体で「危機管理」へのニーズが拡大しているという第三者調査の結果は、同社が長年培ってきた専門性が今後さらに競争優位性を持つ可能性を示唆しています。
+              - generic [ref=e1873]:
+                - separator [ref=e1875]
+                - generic [ref=e1876]:
+                  - generic [ref=e1877]: 独自プロダクトの競争力と規制リスクの検証
+                  - generic [ref=e1878]: 今後はSaaS型サービス「PRオートメーション」の導入事例やユーザー評価を詳細に調査し、先行する競合他社のデジタル戦略と比較して、技術的な優位性がどこにあるのかを特定します。また、2023年10月に導入されたステルスマーケティング規制が、同社のクリーンな広報活動を標榜する戦略において追い風となっているのか、あるいは業務負荷の増大という逆風になっているのか、ビジネスメディアの分析記事を交えて多角的に検証を進めます。
+              - generic [ref=e1879]:
+                - separator [ref=e1882]
+                - generic [ref=e1884]:
+                  - generic [ref=e1885]: Researching websites...
+                  - generic [ref=e1886]:
+                    - link [ref=e1888] [cursor=pointer]:
+                      - /url: https://finance.logmi.jp/articles/379229
+                      - generic [ref=e1889]: finance.logmi.jp
+                      - generic [ref=e1890]: サニーサイドアップグループ、3Q累計営業利益は34％増益で過去最高を更新 ブランドコミュニケーション事業で統合効果が拡大 - ログミーファイナンス - logmi Business
+                    - link [ref=e1892] [cursor=pointer]:
+                      - /url: https://finance-frontend-pc-dist.west.edge.storage-yahoo.jp/disclosure/20260212/20260212556673.pdf
+                      - generic [ref=e1893]: finance-frontend-pc-dist.west.edge.storage-yahoo.jp
+                      - generic [ref=e1894]: 2025年12月期（第62期） 決算説明資料
+                    - link [ref=e1896] [cursor=pointer]:
+                      - /url: https://www.fisco.co.jp/wordpress/wp-content/uploads/FISCO/report20241122_2180_JP.pdf
+                      - generic [ref=e1897]: fisco.co.jp
+                      - generic [ref=e1898]: 株式会社サニーサイドアップグループ
+                    - link [ref=e1900] [cursor=pointer]:
+                      - /url: https://finance.logmi.jp/articles/379179
+                      - generic [ref=e1901]: finance.logmi.jp
+                      - generic [ref=e1902]: 【QAあり】サニーサイドアップグループ、24年はブランドコミュニケーション事業での手堅い成長に注力、統合効果の創出加速へ - ログミーファイナンス - logmi Business
+                    - link [ref=e1904] [cursor=pointer]:
+                      - /url: https://digitalpr.jp/r/42001
+                      - generic [ref=e1905]: digitalpr.jp
+                      - generic [ref=e1906]: PRをデジタルで変革する「PR Automation（β版）」 提供開始から1か月で利用企業数が60社を突破
+                    - link [ref=e1908] [cursor=pointer]:
+                      - /url: https://www.prap.co.jp/pr/service/solution/4282840
+                      - generic [ref=e1909]: prap.co.jp
+                      - generic [ref=e1910]: PR Automation | PR会社 | プラップジャパン | PRAP JAPAN
+                    - link [ref=e1912] [cursor=pointer]:
+                      - /url: https://www.bridge-salon.jp/report_bridge/archives/2025/06/250604_2449.html
+                      - generic [ref=e1913]: bridge-salon.jp
+                      - generic [ref=e1914]: ブリッジレポート：（2449）プラップジャパン 2025年8月期第2 ...
+                    - link [ref=e1916] [cursor=pointer]:
+                      - /url: https://www.itreview.jp/products/pr-automation/reviews
+                      - generic [ref=e1917]: itreview.jp
+                      - generic [ref=e1918]: レビュー募集中！PRオートメーションを紹介・競合製品の評判を ...
+              - generic [ref=e1919]:
+                - generic [ref=e1920]:
+                  - img [ref=e1922]: spark
+                  - separator [ref=e1923]
+                - generic [ref=e1924]:
+                  - generic [ref=e1925]: 競合他社との収益性比較と市場シェアの検証
+                  - generic [ref=e1926]: 業界最大手のベクトルやサニーサイドアップ、共同PRといった競合他社との財務データを統合し、各社の収益構造と市場ポジションの比較分析を開始しました。プラップジャパンは、売上の約9割が上場企業との直接取引という強固な顧客基盤を有しており、低価格・多売戦略をとる競合とは一線を画した「高付加価値コンサルティング」による差別化が鮮明になっています。特に、業界全体でPR市場規模が微減傾向にある中、同社がターゲットとする危機管理やヘルスケア領域の需要は逆行して拡大しており、このミクロな市場優位性が中期経営計画の達成にどう寄与するかを精査しています。
+              - generic [ref=e1927]:
+                - separator [ref=e1929]
+                - generic [ref=e1930]:
+                  - generic [ref=e1931]: ステルスマーケティング規制と信頼性の優位
+                  - generic [ref=e1932]: 2023年10月の景品表示法改正（ステマ規制）以降、広告と広報の境界線が厳格化されたことが、同社の「誠実な広報」というブランドイメージに追い風となっている可能性を検討しています。デジタルソリューション事業において、SNSインフルエンサーの活用リスクが高まる中、伝統的なメディアリレーションと透明性の高い情報発信を強みとする同社の手法が、クライアントからリスク回避の受け皿として再評価されている側面を、ビジネスメディアの分析から読み解いています。
+              - generic [ref=e1933]:
+                - separator [ref=e1935]
+                - generic [ref=e1936]:
+                  - generic [ref=e1937]: 今後の調査アクション：海外展開と独自技術の深掘り
+                  - generic [ref=e1938]: 今後は、中国市場における大手クライアント離脱後の具体的なリカバリー戦略と、東南アジア諸国での成長スピードを地域別に深掘りします。また、現在出願中とされている特許技術の詳細や、「PRオートメーション」の競合製品に対する機能的な優位性について、技術メディアや導入企業のリアルなフィードバックを基に検証し、DXによる将来の利益率向上の確度を評価していきます。
+              - generic [ref=e1939]:
+                - separator [ref=e1942]
+                - generic [ref=e1944]:
+                  - generic [ref=e1945]: Researching websites...
+                  - generic [ref=e1946]:
+                    - link [ref=e1948] [cursor=pointer]:
+                      - /url: https://support.google.com/knowledgepanel/answer/9787176
+                      - generic [ref=e1949]: support.google.com
+                      - generic [ref=e1950]: Google Sports Data
+                    - link [ref=e1952] [cursor=pointer]:
+                      - /url: https://www.jbic.go.jp/en/information/press/press-2025/image/000014411.pdf
+                      - generic [ref=e1953]: jbic.go.jp
+                      - generic [ref=e1954]: Survey Report on Overseas Business Operations by Japanese Companies (JFY2025)
+                    - link [ref=e1956] [cursor=pointer]:
+                      - /url: https://www.jetro.go.jp/ext_images/en/reports/survey/pdf/2025/EN_Asia_and_Oceania_2025_r.pdf
+                      - generic [ref=e1957]: jetro.go.jp
+                      - generic [ref=e1958]: FY2025 Survey on Business Conditions of Japanese Companies Operating Overseas (Asia and Oceania)
+                    - link [ref=e1960] [cursor=pointer]:
+                      - /url: https://www.jetro.go.jp/en/news/releases/2026/7dc6068af2960be9.html
+                      - generic [ref=e1961]: jetro.go.jp
+                      - generic [ref=e1962]: FY2025 JETRO Survey on Business Conditions of Japanese Companies Operating Overseas（Asia and Oceania） | News & Updates - Japan External Trade Organization
+                    - link [ref=e1964] [cursor=pointer]:
+                      - /url: https://www.lowyinstitute.org/publications/navigating-storm-southeast-asia-global-trade-shocks
+                      - generic [ref=e1965]: lowyinstitute.org
+                      - generic [ref=e1966]: "Navigating the storm: Southeast Asia and the global trade shocks | Lowy Institute"
+                    - link [ref=e1968] [cursor=pointer]:
+                      - /url: https://www.aoshearman.com/en/insights/global-ma-insights/asia-pacific-dealmaking-fueled-by-strong-activity-in-japan-and-china
+                      - generic [ref=e1969]: aoshearman.com
+                      - generic [ref=e1970]: Asia-Pacific dealmaking fueled by strong activity in Japan and China - A&O Shearman
+              - generic [ref=e1971]:
+                - generic [ref=e1972]:
+                  - img [ref=e1974]: spark
+                  - separator [ref=e1975]
+                - generic [ref=e1976]:
+                  - generic [ref=e1977]: 競合比較から見る高収益モデルの確立
+                  - generic [ref=e1978]: 業界大手であるベクトルや共同PRとの業績データを詳細に比較した結果、プラップジャパンの「高付加価値リテナー（継続契約）モデル」の強固さが浮き彫りになりました。低単価・大量獲得を優先する競合に対し、同社はヘルスケアや危機管理といった専門性の高い領域に特化することで、1社あたりの収益性と顧客継続率を高く維持しています。特に、業界全体で市場規模が横ばい推移する中、同社がターゲットとする危機管理広報のニーズは2025年以降も拡大傾向にあり、市場の構造変化を追い風にしている実態を把握しました。
+              - generic [ref=e1979]:
+                - separator [ref=e1981]
+                - generic [ref=e1982]:
+                  - generic [ref=e1983]: デジタルDX事業の損益分岐点と知的財産戦略
+                  - generic [ref=e1984]: 成長の柱として期待されるSaaS「PRオートメーション」について、2020年以降の特許動向と技術的優位性を精査しています。デジタルソリューション事業は現在、先行投資によりセグメント損失を計上していますが、月額5万〜15万円の価格帯で広報業務を一気通貫で自動化する仕組みは、従来の属人的なPR業務からの脱却を図る企業から高い評価を得ています。生成AI活用に向けた研究開発投資が、将来的にどれほどの利益率改善をもたらすか、中長期的な収益貢献の確度を推計しています。
+              - generic [ref=e1985]:
+                - separator [ref=e1987]
+                - generic [ref=e1988]:
+                  - generic [ref=e1989]: 今後のアクション：アナリスト評価と規制対応の最終検証
+                  - generic [ref=e1990]: 今後は、主要証券アナリストによる目標株価やレーティングの乖離を分析し、市場がまだ織り込んでいないリスクや期待値を特定します。また、ステルスマーケティング規制強化後の実務面での変化について、具体的な導入事例やテック系メディアの論評を基に深掘りし、同社のコンプライアンス重視の姿勢がどのように新規案件獲得の成約率に寄与しているかを解明することで、調査の総括へと繋げていきます。
+              - generic [ref=e1991]:
+                - separator [ref=e1994]
+                - generic [ref=e1996]:
+                  - generic [ref=e1997]: Researching websites...
+                  - generic [ref=e1998]:
+                    - link [ref=e2000] [cursor=pointer]:
+                      - /url: https://media-innovation.jp/article/2024/05/10/141521.html
+                      - generic [ref=e2001]: media-innovation.jp
+                      - generic [ref=e2002]: "【メディア企業徹底考察 #158】ベクトルは売上高過去最高を更新も「あしたのチーム」不調が鮮明に"
+                    - link [ref=e2004] [cursor=pointer]:
+                      - /url: https://www.tis.co.jp/documents/jp/ir/finance/meeting/250508_1.pdf
+                      - generic [ref=e2005]: tis.co.jp
+                      - generic [ref=e2006]: 2025年3月期 決算説明資料
+                    - link [ref=e2008] [cursor=pointer]:
+                      - /url: https://irtv.jp/wp-content/uploads/2024/07/%E3%83%98%E3%82%99%E3%82%AF%E3%83%88%E3%83%AB-2025%E5%B9%B42%E6%9C%88%E6%9C%9F-%E7%AC%AC1%E5%9B%9B%E5%8D%8A%E6%9C%9F%E6%B1%BA%E7%AE%97%E8%AA%AC%E6%98%8E%E8%B3%87%E6%96%99.pdf
+                      - generic [ref=e2009]: irtv.jp
+                      - generic [ref=e2010]: ベクトル 2025年2月期 第1四半期決算説明資料 - IRTV
+                    - link [ref=e2012] [cursor=pointer]:
+                      - /url: https://www.kyodo-pr.co.jp/wp/wp-content/uploads/2025/03/20250322%E3%80%90%E5%85%B1%E5%90%8CPR%E3%80%91%E5%80%8B%E4%BA%BA%E6%8A%95%E8%B3%87%E5%AE%B6%E5%90%91%E3%81%91%E8%AA%AC%E6%98%8E%E4%BC%9A%E8%B3%87%E6%96%99_2024%E5%B9%B412%E6%9C%88%E6%9C%9F%E9%80%9A%E6%9C%9F.pdf
+                      - generic [ref=e2013]: kyodo-pr.co.jp
+                      - generic [ref=e2014]: 個人投資家向け説明会 会社説明資料 - 共同ピーアール
+                    - link [ref=e2016] [cursor=pointer]:
+                      - /url: https://finance.logmi.jp/articles/383704
+                      - generic [ref=e2017]: finance.logmi.jp
+                      - generic [ref=e2018]: 共同ピーアール（2436）全セグメントで過去最高を達成し増収増益 AICセンター設立で「AIで勝つ会社」へ体制を構築 - ログミーファイナンス
+                    - link [ref=e2020] [cursor=pointer]:
+                      - /url: https://finance.matsui.co.jp/stock/2436/settlement/index
+                      - generic [ref=e2021]: finance.matsui.co.jp
+                      - generic [ref=e2022]: 共同ピーアール(2436) 東証スタンダード 決算 | マーケット情報 | 松井証券
+                    - link [ref=e2024] [cursor=pointer]:
+                      - /url: https://syncad.jp/news/63429/
+                      - generic [ref=e2025]: syncad.jp
+                      - generic [ref=e2026]: 【調査レポート】インフルエンサーマーケティング企業toridoriが、ステルスマーケティングの法規制に関する企業の反応を徹底調査！法規制後、95％の企業で“SNS業務に関する意識”が大きく変化！ | syncAD（シンクアド）｜ Web広告・デジタルマーケティングのいまをお届けするメディア
+                    - link [ref=e2028] [cursor=pointer]:
+                      - /url: https://effectual.co.jp/sorila/blog/keihyoho-kaisei-stemama-kisei/
+                      - generic [ref=e2029]: effectual.co.jp
+                      - generic [ref=e2030]: 景品表示法改正とステルスマーケティング規制広報担当者が押さえるべき最新動向と実務対策
+                    - link [ref=e2032] [cursor=pointer]:
+                      - /url: https://prtimes.jp/main/html/rd/p/000000451.000011944.html
+                      - generic [ref=e2033]: prtimes.jp
+                      - generic [ref=e2034]: 【ステマ最新調査】「勝手にPRを付けたことはない」96.4%のインフルエンサーが回答。規制後の影響は？どんな悪質なステマ依頼が？調査結果レポート | LIDDELL株式会社のプレスリリース - PR TIMES
+                    - link [ref=e2036] [cursor=pointer]:
+                      - /url: https://www.buffett-code.com/company/2436/financial
+                      - generic [ref=e2037]: buffett-code.com
+                      - generic [ref=e2038]: 共同ピーアールの業績・財務 - 2436 / ｽﾀﾝﾀﾞｰﾄﾞ / サービス業 ...
+                    - link [ref=e2040] [cursor=pointer]:
+                      - /url: https://www.buffett-code.com/company/6058/financial
+                      - generic [ref=e2041]: buffett-code.com
+                      - generic [ref=e2042]: ベクトルの業績・財務 - 6058 / プライム / サービス業 | バフェット ...
+                    - link [ref=e2044] [cursor=pointer]:
+                      - /url: https://minkabu.jp/stock/2449/analysis
+                      - generic [ref=e2045]: minkabu.jp
+                      - generic [ref=e2046]: "プラップジャパン (2449) : 今後の予想・売買予想・AI株価診断 ..."
+              - generic [ref=e2047]:
+                - generic [ref=e2048]:
+                  - img [ref=e2050]: spark
+                  - separator [ref=e2051]
+                - generic [ref=e2052]:
+                  - generic [ref=e2053]: セグメント別の成長軌道とニッチ市場での支配力
+                  - generic [ref=e2054]: 直近の事業データを詳細に分析した結果、ヘルスケアおよび危機管理広報コンサルティングが牽引するコミュニケーションサービス事業において、前年同期比で売上高12.0％増、セグメント利益27.7％増という力強い成長を確認しました。特に、業界全体で危機管理への関心が高まる中、上場企業を主要顧客に持つ同社のリテナー契約は極めて安定しており、景気変動に強い収益構造を構築しています。一方で、中国事業における大型案件の離脱を、迅速な新規開拓によって微減に留めたリカバリー能力も、組織的な営業力の高さを示唆しています。
+              - generic [ref=e2055]:
+                - separator [ref=e2057]
+                - generic [ref=e2058]:
+                  - generic [ref=e2059]: 中期経営計画達成に向けた投資と資本効率の改善
+                  - generic [ref=e2060]: 2027年8月期の売上高100億円達成に向けた道筋を精査する中で、M&Aへの20億円、新規事業への10億円という具体的な投資配分を思考しています。過去数年のROEが目標を下回っていた課題に対し、累進配当の導入による株主還元の強化と、高付加価値案件へのシフトによる利益率向上を両立させる姿勢が明確になっています。証券アナリストのレポートにおいても、現在の株価指標（PBR等）が依然として割安圏にあるとの見方があり、成長投資と資本効率のバランスが今後の株価再評価の鍵を握ると分析しています。
+              - generic [ref=e2061]:
+                - separator [ref=e2063]
+                - generic [ref=e2064]:
+                  - generic [ref=e2065]: 最終分析：研究開発費の推移と市場シェアの総括
+                  - generic [ref=e2066]: 調査の締めくくりとして、過去5年間の業績推移を基にしたセグメント別の成長率（CAGR）を算出するとともに、次世代の収益源であるSaaS事業における研究開発費の具体的な投入規模を特定します。あわせて、国内PR市場全体における同社の客観的なポジションを確定させ、ステマ規制という法的な追い風がどれほど長期的な競争優位性に寄与するかを総括することで、投資判断の確度を高める最終的な評価へと繋げていきます。
+              - generic [ref=e2067]:
+                - separator [ref=e2070]
+                - generic [ref=e2072]:
+                  - generic [ref=e2073]: Researching websites...
+                  - generic [ref=e2074]:
+                    - link [ref=e2076] [cursor=pointer]:
+                      - /url: https://frontier-pr.jp/10162.html
+                      - generic [ref=e2077]: frontier-pr.jp
+                      - generic [ref=e2078]: 【2026年】PR会社おすすめ20選！現役記者が得意分野や選び方を解説
+                    - link [ref=e2080] [cursor=pointer]:
+                      - /url: https://frontier-pr.jp/9443.html
+                      - generic [ref=e2081]: frontier-pr.jp
+                      - generic [ref=e2082]: PR業界とは？広告とPRの違いや将来性、人気大手5社をまとめて解説
+                    - link [ref=e2084] [cursor=pointer]:
+                      - /url: https://vectorinc.co.jp/groupservice/marketing-picks/public_relations/pr/1126291
+                      - generic [ref=e2085]: vectorinc.co.jp
+                      - generic [ref=e2086]: PR会社の売上ランキング上位7社！利用するメリットやデメリットも解説 | MARKETING PICKS
+                    - link [ref=e2088] [cursor=pointer]:
+                      - /url: https://okanechips.mei-kyu.com/riwochi-job/11099/
+                      - generic [ref=e2089]: okanechips.mei-kyu.com
+                      - generic [ref=e2090]: 【2026年最新】PR会社おすすめランキング26選！選び方と注意点を徹底解説 - おかねチップス
+              - generic [ref=e2091]:
+                - generic [ref=e2092]:
+                  - img [ref=e2094]: spark
+                  - separator [ref=e2095]
+                - generic [ref=e2096]:
+                  - generic [ref=e2097]: セグメント成長率の定量分析と収益構造の特異性
+                  - generic [ref=e2098]: 過去数年間のデータを再構築した結果、主力であるコミュニケーションサービス事業が売上高前年同期比12.0%増、セグメント利益27.7%増と、市場平均を上回る勢いで成長していることを突き止めました。特にヘルスケアと危機管理広報の専門性が参入障壁として機能しており、約9割という高い直販比率と上場企業中心の顧客基盤が、安定的なキャッシュフローの源泉となっています。中国事業での大口顧客離脱を新規獲得で相殺したレジリエンスの高さも、他社にはない強みとして評価しています。
+              - generic [ref=e2099]:
+                - separator [ref=e2101]
+                - generic [ref=e2102]:
+                  - generic [ref=e2103]: 市場ポジションの再定義と2027年目標への蓋然性
+                  - generic [ref=e2104]: PR業界内での立ち位置を、売上規模で首位のベクトルや追随するサニーサイドアップ、共同PRと比較検討しました。プラップジャパンは、量的拡大を追う競合とは異なり、ISMS認証取得やSaaS「PRオートメーション」の展開を通じた「信頼性とDXの融合」に独自の勝機を見出しています。アナリスト予測と中期経営計画（売上100億円、営業益11億円）を照らし合わせると、現在のPBR水準は依然として割安圏にあり、累進配当の導入が資本効率の改善を求める市場の声に対する明確な回答になっていると分析しています。
+              - generic [ref=e2105]:
+                - separator [ref=e2107]
+                - generic [ref=e2108]:
+                  - generic [ref=e2109]: 調査の総括と投資判断への最終評価
+                  - generic [ref=e2110]: これまでの多角的な調査を統合し、投資判断に資する包括的な結論を導き出します。ステマ規制などの法制度の変化がもたらすコンプライアンス需要の取り込み、先行投資段階にあるデジタルソリューション事業の黒字化に向けた損益分岐点の推計、そしてM&A枠20億円の活用による非連続な成長の可能性について最終的な検証を行います。これまで収集したIR資料、第三者レポート、ユーザー評価、および競合比較データを統合し、同社の持続的な成長性とリスク要因を整理した最終レポートを作成します。
+            - generic [ref=e2112]:
+              - separator [ref=e2115]
+              - separator [ref=e2123]

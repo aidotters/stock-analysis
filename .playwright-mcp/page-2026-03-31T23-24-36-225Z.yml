@@ -1,0 +1,957 @@
+- generic [active] [ref=e1]:
+  - 'button "Google アカウント: Takuya Akashi (tak.akashi@gmail.com)" [ref=e8] [cursor=pointer]':
+    - img [ref=e10]
+    - img [ref=e16]
+  - main [ref=e18]:
+    - generic:
+      - button "メインメニュー" [ref=e20] [cursor=pointer]:
+        - img [ref=e21]: menu
+      - button "チャットを新規作成" [ref=e25] [cursor=pointer]:
+        - generic [ref=e27]: Gemini
+    - generic [ref=e29]:
+      - generic [ref=e430]: Sansan 企業深掘り調査計画
+      - generic [ref=e30]:
+        - link "アップグレード" [ref=e311]:
+          - img [ref=e312]: spark
+          - generic [ref=e314]: アップグレード
+        - generic [ref=e32]:
+          - button "会話を共有" [ref=e432] [cursor=pointer]:
+            - img [ref=e433]: share
+          - button "会話アクションのメニューを開く" [ref=e318] [cursor=pointer]:
+            - img [ref=e319]: more_vert
+    - generic [ref=e45]:
+      - navigation [ref=e46]:
+        - generic [ref=e50]:
+          - group [ref=e51]:
+            - link "チャットを新規作成" [ref=e53] [cursor=pointer]:
+              - /url: /app
+              - img [ref=e56]: edit_square
+          - group [ref=e59]:
+            - button "Settings & help" [ref=e61] [cursor=pointer]:
+              - img [ref=e64]: settings_2
+      - generic [ref=e73]:
+        - generic [ref=e74]:
+          - generic [ref=e75]:
+            - heading "Gemini との会話" [level=1] [ref=e76]
+            - generic [ref=e78]:
+              - generic [ref=e322]:
+                - generic [ref=e327]:
+                  - button "プロンプトをコピー" [ref=e329] [cursor=pointer]:
+                    - img [ref=e330]: content_copy
+                  - generic [ref=e335]:
+                    - 'heading "あなたのプロンプト 以下の日本企業について、投資判断に役立つ包括的な深掘り調査を行ってください。 企業: Sansan（証券コード: 4443） セクター: 情報・通信業（クラウドSaaS） 事業概要: 営業DXサービス「Sansan」、クラウド請求書受領サービス「Bill One」、個人向け名刺アプリ「Eight」を展開。法人向け名刺管理市場で国内シェア約8割。 【必須（重点的に調査してください）】 1. セグメント別事業分析 - 事業セグメント一覧と各セグメントの概要 - セグメント別の売上構成比・利益構成比（最新決算ベース） - セグメント別の前年比成長率 - 各セグメントの市場ポジションと差別化要因 - 主要プロダクト/サービスの競争力評価 2. セグメント別成長性 - 各セグメントの過去3〜5年の成長トレンド - セグメント別の売上高CAGR（算出可能な場合） - 今後の成長ドライバーとなるセグメント - 縮小・撤退リスクのあるセグメント 3. 業界動向・競争環境 - 属する業界の市場規模と成長率 - 業界の主要トレンドと今後3〜5年の見通し - 参入障壁の高低とその要因 - 主要競合企業との比較（国内・海外） - 市場シェアや競争優位性 【あれば有益】 4. 技術的優位性・知的財産 - 保有する重要技術・特許 - R&D投資の方向性 5. 規制環境・政策リスク - 現行の規制環境 - 今後の規制変更リスク - 政策追い風/逆風の可能性 6. 海外展開状況 - 海外売上比率 - 主要進出地域と戦略 - 為替リスク 【低優先度（Phase 1で十分カバー済み）】 - 企業概要（簡潔に） - 財務数値の詳細（Phase 1でカバー済み） 各項目は具体的なデータや数値を含めて回答してください。情報が得られない項目は「情報なし」と明記してください。" [level=2] [ref=e336]':
+                      - generic [ref=e337]: あなたのプロンプト
+                      - paragraph [ref=e338]: 以下の日本企業について、投資判断に役立つ包括的な深掘り調査を行ってください。
+                      - paragraph [ref=e339]
+                      - paragraph [ref=e340]: "企業: Sansan（証券コード: 4443）"
+                      - paragraph [ref=e341]: "セクター: 情報・通信業（クラウドSaaS）"
+                      - paragraph [ref=e342]: "事業概要: 営業DXサービス「Sansan」、クラウド請求書受領サービス「Bill One」、個人向け名刺アプリ「Eight」を展開。法人向け名刺管理市場で国内シェア約8割。"
+                      - paragraph [ref=e343]
+                      - paragraph [ref=e344]: 【必須（重点的に調査してください）】
+                      - paragraph [ref=e345]
+                      - paragraph [ref=e346]: 1. セグメント別事業分析
+                      - paragraph [ref=e347]: "- 事業セグメント一覧と各セグメントの概要"
+                      - paragraph [ref=e348]: "- セグメント別の売上構成比・利益構成比（最新決算ベース）"
+                      - paragraph [ref=e349]: "- セグメント別の前年比成長率"
+                      - paragraph [ref=e350]: "- 各セグメントの市場ポジションと差別化要因"
+                      - paragraph [ref=e351]: "- 主要プロダクト/サービスの競争力評価"
+                      - paragraph [ref=e352]
+                      - paragraph [ref=e353]: 2. セグメント別成長性
+                      - paragraph [ref=e354]: "- 各セグメントの過去3〜5年の成長トレンド"
+                      - paragraph [ref=e355]: "- セグメント別の売上高CAGR（算出可能な場合）"
+                      - paragraph [ref=e356]: "- 今後の成長ドライバーとなるセグメント"
+                      - paragraph [ref=e357]: "- 縮小・撤退リスクのあるセグメント"
+                      - paragraph [ref=e358]
+                      - paragraph [ref=e359]: 3. 業界動向・競争環境
+                      - paragraph [ref=e360]: "- 属する業界の市場規模と成長率"
+                      - paragraph [ref=e361]: "- 業界の主要トレンドと今後3〜5年の見通し"
+                      - paragraph [ref=e362]: "- 参入障壁の高低とその要因"
+                      - paragraph [ref=e363]: "- 主要競合企業との比較（国内・海外）"
+                      - paragraph [ref=e364]: "- 市場シェアや競争優位性"
+                      - paragraph [ref=e365]
+                      - paragraph [ref=e366]: 【あれば有益】
+                      - paragraph [ref=e367]
+                      - paragraph [ref=e368]: 4. 技術的優位性・知的財産
+                      - paragraph [ref=e369]: "- 保有する重要技術・特許"
+                      - paragraph [ref=e370]: "- R&D投資の方向性"
+                      - paragraph [ref=e371]
+                      - paragraph [ref=e372]: 5. 規制環境・政策リスク
+                      - paragraph [ref=e373]: "- 現行の規制環境"
+                      - paragraph [ref=e374]: "- 今後の規制変更リスク"
+                      - paragraph [ref=e375]: "- 政策追い風/逆風の可能性"
+                      - paragraph [ref=e376]
+                      - paragraph [ref=e377]: 6. 海外展開状況
+                      - paragraph [ref=e378]: "- 海外売上比率"
+                      - paragraph [ref=e379]: "- 主要進出地域と戦略"
+                      - paragraph [ref=e380]: "- 為替リスク"
+                      - paragraph [ref=e381]
+                      - paragraph [ref=e382]: 【低優先度（Phase 1で十分カバー済み）】
+                      - paragraph [ref=e383]: "- 企業概要（簡潔に）"
+                      - paragraph [ref=e384]: "- 財務数値の詳細（Phase 1でカバー済み）"
+                      - paragraph [ref=e385]
+                      - paragraph [ref=e386]: 各項目は具体的なデータや数値を含めて回答してください。情報が得られない項目は「情報なし」と明記してください。
+                    - button "開く" [ref=e387] [cursor=pointer]:
+                      - img [ref=e388]: expand_more
+                - generic [ref=e394]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - button "読み上げる":
+                              - img: volume_up
+                        - menu
+                  - generic [ref=e395]:
+                    - generic [ref=e400]:
+                      - generic:
+                        - generic:
+                          - img
+                    - generic [ref=e402]:
+                      - button [ref=e409]:
+                        - generic [ref=e411]:
+                          - status:
+                            - generic: 思考プロセスを表示
+                          - img [ref=e413]: expand_more
+                      - heading "Gemini の回答" [level=2] [ref=e416]
+                      - paragraph [ref=e900]:
+                        - text: 計画を作成しました。リサーチを開始する前に変更が必要でしたら、お知らせください。
+                        - generic [ref=e904]:
+                          - heading "Sansan深掘り調査：投資判断資料" [level=3] [ref=e905]
+                          - generic [ref=e906]:
+                            - generic [ref=e907]:
+                              - generic [ref=e908]:
+                                - img [ref=e909]: select_window_2
+                                - generic [ref=e910]: ウェブサイトをリサーチ
+                              - generic [ref=e911]:
+                                - generic [ref=e912]: (1) Sansan（4443）の最新の有価証券報告書、決算短信、および決算説明資料（2026年4月時点での最新分）を調査し、Sansan、Bill One、Eight等のセグメント別売上高、営業利益、前年比成長率を抽出する。 (2) 過去5年分のセグメント別売上データを収集し、各セグメントのCAGR（年平均成長率）を算出するとともに、成長トレンドの変遷を特定する。 (3) 営業DX（名刺管理）市場およびクラウド請求書受領市場の国内市場規模、成長予測を調査し、マネーフォワードやインフォマート等の主要競合との比較、およびSansanの市場シェアを特定する。 (4) 中期経営計画やアナリストレポートから、今後の成長ドライバーとなる特定セグメント（特にBill Oneの進捗）や、新規事業への投資計画、既存事業の解約率（Churn Rate）の推移を確認する。 (5) 同社の技術的優位性を裏付けるAI・OCR技術の精度、データクレンジングの仕組み、および保有する重要特許やR&D投資額の対売上比率を調査する。 (6) 電子帳簿保存法、インボイス制度などの税制・法的規制の動向と、それらがBill OneやSansanの需要に与える長期的影響、および今後の規制変更によるリスクを分析する。 (7) 海外事業の展開状況を調査し、シンガポールを中心とした東南アジア市場での進捗、海外売上比率、地域別戦略、および為替感応度を特定する。 (8) 調査したデータを総合し、参入障壁（ネットワーク外部性等）の強固さ、競合優位性の持続可能性、および投資判断に影響を与える可能性のある事業リスクを評価する。
+                                - button "リサーチプランの詳細" [ref=e914] [cursor=pointer]:
+                                  - generic [ref=e915]: その他
+                            - generic [ref=e919]:
+                              - img [ref=e920]: sort
+                              - generic [ref=e921]: 結果を分析
+                            - generic [ref=e924]:
+                              - img [ref=e925]: travel_explore
+                              - generic [ref=e926]: レポートを作成
+                          - generic [ref=e927]:
+                            - img [ref=e928]: schedule
+                            - generic [ref=e929]: 数分で完了予定
+                          - generic [ref=e930]:
+                            - button "リサーチ計画を編集" [disabled]:
+                              - generic: 計画を編集
+                            - button "リサーチを開始" [disabled]:
+                              - generic: リサーチを開始
+                  - generic [ref=e933]:
+                    - button "良い回答" [ref=e935] [cursor=pointer]:
+                      - img [ref=e936]: thumb_up
+                    - button "悪い回答" [ref=e940] [cursor=pointer]:
+                      - img [ref=e941]: thumb_down
+                    - button "コピー" [ref=e945]:
+                      - img [ref=e946]: content_copy
+                    - button "他のオプションを表示" [ref=e952]:
+                      - img [ref=e953]: more_vert
+              - generic [ref=e583]:
+                - generic [ref=e588]:
+                  - button "プロンプトをコピー" [ref=e590] [cursor=pointer]:
+                    - img [ref=e591]: content_copy
+                  - button "編集" [ref=e595] [cursor=pointer]:
+                    - img [ref=e596]: edit
+                  - heading "あなたのプロンプト リサーチを開始" [level=2] [ref=e601]:
+                    - generic [ref=e602]: あなたのプロンプト
+                    - paragraph [ref=e603]: リサーチを開始
+                - generic [ref=e607]:
+                  - generic [ref=e608]:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - button "読み上げる":
+                              - img: volume_up
+                        - menu
+                    - generic [ref=e613]:
+                      - generic:
+                        - generic:
+                          - img
+                  - generic [ref=e616]:
+                    - heading "Gemini の回答" [level=2] [ref=e617]
+                    - paragraph [ref=e956]:
+                      - text: リサーチが完了しました。フォローアップの質問や変更の希望があれば、お知らせください。
+                      - generic [ref=e962] [cursor=pointer]:
+                        - img [ref=e964]: travel_explore
+                        - status [ref=e965]:
+                          - generic [ref=e966]: Sansan深掘り調査：投資判断資料
+                          - generic [ref=e967]: 完了済み
+                          - generic [ref=e968]: 4月1日 8:24
+                  - generic [ref=e972]:
+                    - button "良い回答" [ref=e974] [cursor=pointer]:
+                      - img [ref=e975]: thumb_up
+                    - button "悪い回答" [ref=e979] [cursor=pointer]:
+                      - img [ref=e980]: thumb_down
+                    - button "コピー" [ref=e984]:
+                      - img [ref=e985]: content_copy
+                    - button "他のオプションを表示" [ref=e991]:
+                      - img [ref=e992]: more_vert
+          - generic [ref=e100]:
+            - group [ref=e101]:
+              - generic [ref=e104]:
+                - textbox "Gemini へのプロンプトを入力" [ref=e274]:
+                  - text: 調べたい内容を入力
+                  - paragraph [ref=e419]
+                - generic [ref=e111]:
+                  - button "[ファイルをアップロード] メニューを開く" [ref=e116] [cursor=pointer]:
+                    - img [ref=e117]: add_2
+                  - generic [ref=e122]:
+                    - text: page_info
+                    - button "Deep Researchの選択を解除" [ref=e281]:
+                      - img [ref=e282]: travel_explore
+                      - img [ref=e284]: close
+                - generic [ref=e130]:
+                  - button "モード選択ツールを開く" [ref=e133]:
+                    - generic [ref=e135]:
+                      - generic [ref=e136]: 高速モード
+                      - img [ref=e137]: keyboard_arrow_down
+                  - generic [ref=e140]:
+                    - button "マイク" [ref=e143] [cursor=pointer]:
+                      - img [ref=e145]: mic
+                    - text: send
+            - paragraph [ref=e426]: Gemini は AI であり、間違えることがあります。
+        - generic [ref=e641]:
+          - generic [ref=e643]:
+            - generic [ref=e644]:
+              - img [ref=e645]: travel_explore
+              - heading "Sansan深掘り調査：投資判断資料" [level=2] [ref=e646]
+            - generic [ref=e653]:
+              - button "目次メニュー" [ref=e996]:
+                - generic [ref=e997]: 目次
+                - img [ref=e998]: keyboard_arrow_down
+              - button "共有とエクスポート" [ref=e1001]:
+                - generic [ref=e1002]: 共有とエクスポート
+                - img [ref=e1003]: keyboard_arrow_down
+              - button "作成" [ref=e1008]:
+                - generic [ref=e1009]: 作成
+                - img [ref=e1010]: keyboard_arrow_down
+              - button "パネルを閉じる" [ref=e654] [cursor=pointer]:
+                - img [ref=e655]: close
+          - generic [ref=e1016]:
+            - generic [ref=e1020]:
+              - heading "Sansan株式会社：名刺管理から「ビジネスインフラ」への昇華と持続的成長のメカニズム" [level=1] [ref=e1021]
+              - heading "1. 事業セグメントの構造的分析と市場における立ち位置" [level=2] [ref=e1022]
+              - paragraph [ref=e1023]:
+                - text: Sansan株式会社（以下、同社）は、創業以来のコアコンピタンスである「名刺管理」を起点に、企業の営業活動およびバックオフィス業務をデジタル化する「ビジネスインフラ」の構築を推進している。現在の事業構造は、法人向けの営業DXサービスと請求書管理サービスを統合した「Sansan／Bill One事業」と、個人向け名刺アプリを軸とした「Eight事業」の2つの報告セグメントで構成されている
+                - superscript [ref=e1024]
+                - text: 。
+                - button "詳細" [ref=e1027] [cursor=pointer]:
+                  - img [ref=e1028]: expand_more
+              - heading "セグメント別の事業概要とプロダクトの役割" [level=3] [ref=e1029]
+              - paragraph [ref=e1030]:
+                - text: 主力セグメントである「Sansan／Bill One事業」は、同社の売上高の9割以上を占める成長の源泉である。営業DXサービス「Sansan」は、名刺というアナログな接点情報をデジタル資産化し、組織全体の人脈を可視化・共有することで営業効率を最大化させる。従来の名刺管理ツールとしての枠組みを超え、現在は帝国データバンク等の企業データベースと連携した「ビジネスデータベース」へと進化しており、企業の営業戦略における「OS」のような役割を担っている
+                - superscript [ref=e1031]
+                - text: 。
+                - button "詳細" [ref=e1034] [cursor=pointer]:
+                  - img [ref=e1035]: expand_more
+              - paragraph [ref=e1036]:
+                - text: 一方、「Bill One」は2020年にローンチされたクラウド請求書受領サービスであり、あらゆる形式の請求書をオンラインで受領・一元管理することを可能にする。インボイス制度や電子帳簿保存法といった規制対応を追い風に、同社の第2の柱として爆発的な成長を遂げている。特に「Bill One」は、Sansanが長年培ってきた「高精度なデータ化技術」を請求書領域に応用したものであり、サービス開始から短期間で市場シェアNo.1を獲得するに至った
+                - superscript [ref=e1037]
+                - text: 。
+                - button "詳細" [ref=e1040] [cursor=pointer]:
+                  - img [ref=e1041]: expand_more
+              - paragraph [ref=e1042]:
+                - text: 「Eight事業」は、個人向け名刺アプリ「Eight」を基盤としている。当初はC2C（個人間）のネットワーク形成に主眼を置いていたが、近年は「Eight Career Design」を通じた採用支援サービスや、大規模ビジネスイベントの開催といったB2B領域へのシフトを強めている。このビジネスモデルの転換により、かつての「無料ユーザーを抱える赤字事業」から、高収益なB2Bサービスを内包する黒字化セグメントへと変貌を遂げた
+                - superscript [ref=e1043]
+                - text: 。
+                - button "詳細" [ref=e1046] [cursor=pointer]:
+                  - img [ref=e1047]: expand_more
+              - heading "最新決算に基づくセグメント別の売上・利益構成比" [level=3] [ref=e1048]
+              - paragraph [ref=e1049]: 2026年5月期第2四半期累計の実績において、各セグメントは以下の通りの構成となっている。
+              - generic [ref=e1054]:
+                - table [ref=e1056]:
+                  - rowgroup [ref=e1057]:
+                    - row "セグメント / 項目 売上高（百万円） 売上構成比 調整後営業利益（百万円） 利益構成比 前年同期比成長率" [ref=e1058]:
+                      - cell "セグメント / 項目" [ref=e1059]
+                      - cell "売上高（百万円）" [ref=e1060]
+                      - cell "売上構成比" [ref=e1061]
+                      - cell "調整後営業利益（百万円）" [ref=e1062]
+                      - cell "利益構成比" [ref=e1063]
+                      - cell "前年同期比成長率" [ref=e1064]
+                  - rowgroup [ref=e1065]:
+                    - row "Sansan／Bill One事業 22,866 91.1% 1,418 75.3% 25.8%" [ref=e1066]:
+                      - cell "Sansan／Bill One事業" [ref=e1067]
+                      - cell "22,866" [ref=e1068]
+                      - cell "91.1%" [ref=e1069]
+                      - cell "1,418" [ref=e1070]
+                      - cell "75.3%" [ref=e1071]
+                      - cell "25.8%" [ref=e1072]
+                    - row "Eight事業 2,246 8.9% 465 24.7% 19.3%" [ref=e1073]:
+                      - cell "Eight事業" [ref=e1074]
+                      - cell "2,246" [ref=e1075]
+                      - cell "8.9%" [ref=e1076]
+                      - cell "465" [ref=e1077]
+                      - cell "24.7%" [ref=e1078]
+                      - cell "19.3%" [ref=e1079]
+                    - row "全社・調整額（利益） -- -- 2,823 -- --" [ref=e1080]:
+                      - cell "全社・調整額（利益）" [ref=e1081]
+                      - cell "--" [ref=e1082]
+                      - cell "--" [ref=e1083]
+                      - cell "2,823" [ref=e1084]
+                      - cell "--" [ref=e1085]
+                      - cell "--" [ref=e1086]
+                    - row "連結合計 25,112 100.0% 4,706 -- 26.5%" [ref=e1087]:
+                      - cell "連結合計" [ref=e1088]
+                      - cell "25,112" [ref=e1089]
+                      - cell "100.0%" [ref=e1090]
+                      - cell "4,706" [ref=e1091]
+                      - cell "--" [ref=e1092]
+                      - cell "26.5%" [ref=e1093]
+                - generic [ref=e1094]:
+                  - button "Google スプレッドシートにエクスポート" [ref=e1095]:
+                    - generic [ref=e1097]:
+                      - img [ref=e1099]: drive_spreadsheet
+                      - generic [ref=e1100]: Google スプレッドシートにエクスポート
+                  - button "表をコピー" [ref=e1103] [cursor=pointer]:
+                    - img [ref=e1104]: content_copy
+              - paragraph [ref=e1107]:
+                - text: ※注：利益構成比はセグメント利益（調整前）の合計に対する比率。調整後営業利益は売上拡大や売上総利益率の改善、販管費率の低下により大幅に増加している
+                - superscript [ref=e1108]
+                - text: 。
+                - button "詳細" [ref=e1111] [cursor=pointer]:
+                  - img [ref=e1112]: expand_more
+              - heading "主要プロダクトの競争力評価と差別化要因" [level=3] [ref=e1113]
+              - paragraph [ref=e1114]:
+                - text: 同社のプロダクト群における最大の差別化要因は、99.9%という驚異的な「データ化精度」にある。これは、独自のAI・OCR技術と人力によるオペレーションを組み合わせたハイブリッドモデルによって実現されており、企業がビジネス上の意思決定を下すに足る「信頼できるデータベース」を構築している
+                - superscript [ref=e1115]
+                - text: 。
+                - button "詳細" [ref=e1118] [cursor=pointer]:
+                  - img [ref=e1119]: expand_more
+              - list [ref=e1120]:
+                - listitem [ref=e1121]:
+                  - paragraph [ref=e1122]:
+                    - generic [ref=e1123]: "Sansan（市場シェア 85.8%）: 法人向け名刺管理市場において圧倒的なデファクトスタンダードとなっており、13年連続でシェアNo.1を維持している"
+                    - superscript [ref=e1124]
+                    - text: 。解約率は0.4%台という極めて低い水準にあり、一度導入されると組織の「人脈資産」が蓄積されるため、他社ツールへの乗り換え障壁（スイッチングコスト）が非常に高い
+                    - superscript [ref=e1125]
+                    - text: 。
+                    - button "詳細" [ref=e1128] [cursor=pointer]:
+                      - img [ref=e1129]: expand_more
+                - listitem [ref=e1130]:
+                  - paragraph [ref=e1131]:
+                    - generic [ref=e1132]: "Bill One（市場シェアNo.1）: 請求書の「形式を問わず」受領できるという汎用性と、Sansanの顧客基盤へのクロスセルが強力な武器となっている。単なる管理ツールにとどまらず、支払実行や経費精算へと機能を拡張し、企業の支出管理（Spend Management）プラットフォームへと進化している"
+                    - superscript [ref=e1133]
+                    - text: 。
+                    - button "詳細" [ref=e1136] [cursor=pointer]:
+                      - img [ref=e1137]: expand_more
+                - listitem [ref=e1138]:
+                  - paragraph [ref=e1139]:
+                    - generic [ref=e1140]: "Eight（利用率No.1）: 約330万人のユーザー基盤を背景としたネットワーク効果が強みである。特にB2Bサービスである「Eight Career Design」は、名刺交換履歴という「信頼できる接点」に基づいたスカウトが可能であり、一般的な転職サイトとは異なる価値を提供している"
+                    - superscript [ref=e1141]
+                    - text: 。
+                    - button "詳細" [ref=e1144] [cursor=pointer]:
+                      - img [ref=e1145]: expand_more
+              - heading "2. セグメント別成長ポテンシャルの定量的・定性的分析" [level=2] [ref=e1146]
+              - paragraph [ref=e1147]:
+                - text: 同社は、既存事業の安定的な成長と新規事業の急速な立ち上げを高いレベルで両立させている。連結売上高のCAGR（年平均成長率）として22%〜27%という目標を掲げており、これはSaaS企業の中でもトップクラスの水準である
+                - superscript [ref=e1148]
+                - text: 。
+                - button "詳細" [ref=e1151] [cursor=pointer]:
+                  - img [ref=e1152]: expand_more
+              - heading "過去の成長トレンドとCAGRの推移" [level=3] [ref=e1153]
+              - paragraph [ref=e1154]: 過去5年間の推移を見ると、Sansan事業は安定的に15%〜20%程度の成長を継続する一方、Bill One事業が前年比40%〜50%超という驚異的な伸びを示し、連結全体の成長を牽引している。
+              - table [ref=e1156]:
+                - rowgroup [ref=e1157]:
+                  - row "サービス名 2026年5月期 見通し成長率 中長期的なCAGR目標 主要成長ドライバー" [ref=e1158]:
+                    - cell "サービス名" [ref=e1159]
+                    - cell "2026年5月期 見通し成長率" [ref=e1160]
+                    - cell "中長期的なCAGR目標" [ref=e1161]
+                    - cell "主要成長ドライバー" [ref=e1162]
+                - rowgroup [ref=e1163]:
+                  - row "Sansan 15% 〜 17% 15% 以上 営業人員の育成による契約件数増、ARPUの向上" [ref=e1164]:
+                    - cell "Sansan" [ref=e1165]
+                    - cell "15% 〜 17%" [ref=e1166]
+                    - cell "15% 以上" [ref=e1167]
+                    - cell "営業人員の育成による契約件数増、ARPUの向上" [ref=e1168]:
+                      - paragraph [ref=e1169]:
+                        - text: 営業人員の育成による契約件数増、ARPUの向上
+                        - superscript [ref=e1170]
+                  - row "Bill One 35% 〜 40% 30% 以上 インボイス制度対応、機能拡張によるクロスセル" [ref=e1171]:
+                    - cell "Bill One" [ref=e1172]
+                    - cell "35% 〜 40%" [ref=e1173]
+                    - cell "30% 以上" [ref=e1174]
+                    - cell "インボイス制度対応、機能拡張によるクロスセル" [ref=e1175]:
+                      - paragraph [ref=e1176]:
+                        - text: インボイス制度対応、機能拡張によるクロスセル
+                        - superscript [ref=e1177]
+                  - row "Eight 加速（70%目標有） 未公表 ビジネスイベントの大型化、採用支援の拡充" [ref=e1178]:
+                    - cell "Eight" [ref=e1179]
+                    - cell "加速（70%目標有）" [ref=e1180]
+                    - cell "未公表" [ref=e1181]
+                    - cell "ビジネスイベントの大型化、採用支援の拡充" [ref=e1182]:
+                      - paragraph [ref=e1183]:
+                        - text: ビジネスイベントの大型化、採用支援の拡充
+                        - superscript [ref=e1184]
+              - button "詳細" [ref=e1187] [cursor=pointer]:
+                - img [ref=e1188]: expand_more
+              - heading "今後の成長ドライバーとなるセグメント" [level=3] [ref=e1189]
+              - paragraph [ref=e1190]:
+                - text: 今後の最大の成長エンジンは「Bill One」である。請求書受領から始まったこのプロダクトは、現在「Bill One 経費精算」や「Bill One 請求書発行」など、隣接領域への拡張を加速させている。これにより、既存のBill One顧客からのアップセルが期待できるだけでなく、経理業務全般をカバーする「支出管理プラットフォーム」としての地位を確立することで、単価（ARPU）の大幅な上昇が見込まれる
+                - superscript [ref=e1191]
+                - text: 。
+                - button "詳細" [ref=e1194] [cursor=pointer]:
+                  - img [ref=e1195]: expand_more
+              - paragraph [ref=e1196]:
+                - text: また、Sansan事業においても、単なる名刺管理から「営業DX」へとコンセプトを転換し、大手企業（エンタープライズ）向けに数万人規模での導入を進めている。これにより、ストック売上高の基盤がより強固なものとなっている
+                - superscript [ref=e1197]
+                - text: 。
+                - button "詳細" [ref=e1200] [cursor=pointer]:
+                  - img [ref=e1201]: expand_more
+              - heading "縮小・撤退リスクの検討" [level=3] [ref=e1202]
+              - paragraph [ref=e1203]:
+                - text: 現在、縮小・撤退のリスクが懸念されるセグメントは存在しない。かつて赤字が続いていた「Eight事業」についても、B2Bモデルへの転換と収益性重視の運営（調整後営業利益が前年比336.9%増）により、同社の利益創出に大きく貢献するセグメントへと脱皮した
+                - superscript [ref=e1204]
+                - text: 。リスクがあるとすれば、名刺そのものの交換頻度がデジタル化の進展により中長期的に減少する可能性だが、同社は「デジタル名刺」や「メール署名取り込み」などの機能を強化し、オフラインからオンラインへの接点情報の移行を先回りして押さえているため、この変化をむしろシェア拡大の機会としている
+                - superscript [ref=e1205]
+                - text: 。
+                - button "詳細" [ref=e1208] [cursor=pointer]:
+                  - img [ref=e1209]: expand_more
+              - heading "3. 業界動向と競争環境のダイナミクス" [level=2] [ref=e1210]
+              - paragraph [ref=e1211]: Sansanが属するSaaS市場は、日本のデジタル敗戦を挽回するための「DX投資」の最前線に位置している。
+              - heading "市場規模の推移と成長の背景" [level=3] [ref=e1212]
+              - paragraph [ref=e1213]:
+                - text: 法人向け名刺管理サービスの市場規模は2024年に約291億円となり、2013年以降で約21倍に成長した
+                - superscript [ref=e1214]
+                - text: 。この急成長の背景には、従来は個人の引き出しに眠っていた名刺という「アナログな人脈」を、会社の資産として活用しようとする経営意識の変化がある。
+                - button "詳細" [ref=e1217] [cursor=pointer]:
+                  - img [ref=e1218]: expand_more
+              - paragraph [ref=e1219]:
+                - text: 一方、クラウド請求書管理市場は、法規制（インボイス制度、電帳法）への対応を主眼とした「Compliance-driven（規制主導型）」の成長を遂げている。この市場のTAM（獲得可能な最大市場規模）は名刺管理を遥かに凌駕しており、Sansanにとっての成長余地は依然として大きい
+                - superscript [ref=e1220]
+                - text: 。
+                - button "詳細" [ref=e1223] [cursor=pointer]:
+                  - img [ref=e1224]: expand_more
+              - heading "参入障壁とその要因" [level=3] [ref=e1225]
+              - paragraph [ref=e1226]: Sansanの参入障壁は、以下の3つの要素によって形成されている。
+              - list [ref=e1227]:
+                - listitem [ref=e1228]:
+                  - paragraph [ref=e1229]:
+                    - generic [ref=e1230]: "データ化オペレーションの規模経済: 99.9%の精度を実現するためには、AI技術だけでなく、膨大な数のオペレーターを統制するワークフローが必要である。後発企業が同等の精度とスピードを低コストで実現することは極めて困難である"
+                    - superscript [ref=e1231]
+                    - text: 。
+                    - button "詳細" [ref=e1234] [cursor=pointer]:
+                      - img [ref=e1235]: expand_more
+                - listitem [ref=e1236]:
+                  - paragraph [ref=e1237]:
+                    - generic [ref=e1238]: "データ・グラビティ（データの重力）: 組織内に蓄積された過去10年以上の接点データや請求書データは、それ自体が強力なロックイン効果を生む。他社ツールへの移行は、単なる機能の代替ではなく、過去の資産の喪失を意味するため、解約率の低さにつながっている"
+                    - superscript [ref=e1239]
+                    - text: 。
+                    - button "詳細" [ref=e1242] [cursor=pointer]:
+                      - img [ref=e1243]: expand_more
+                - listitem [ref=e1244]:
+                  - paragraph [ref=e1245]:
+                    - generic [ref=e1246]: "ネットワーク効果: 「Eight」の約330万人のユーザーや、「Bill One」を利用する数万社のサプライヤー（請求書発行側）との繋がりは、サービスを利用する企業が増えるほどその価値が高まるという、プラットフォーム特有の強みとなっている"
+                    - superscript [ref=e1247]
+                    - text: 。
+                    - button "詳細" [ref=e1250] [cursor=pointer]:
+                      - img [ref=e1251]: expand_more
+              - heading "主要競合企業との比較" [level=3] [ref=e1252]
+              - paragraph [ref=e1253]: 同社は名刺管理において独走状態にあるが、他の領域では強力なプレイヤーと競合している。
+              - table [ref=e1255]:
+                - rowgroup [ref=e1256]:
+                  - row "領域 主要競合企業 Sansanの優位性 / 特徴" [ref=e1257]:
+                    - cell "領域" [ref=e1258]
+                    - cell "主要競合企業" [ref=e1259]
+                    - cell "Sansanの優位性 / 特徴" [ref=e1260]
+                - rowgroup [ref=e1261]:
+                  - row "名刺管理 ウォンテッドリー, Salesforce 専業ならではのデータ化精度と日本的組織への適合" [ref=e1262]:
+                    - cell "名刺管理" [ref=e1263]
+                    - cell "ウォンテッドリー, Salesforce" [ref=e1264]
+                    - cell "専業ならではのデータ化精度と日本的組織への適合" [ref=e1265]:
+                      - paragraph [ref=e1266]:
+                        - text: 専業ならではのデータ化精度と日本的組織への適合
+                        - superscript [ref=e1267]
+                  - row "請求書受領 インフォマート, マネーフォワード 請求書フォーマットを問わない柔軟性とUIの簡便さ" [ref=e1268]:
+                    - cell "請求書受領" [ref=e1269]
+                    - cell "インフォマート, マネーフォワード" [ref=e1270]
+                    - cell "請求書フォーマットを問わない柔軟性とUIの簡便さ" [ref=e1271]:
+                      - paragraph [ref=e1272]:
+                        - text: 請求書フォーマットを問わない柔軟性とUIの簡便さ
+                        - superscript [ref=e1273]
+                  - row "営業DX ベルフェイス, 各種CRM/SFA 「接点データ」という独自の一次情報を起点とする点" [ref=e1274]:
+                    - cell "営業DX" [ref=e1275]
+                    - cell "ベルフェイス, 各種CRM/SFA" [ref=e1276]
+                    - cell "「接点データ」という独自の一次情報を起点とする点" [ref=e1277]:
+                      - paragraph [ref=e1278]:
+                        - text: 「接点データ」という独自の一次情報を起点とする点
+                        - superscript [ref=e1279]
+              - button "詳細" [ref=e1282] [cursor=pointer]:
+                - img [ref=e1283]: expand_more
+              - paragraph [ref=e1284]:
+                - text: 海外市場においては、LinkedIn（リンクトイン）などのSNSが名刺に近い役割を果たすが、日本では「名刺交換」という儀礼が根強く残っており、これがSansanにとっての参入障壁（国内保護壁）として機能している。海外展開においては、この文化的な差を「接点のインテリジェンス」としてどう翻訳するかが鍵となる
+                - superscript [ref=e1285]
+                - text: 。
+                - button "詳細" [ref=e1288] [cursor=pointer]:
+                  - img [ref=e1289]: expand_more
+              - heading "4. 技術的優位性と知的財産戦略の詳細" [level=2] [ref=e1290]
+              - paragraph [ref=e1291]: Sansanの技術戦略は、単に最先端の技術を追うのではなく、ビジネス現場の「アナログな摩擦」をいかにテクノロジーで解消するかに集中している。
+              - heading "重要技術とR&D投資の方向性" [level=3] [ref=e1292]
+              - paragraph [ref=e1293]: 同社の研究開発の司令塔は「DSOC（Data Strategy & Operation Center）」である。ここでは、画像解析、自然言語処理、社会科学の知見を融合させた研究が行われている。
+              - list [ref=e1294]:
+                - listitem [ref=e1295]:
+                  - paragraph [ref=e1296]:
+                    - generic [ref=e1297]: "独自のOCR技術「DSOC OCR」: 名刺上の情報を99.9%の精度で認識するために、文字認識だけでなく、名刺のレイアウト解析や、社名・住所の正規化アルゴリズムを自社開発している。これにより、二次納品（オペレーター校正後）までの時間を大幅に短縮している"
+                    - superscript [ref=e1298]
+                    - text: 。
+                    - button "詳細" [ref=e1301] [cursor=pointer]:
+                      - img [ref=e1302]: expand_more
+                - listitem [ref=e1303]:
+                  - paragraph [ref=e1304]:
+                    - generic [ref=e1305]: "生成AI（LLM）の統合: 2025年を「AI元年」と位置づけ、生成AIをプロダクトに組み込む「AIファースト」戦略を推進している。蓄積された接点データをAIが解析し、「どのタイミングで誰にどのようなメールを送るべきか」といった具体的なアクションを提案する機能の開発に注力している"
+                    - superscript [ref=e1306]
+                    - text: 。
+                    - button "詳細" [ref=e1309] [cursor=pointer]:
+                      - img [ref=e1310]: expand_more
+                - listitem [ref=e1311]:
+                  - paragraph [ref=e1312]:
+                    - generic [ref=e1313]: "非定型ドキュメントの構造化: 請求書や契約書などの非定型なPDFから、必要な情報を自動抽出する技術を磨いている。これは「Bill One」の利益率向上に直結しており、データ化オペレーションの効率化により売上総利益率は前年同期比で2.0ポイント以上改善している"
+                    - superscript [ref=e1314]
+                    - text: 。
+                    - button "詳細" [ref=e1317] [cursor=pointer]:
+                      - img [ref=e1318]: expand_more
+              - heading "知的財産（IP）の保護体制" [level=3] [ref=e1319]
+              - paragraph [ref=e1320]:
+                - text: 同社は、独自のデータ化ワークフローやユーザーインターフェースについて積極的に特許を取得している。特に「名刺を撮影して組織図を自動生成する」などのビジネスモデル特許は、競合他社に対する強力な抑止力となっている。また、SansanやBill Oneといったブランド名も重要な知的財産として位置づけ、広告宣伝投資を通じてそのブランド価値（信頼性）を高める戦略をとっている
+                - superscript [ref=e1321]
+                - text: 。
+                - button "詳細" [ref=e1324] [cursor=pointer]:
+                  - img [ref=e1325]: expand_more
+              - heading "5. 規制環境の変化と政策的追い風" [level=2] [ref=e1326]
+              - paragraph [ref=e1327]: Sansanにとって、日本のDX推進に関連する法改正は、強力な外部の成長エンジンとなっている。
+              - heading "インボイス制度と電子帳簿保存法" [level=3] [ref=e1328]
+              - list [ref=e1329]:
+                - listitem [ref=e1330]:
+                  - paragraph [ref=e1331]:
+                    - generic [ref=e1332]: "インボイス制度（2023年10月〜）: 適格請求書の保存が仕入税額控除の条件となったことで、企業は請求書が「適格」であるかを厳密にチェックする必要が生じた。Bill Oneは、この判定を自動化する機能を提供することで、経理部門の負担を劇的に軽減した"
+                    - superscript [ref=e1333]
+                    - text: 。
+                    - button "詳細" [ref=e1336] [cursor=pointer]:
+                      - img [ref=e1337]: expand_more
+                - listitem [ref=e1338]:
+                  - paragraph [ref=e1339]:
+                    - generic [ref=e1340]: "電子帳簿保存法: 電子取引データの書面保存が原則廃止され、電子保存が義務化された。これにより、紙で届く請求書もスキャンしてデジタル保存するニーズが爆発し、Bill Oneの導入を決定づける強力な「言い訳（予算獲得の根拠）」を顧客に提供した"
+                    - superscript [ref=e1341]
+                    - text: 。
+                    - button "詳細" [ref=e1344] [cursor=pointer]:
+                      - img [ref=e1345]: expand_more
+              - heading "今後の規制変更リスクと政策" [level=3] [ref=e1346]
+              - paragraph [ref=e1347]:
+                - text: 現在のデジタル化推進政策は同社にとって追い風だが、将来的なリスクとしては「個人情報保護法」の更なる厳格化が挙げられる。同社は全社員に個人情報保護士の資格取得を義務付けるなど、コンプライアンス体制を極めて高く設定しており、規制を「壁」ではなく「信頼の証」へと変換する戦略をとっている
+                - superscript [ref=e1348]
+                - text: 。また、政府が進める「デジタル庁」主導の標準化の動きも、アナログ情報のデジタル化を本業とする同社にとっては、データ連携の機会を広げるポジティブな要因と捉えられる。
+                - button "詳細" [ref=e1351] [cursor=pointer]:
+                  - img [ref=e1352]: expand_more
+              - heading "6. 海外展開の現状とグローバル・インフラへの道筋" [level=2] [ref=e1353]
+              - paragraph [ref=e1354]: Sansanは、日本国内での成功を足がかりに、「Sansan Global」として東南アジアを中心に拠点を広げている。
+              - heading "地域別戦略と進出状況" [level=3] [ref=e1355]
+              - list [ref=e1356]:
+                - listitem [ref=e1357]:
+                  - paragraph [ref=e1358]:
+                    - generic [ref=e1359]: "シンガポール・タイ: 東南アジアのビジネスハブであるシンガポールを拠点に、現地企業および日系企業への導入を進めている。欧米系のCRM（Salesforce等）と連携し、CRMへのデータ入力負荷をゼロにする「Data Entry Solution」として訴求している"
+                    - superscript [ref=e1360]
+                    - text: 。
+                    - button "詳細" [ref=e1363] [cursor=pointer]:
+                      - img [ref=e1364]: expand_more
+                - listitem [ref=e1365]:
+                  - paragraph [ref=e1366]:
+                    - generic [ref=e1367]: "開発拠点のグローバル化: ベトナム（ホーチミン、ダナン）やフィリピン（セブ）に開発拠点を設置している。これにより、世界中の優秀なエンジニアを獲得できる体制を整えるとともに、多言語・多通貨対応のスピードを上げている"
+                    - superscript [ref=e1368]
+                    - text: 。
+                    - button "詳細" [ref=e1371] [cursor=pointer]:
+                      - img [ref=e1372]: expand_more
+              - heading "為替リスクと収益への影響" [level=3] [ref=e1373]
+              - paragraph [ref=e1374]:
+                - text: 現在の海外売上比率は数%程度と推測されるため、為替変動が売上高に与える直接的なインパクトは限定的である
+                - superscript [ref=e1375]
+                - text: 。しかし、中長期的には海外ARRの比率を高めることを目標としており、その過程でドル建てのサーバー費用や海外人件費の変動リスクを管理する必要がある。現状では、円安は海外拠点のコスト上昇要因となるが、グローバルでの競争力を高める投資期間と位置づけている
+                - superscript [ref=e1376]
+                - text: 。
+                - button "詳細" [ref=e1379] [cursor=pointer]:
+                  - img [ref=e1380]: expand_more
+              - heading "7. 投資判断のための総合的財務分析と結論" [level=2] [ref=e1381]
+              - paragraph [ref=e1382]: Sansanは、これまでの「赤字覚悟のシェア拡大」フェーズから、明確に「高い成長と利益創出の両立」フェーズへと移行している。
+              - heading "収益性向上のメカニズム" [level=3] [ref=e1383]
+              - paragraph [ref=e1384]:
+                - text: 最新の四半期決算において、調整後営業利益率は18.7%に達した。この利益率向上の背景には、以下の「収益レバレッジ」が効き始めたことがある
+                - superscript [ref=e1385]
+                - text: 。
+                - button "詳細" [ref=e1388] [cursor=pointer]:
+                  - img [ref=e1389]: expand_more
+              - list [ref=e1390]:
+                - listitem [ref=e1391]:
+                  - paragraph [ref=e1392]:
+                    - generic [ref=e1393]: "販管費率の低下: 本社移転に関連する一時的な費用（二重家賃等）がなくなり、売上拡大に対して固定費の伸びが抑制されている"
+                    - superscript [ref=e1394]
+                    - text: 。
+                    - button "詳細" [ref=e1397] [cursor=pointer]:
+                      - img [ref=e1398]: expand_more
+                - listitem [ref=e1399]:
+                  - paragraph [ref=e1400]:
+                    - generic [ref=e1401]: "Bill Oneのユニット・エコノミクス改善: 導入社数の増加に伴い、データ化オペレーションの自動化比率が上昇し、限界利益率が向上している。Bill Oneは既にセグメント黒字化を達成し、連結の利益押し上げ要因となっている"
+                    - superscript [ref=e1402]
+                    - text: 。
+                    - button "詳細" [ref=e1405] [cursor=pointer]:
+                      - img [ref=e1406]: expand_more
+              - heading "中期財務目標と達成の確度" [level=3] [ref=e1407]
+              - paragraph [ref=e1408]:
+                - text: 同社は2027年5月期に「調整後営業利益率18%〜23%」という目標を掲げているが、2026年第2四半期時点で既にこのレンジに到達しており、目標の達成は極めて現実的である
+                - superscript [ref=e1409]
+                - text: 。
+                - button "詳細" [ref=e1412] [cursor=pointer]:
+                  - img [ref=e1413]: expand_more
+              - table [ref=e1415]:
+                - rowgroup [ref=e1416]:
+                  - row "指標 2025年5月期（実績） 2026年5月期（予想） 2027年5月期（目標）" [ref=e1417]:
+                    - cell "指標" [ref=e1418]
+                    - cell "2025年5月期（実績）" [ref=e1419]
+                    - cell "2026年5月期（予想）" [ref=e1420]
+                    - cell "2027年5月期（目標）" [ref=e1421]
+                - rowgroup [ref=e1422]:
+                  - row "売上高 432億円 527-540億円 615-694億円" [ref=e1423]:
+                    - cell "売上高" [ref=e1424]
+                    - cell "432億円" [ref=e1425]:
+                      - paragraph [ref=e1426]:
+                        - text: 432億円
+                        - superscript [ref=e1427]
+                    - cell "527-540億円" [ref=e1428]:
+                      - paragraph [ref=e1429]:
+                        - text: 527-540億円
+                        - superscript [ref=e1430]
+                    - cell "615-694億円" [ref=e1431]:
+                      - paragraph [ref=e1432]:
+                        - text: 615-694億円
+                        - superscript [ref=e1433]
+                  - row "調整後営業利益率 8.2% 13.0-16.0% 18-23%" [ref=e1434]:
+                    - cell "調整後営業利益率" [ref=e1435]
+                    - cell "8.2%" [ref=e1436]:
+                      - paragraph [ref=e1437]:
+                        - text: 8.2%
+                        - superscript [ref=e1438]
+                    - cell "13.0-16.0%" [ref=e1439]:
+                      - paragraph [ref=e1440]:
+                        - text: 13.0-16.0%
+                        - superscript [ref=e1441]
+                    - cell "18-23%" [ref=e1442]:
+                      - paragraph [ref=e1443]:
+                        - text: 18-23%
+                        - superscript [ref=e1444]
+              - button "詳細" [ref=e1447] [cursor=pointer]:
+                - img [ref=e1448]: expand_more
+              - heading "結論：投資判断への示唆" [level=3] [ref=e1449]
+              - paragraph [ref=e1450]: Sansanは、日本国内において「名刺」と「請求書」という2つの重要かつアナログなビジネス・接点を押さえることに成功した。このポジショニングは、単なるソフトウェア提供者を超え、企業のデータ流通を司る「インフラ」に近い。
+              - paragraph [ref=e1451]: 投資家にとっての最大の論点は、現在の20%台後半の成長をいつまで維持できるかである。Bill Oneの支出管理領域への拡張、および生成AIによるデータの付加価値向上（データ解析からアクション提案への進化）が成功すれば、ARRの成長はさらに加速する可能性がある。一方で、国内の労働人口減少による「名刺交換回数の減少」という長期的トレンドは存在するが、同社はそれを「1件あたりのデータの深度（リッチ化）」で補う戦略を明確に打ち出している。
+              - paragraph [ref=e1452]:
+                - text: 高い利益成長のフェーズに突入した現状を鑑みると、Sansanは日本のSaaSセクターにおける「クオリティ・グロース」株として、極めて強固なファンダメンタルズを有していると判断される
+                - superscript [ref=e1453]
+                - text: 。
+                - button "詳細" [ref=e1456] [cursor=pointer]:
+                  - img [ref=e1457]: expand_more
+            - generic [ref=e1458]:
+              - button "レポートに使用されているソース" [expanded] [ref=e1460]:
+                - generic [ref=e1461]: レポートに使用されているソース
+                - img [ref=e1462]: expand_less
+              - generic [ref=e1465]:
+                - link "finance.yahoo.co.jp Ｓａｎｓａｎ(株)【4443】：決算説明会書き起こし - Yahoo ... 新しいウィンドウで開く" [ref=e1467] [cursor=pointer]:
+                  - /url: https://finance.yahoo.co.jp/quote/4443.T/financials?styl=presentation
+                  - generic [ref=e1470]:
+                    - generic [ref=e1471]: finance.yahoo.co.jp
+                    - generic [ref=e1472]: Ｓａｎｓａｎ(株)【4443】：決算説明会書き起こし - Yahoo ...
+                  - generic [ref=e1473]: 新しいウィンドウで開く
+                - link "ir.corp-sansan.com Sansan株式会社 統合報告書2025 - トップ | Sansan株式会社 新しいウィンドウで開く" [ref=e1475] [cursor=pointer]:
+                  - /url: https://ir.corp-sansan.com/ja/ir/library/report/main/06/teaserItems1/00/linkList/0/link/sansan_ar2025_jp.pdf
+                  - generic [ref=e1478]:
+                    - generic [ref=e1479]: ir.corp-sansan.com
+                    - generic [ref=e1480]: Sansan株式会社 統合報告書2025 - トップ | Sansan株式会社
+                  - generic [ref=e1481]: 新しいウィンドウで開く
+                - link "jp.corp-sansan.com Sansan、法人向け名刺管理サービス13年連続シェアNo.1～契約件数1万1000件を突破し 新しいウィンドウで開く" [ref=e1483] [cursor=pointer]:
+                  - /url: https://jp.corp-sansan.com/news/2026/0113.html
+                  - generic [ref=e1486]:
+                    - generic [ref=e1487]: jp.corp-sansan.com
+                    - generic [ref=e1488]: Sansan、法人向け名刺管理サービス13年連続シェアNo.1～契約件数1万1000件を突破し
+                  - generic [ref=e1489]: 新しいウィンドウで開く
+                - link "ir.corp-sansan.com 統合報告書 | IRライブラリ | 株主・投資家情報 | Sansan株式会社 新しいウィンドウで開く" [ref=e1491] [cursor=pointer]:
+                  - /url: https://ir.corp-sansan.com/ja/ir/library/report.html
+                  - generic [ref=e1494]:
+                    - generic [ref=e1495]: ir.corp-sansan.com
+                    - generic [ref=e1496]: 統合報告書 | IRライブラリ | 株主・投資家情報 | Sansan株式会社
+                  - generic [ref=e1497]: 新しいウィンドウで開く
+                - link "data.swcms.net 2026年5月期 第2四半期 決算説明資料 新しいウィンドウで開く" [ref=e1499] [cursor=pointer]:
+                  - /url: https://data.swcms.net/file/corp-sansan-ir/dam/jcr:d6d3822a-aadc-4a51-8e34-a9816038a78c/140120260114533274.pdf
+                  - generic [ref=e1502]:
+                    - generic [ref=e1503]: data.swcms.net
+                    - generic [ref=e1504]: 2026年5月期 第2四半期 決算説明資料
+                  - generic [ref=e1505]: 新しいウィンドウで開く
+                - link "note.com Sansan 2026年5月期 第1四半期決算で見えたDX市場の勝者への道筋とは？売上+28%成長とARR44億円突破の裏に隠された戦略 - note 新しいウィンドウで開く" [ref=e1507] [cursor=pointer]:
+                  - /url: https://note.com/ir_labo/n/n80a9d5b1d2fc
+                  - generic [ref=e1510]:
+                    - generic [ref=e1511]: note.com
+                    - generic [ref=e1512]: Sansan 2026年5月期 第1四半期決算で見えたDX市場の勝者への道筋とは？売上+28%成長とARR44億円突破の裏に隠された戦略 - note
+                  - generic [ref=e1513]: 新しいウィンドウで開く
+                - link "jp.sansan.com 名刺管理のSansan - 法人向けシェアNo.1 新しいウィンドウで開く" [ref=e1515] [cursor=pointer]:
+                  - /url: https://jp.sansan.com/solution/meishi-management/
+                  - generic [ref=e1518]:
+                    - generic [ref=e1519]: jp.sansan.com
+                    - generic [ref=e1520]: 名刺管理のSansan - 法人向けシェアNo.1
+                  - generic [ref=e1521]: 新しいウィンドウで開く
+                - link "youtube.com Sansan（4443） 2025年5月期第3四半期決算説明 - YouTube 新しいウィンドウで開く" [ref=e1523] [cursor=pointer]:
+                  - /url: https://www.youtube.com/watch?v=8aOd8gPqyRo
+                  - generic [ref=e1526]:
+                    - generic [ref=e1527]: youtube.com
+                    - generic [ref=e1528]: Sansan（4443） 2025年5月期第3四半期決算説明 - YouTube
+                  - generic [ref=e1529]: 新しいウィンドウで開く
+                - link "youtube.com Sansan（4443） 2025年5月期決算説明 - YouTube 新しいウィンドウで開く" [ref=e1531] [cursor=pointer]:
+                  - /url: https://www.youtube.com/watch?v=U2Yk2H2M068
+                  - generic [ref=e1534]:
+                    - generic [ref=e1535]: youtube.com
+                    - generic [ref=e1536]: Sansan（4443） 2025年5月期決算説明 - YouTube
+                  - generic [ref=e1537]: 新しいウィンドウで開く
+                - link "itmedia.co.jp 名刺上のメールアドレスを99.7％の精度で認識 Sansanが独自OCR技術を開発 - ITmedia NEWS 新しいウィンドウで開く" [ref=e1539] [cursor=pointer]:
+                  - /url: https://www.itmedia.co.jp/news/articles/2012/01/news057.html
+                  - generic [ref=e1542]:
+                    - generic [ref=e1543]: itmedia.co.jp
+                    - generic [ref=e1544]: 名刺上のメールアドレスを99.7％の精度で認識 Sansanが独自OCR技術を開発 - ITmedia NEWS
+                  - generic [ref=e1545]: 新しいウィンドウで開く
+                - link "ai-gakkai.or.jp Sansanの研究開発部 新しいウィンドウで開く" [ref=e1547] [cursor=pointer]:
+                  - /url: https://www.ai-gakkai.or.jp/jsai2022/wp-content/uploads/sites/17/2022/05/material_sansan.pdf
+                  - generic [ref=e1550]:
+                    - generic [ref=e1551]: ai-gakkai.or.jp
+                    - generic [ref=e1552]: Sansanの研究開発部
+                  - generic [ref=e1553]: 新しいウィンドウで開く
+                - link "cloudsign.jp 電子帳簿保存法の要件とは？2026年最新のポイントをわかりやすく解説 | クラウドサイン 新しいウィンドウで開く" [ref=e1555] [cursor=pointer]:
+                  - /url: https://www.cloudsign.jp/media/electronic-books-maintenance-act/
+                  - generic [ref=e1558]:
+                    - generic [ref=e1559]: cloudsign.jp
+                    - generic [ref=e1560]: 電子帳簿保存法の要件とは？2026年最新のポイントをわかりやすく解説 | クラウドサイン
+                  - generic [ref=e1561]: 新しいウィンドウで開く
+              - button "参照されたもののレポートには使用されていないソース" [ref=e1563]:
+                - generic [ref=e1564]: 参照されたもののレポートには使用されていないソース
+                - img [ref=e1565]: expand_more
+              - generic:
+                - link [ref=e1569] [cursor=pointer]:
+                  - /url: https://www.youtube.com/watch?v=pt1GOz-Q04E
+                  - generic [ref=e1572]:
+                    - generic [ref=e1573]: youtube.com
+                    - generic [ref=e1574]: 【2026年5月期 第2四半期決算説明】Sansan（4443） IR Live - YouTube
+                  - generic [ref=e1575]: 新しいウィンドウで開く
+                - link [ref=e1577] [cursor=pointer]:
+                  - /url: https://prtimes.jp/main/html/rd/p/000000752.000049627.html
+                  - generic [ref=e1580]:
+                    - generic [ref=e1581]: prtimes.jp
+                    - generic [ref=e1582]: Sansan株式会社、「統合報告書2025」を公開 - PR TIMES
+                  - generic [ref=e1583]: 新しいウィンドウで開く
+                - link [ref=e1585] [cursor=pointer]:
+                  - /url: https://quote.nomura.co.jp/nomura/cgi-bin/parser.pl?QCODE=4443&TEMPLATE=nomura_tp_kabu_01&MKTN=T
+                  - generic [ref=e1588]:
+                    - generic [ref=e1589]: quote.nomura.co.jp
+                    - generic [ref=e1590]: Ｓａｎｓａｎ（4443） 株価｜ソリューション・サービス - 野村證券
+                  - generic [ref=e1591]: 新しいウィンドウで開く
+                - link [ref=e1593] [cursor=pointer]:
+                  - /url: https://prtimes.jp/main/html/rd/p/000000641.000049627.html
+                  - generic [ref=e1596]:
+                    - generic [ref=e1597]: prtimes.jp
+                    - generic [ref=e1598]: 営業DXサービス「Sansan」法人向け名刺管理サービスで12年連続シェアNo.1 - PR TIMES
+                  - generic [ref=e1599]: 新しいウィンドウで開く
+            - button "思考プロセス" [ref=e1601]:
+              - generic [ref=e1602]: 思考プロセス
+              - img [ref=e1603]: expand_more
+            - generic [ref=e1606]:
+              - generic [ref=e1607]:
+                - generic [ref=e1608]:
+                  - img [ref=e1610]: spark
+                  - separator [ref=e1611]
+                - generic [ref=e1612]:
+                  - generic [ref=e1613]: 最新の決算情報の収集と構造把握
+                  - generic [ref=e1614]: 投資判断の基盤となる最新の財務状況を把握するため、2026年4月時点における最新の決算短信や有価証券報告書の調査を開始しました。主要事業である「Sansan」「Bill One」「Eight」の各セグメントが、直近の四半期でどのような成長を描いているか、また売上構成比や利益率にどのような変化が生じているかを精査しています。
+              - generic [ref=e1615]:
+                - separator [ref=e1617]
+                - generic [ref=e1618]:
+                  - generic [ref=e1619]: 市場優位性と競争環境の分析
+                  - generic [ref=e1620]: 名刺管理市場で圧倒的なシェアを誇る中、急成長を遂げているクラウド請求書受領サービス「Bill One」の市場ポジションを重点的に分析しています。インフォマートやマネーフォワードといった競合他社との差別化要因を明確にするため、インボイス制度や電子帳簿保存法などの法規制が追い風となった市場動向を改めて整理し、技術的な優位性を検証しています。
+              - generic [ref=e1621]:
+                - separator [ref=e1623]
+                - generic [ref=e1624]:
+                  - generic [ref=e1625]: 今後の調査方針と具体アクション
+                  - generic [ref=e1626]: 今後は、国内市場の成熟度を見極めつつ、シンガポールを中心とした東南アジアへの海外展開の進捗状況を詳しく調査します。また、AIやOCR技術といったコア技術への投資がどのように中長期的な成長に寄与するかを分析し、セグメント別の成長ドライバーと潜在的なリスク要因を深掘りしていく予定です。
+              - generic [ref=e1627]:
+                - separator [ref=e1630]
+                - generic [ref=e1632]:
+                  - generic [ref=e1633]: Researching websites...
+                  - generic [ref=e1634]:
+                    - link [ref=e1636] [cursor=pointer]:
+                      - /url: https://finance.yahoo.co.jp/quote/4443.T/financials?styl=presentation
+                      - generic [ref=e1637]: finance.yahoo.co.jp
+                      - generic [ref=e1638]: Ｓａｎｓａｎ(株)【4443】：決算説明会書き起こし - Yahoo!ファイナンス
+                    - link [ref=e1640] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=8aOd8gPqyRo
+                      - generic [ref=e1641]: youtube.com
+                      - generic [ref=e1642]: Sansan（4443） 2025年5月期第3四半期決算説明 - YouTube
+                    - link [ref=e1644] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=pt1GOz-Q04E
+                      - generic [ref=e1645]: youtube.com
+                      - generic [ref=e1646]: 【2026年5月期 第2四半期決算説明】Sansan（4443） IR Live - YouTube
+                    - link [ref=e1648] [cursor=pointer]:
+                      - /url: https://data.swcms.net/file/corp-sansan-ir/dam/jcr:d6d3822a-aadc-4a51-8e34-a9816038a78c/140120260114533274.pdf
+                      - generic [ref=e1649]: data.swcms.net
+                      - generic [ref=e1650]: 2026年5月期 第2四半期 決算説明資料
+                    - link [ref=e1652] [cursor=pointer]:
+                      - /url: https://prtimes.jp/main/html/rd/p/000000752.000049627.html
+                      - generic [ref=e1653]: prtimes.jp
+                      - generic [ref=e1654]: Sansan株式会社、「統合報告書2025」を公開 - PR TIMES
+                    - link [ref=e1656] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=U2Yk2H2M068
+                      - generic [ref=e1657]: youtube.com
+                      - generic [ref=e1658]: Sansan（4443） 2025年5月期決算説明 - YouTube
+                    - link [ref=e1660] [cursor=pointer]:
+                      - /url: https://quote.nomura.co.jp/nomura/cgi-bin/parser.pl?QCODE=4443&TEMPLATE=nomura_tp_kabu_01&MKTN=T
+                      - generic [ref=e1661]: quote.nomura.co.jp
+                      - generic [ref=e1662]: Ｓａｎｓａｎ（4443） 株価｜ソリューション・サービス - 野村證券
+                    - link [ref=e1664] [cursor=pointer]:
+                      - /url: https://ir.corp-sansan.com/ja/ir/library/report/main/06/teaserItems1/00/linkList/0/link/sansan_ar2025_jp.pdf
+                      - generic [ref=e1665]: ir.corp-sansan.com
+                      - generic [ref=e1666]: Sansan株式会社 統合報告書2025
+                    - link [ref=e1668] [cursor=pointer]:
+                      - /url: https://note.com/ir_labo/n/n80a9d5b1d2fc
+                      - generic [ref=e1669]: note.com
+                      - generic [ref=e1670]: Sansan 2026年5月期 第1四半期決算で見えたDX市場の勝者への道筋とは？売上+28%成長とARR44億円突破の裏に隠された戦略 - note
+                    - link [ref=e1672] [cursor=pointer]:
+                      - /url: https://www.itmedia.co.jp/news/articles/2012/01/news057.html
+                      - generic [ref=e1673]: itmedia.co.jp
+                      - generic [ref=e1674]: 名刺上のメールアドレスを99.7％の精度で認識 Sansanが独自OCR技術を開発 - ITmedia NEWS
+                    - link [ref=e1676] [cursor=pointer]:
+                      - /url: https://www.ai-gakkai.or.jp/jsai2022/wp-content/uploads/sites/17/2022/05/material_sansan.pdf
+                      - generic [ref=e1677]: ai-gakkai.or.jp
+                      - generic [ref=e1678]: Sansanの研究開発部
+              - generic [ref=e1679]:
+                - generic [ref=e1680]:
+                  - img [ref=e1682]: spark
+                  - separator [ref=e1683]
+                - generic [ref=e1684]:
+                  - generic [ref=e1685]: 高成長を牽引するBill Oneの躍進と収益構造の劇的改善
+                  - generic [ref=e1686]: 最新の決算データを精査した結果、全社売上高が前年同期比30.2%増と成長を加速させていることが判明しました。特に「Bill One」は前年同期比52.4%増という驚異的な伸びを記録し、単体での黒字化も達成しています。本社移転に伴う一時的な費用の剥落や、データ化オペレーションの効率化によって売上総利益率が向上しており、調整後営業利益が前年比で約4倍に急増するなど、収益フェーズへの劇的な転換点を迎えていることを確認しました。
+              - generic [ref=e1687]:
+                - separator [ref=e1689]
+                - generic [ref=e1690]:
+                  - generic [ref=e1691]: 主力事業の堅実性と解約率の低水準維持
+                  - generic [ref=e1692]: 基盤事業である「Sansan」においても、営業人員の育成効果により売上成長率が18.0%へと再加速している点が注目されます。特筆すべきは解約率の低さであり、12ヶ月平均で0.41%〜0.49%という極めて低い水準を維持しています。これは一度導入されると代替が困難なビジネスインフラとしての地位を確立していることを示唆しており、ストック型収益の強固な安定性を裏付けています。
+              - generic [ref=e1693]:
+                - separator [ref=e1695]
+                - generic [ref=e1696]:
+                  - generic [ref=e1697]: 中長期目標の具体化と今後の深掘り事項
+                  - generic [ref=e1698]: 2027年5月期に向けた中期財務方針を分析し、売上高CAGR 22〜27%、営業利益率18〜23%という野心的な目標への順調な進捗を確認しました。今後は、さらなる成長の鍵となる生成AIを活用した技術投資の具体策や、シンガポールを中心とした海外展開の定量的な成果について、統合報告書や説明会資料を基に深く掘り下げていく予定です。また、マネーフォワードやインフォマートといった競合他社との市場シェア争いの現状についても、最新の業界動向から比較分析を試みます。
+              - generic [ref=e1699]:
+                - separator [ref=e1702]
+                - generic [ref=e1704]:
+                  - generic [ref=e1705]: Researching websites...
+                  - generic [ref=e1706]:
+                    - link [ref=e1708] [cursor=pointer]:
+                      - /url: https://prtimes.jp/main/html/rd/p/000000641.000049627.html
+                      - generic [ref=e1709]: prtimes.jp
+                      - generic [ref=e1710]: 営業DXサービス「Sansan」法人向け名刺管理サービスで12年連続シェアNo.1 - PR TIMES
+                    - link [ref=e1712] [cursor=pointer]:
+                      - /url: https://jp.corp-sansan.com/news/2026/0113.html
+                      - generic [ref=e1713]: jp.corp-sansan.com
+                      - generic [ref=e1714]: Sansan、法人向け名刺管理サービス13年連続シェアNo.1～契約件数1万1000件を突破し
+                    - link [ref=e1716] [cursor=pointer]:
+                      - /url: https://jp.sansan.com/solution/meishi-management/
+                      - generic [ref=e1717]: jp.sansan.com
+                      - generic [ref=e1718]: 名刺管理のSansan - 法人向けシェアNo.1
+                    - link [ref=e1720] [cursor=pointer]:
+                      - /url: https://www.cloudsign.jp/media/electronic-books-maintenance-act/
+                      - generic [ref=e1721]: cloudsign.jp
+                      - generic [ref=e1722]: 電子帳簿保存法の要件とは？2026年最新のポイントをわかりやすく解説 | クラウドサイン
+                    - link [ref=e1724] [cursor=pointer]:
+                      - /url: https://finance.yahoo.co.jp/quote/4443.T/financials?styl=presentation
+                      - generic [ref=e1725]: finance.yahoo.co.jp
+                      - generic [ref=e1726]: Ｓａｎｓａｎ(株)【4443】：決算説明会書き起こし - Yahoo ...
+                    - link [ref=e1728] [cursor=pointer]:
+                      - /url: https://data.swcms.net/file/corp-sansan-ir/dam/jcr:d6d3822a-aadc-4a51-8e34-a9816038a78c/140120260114533274.pdf
+                      - generic [ref=e1729]: data.swcms.net
+                      - generic [ref=e1730]: 2026年5月期 第2四半期 決算説明資料
+                    - link [ref=e1732] [cursor=pointer]:
+                      - /url: https://ir.corp-sansan.com/ja/ir/library/report/main/06/teaserItems1/00/linkList/0/link/sansan_ar2025_jp.pdf
+                      - generic [ref=e1733]: ir.corp-sansan.com
+                      - generic [ref=e1734]: Sansan株式会社 統合報告書2025 - トップ | Sansan株式会社
+              - generic [ref=e1735]:
+                - generic [ref=e1736]:
+                  - img [ref=e1738]: spark
+                  - separator [ref=e1739]
+                - generic [ref=e1740]:
+                  - generic [ref=e1741]: 請求書受領市場における圧倒的なシェアと競合優位性
+                  - generic [ref=e1742]: クラウド請求書受領サービス市場において、「Bill One」がシェア3割以上を占めてトップを走っている現状を分析しました。マネーフォワードやインフォマートといった競合他社との比較において、Sansanが長年培った名刺データ化のノウハウを転用した「99.9%の入力精度」が強力な参入障壁となっていることを再確認しています。競合が安価なセルフ入力型で中小企業を狙うのに対し、Bill Oneは正確なデータ化を武器に大企業の複雑なワークフローを支える独自のポジションを確立しています。
+              - generic [ref=e1743]:
+                - separator [ref=e1745]
+                - generic [ref=e1746]:
+                  - generic [ref=e1747]: 法規制を追い風にした持続的な成長メカニズム
+                  - generic [ref=e1748]: 電子帳簿保存法やインボイス制度の定着による特需が一巡した後も、単なる法令遵守を超えた「月次決算の加速」という本質的なDX需要を掘り起こしている点に注目しています。一度導入されると解約が困難なB2Bプラットフォームとしての特性に加え、契約あたりの平均売上単価（ARPU）が前年比で約7%上昇していることから、既存顧客内での浸透とアップセルが着実に進んでいることを突き止めました。
+              - generic [ref=e1749]:
+                - separator [ref=e1751]
+                - generic [ref=e1752]:
+                  - generic [ref=e1753]: 次なる成長領域とAI・海外戦略の具体化
+                  - generic [ref=e1754]: 今後は、研究開発費の売上比率を精査し、生成AIを活用したデータ構造化技術がどのようにコスト削減と新機能開発に寄与するかを思考していきます。また、東南アジアを中心とした海外展開が、国内の成功モデルを再現できる段階にあるのか、あるいは現地の商習慣に応じた調整が必要なフェーズなのかを検証します。あわせて、2027年度の利益率20%超えという目標達成に向けた、マーケティング効率の改善余地についても深く掘り下げる予定です。
+              - generic [ref=e1755]:
+                - separator [ref=e1757]
+                - generic [ref=e1758]:
+                  - generic [ref=e1759]: 最新業績における収益性の飛躍的向上
+                  - generic [ref=e1760]: 2026年5月期第2四半期までの実績を分析した結果、売上高が前年同期比26.5%増と堅調に推移する中で、調整後営業利益が294%増という驚異的な伸びを見せていることを突き止めました。特に注目すべきは、主要サービスである「Sansan」の成長再加速（18.8%増）と、「Bill One」の圧倒的な高成長（40.1%増）が両立している点です。本社移転に伴う一時費用の剥落や広告宣伝費の効率化により、四半期ベースで過去最高の利益率18.7%を達成しており、利益重視のフェーズへ完全に移行したと評価しています。
+              - generic [ref=e1761]:
+                - separator [ref=e1763]
+                - generic [ref=e1764]:
+                  - generic [ref=e1765]: データ化技術の進化と生成AIへの注力
+                  - generic [ref=e1766]: 独自のOCR技術「DSOC OCR」により、メールアドレス認識精度99.7%という極めて高い水準を実現している技術的優位性を確認しました。2025年を「生成AIと正面から向き合う年」と位置づけ、名刺や請求書、契約書といった非構造化データの構造化プロセスにAIを本格投入している点が興味深いです。これにより、オペレーションコストの削減とデータ化スピードの向上を同時に実現しており、競合他社が容易に模倣できない高い参入障壁を築き上げていると推察しています。
+              - generic [ref=e1767]:
+                - separator [ref=e1769]
+                - generic [ref=e1770]:
+                  - generic [ref=e1771]: 資本効率の改善とグローバル展開の具体相
+                  - generic [ref=e1772]: 今後は、売上高CAGR 22〜27%という中期目標の達成に向けた、より詳細なコスト構造の分析に移行します。特に、フリーキャッシュフローマージンが16.1%と良好な水準にある中、研究開発費が将来の成長にどの程度再投資されているかを精査します。また、シンガポールを中心とした海外拠点における売上寄与度や、現地商習慣への適応状況を掘り下げることで、日本発のSaaSモデルがグローバルで通用する再現性を持っているかを検証していく予定です。
+              - generic [ref=e1773]:
+                - separator [ref=e1776]
+                - generic [ref=e1778]:
+                  - generic [ref=e1779]: Researching websites...
+                  - generic [ref=e1780]:
+                    - link [ref=e1782] [cursor=pointer]:
+                      - /url: https://note.com/ir_labo/n/n80a9d5b1d2fc
+                      - generic [ref=e1783]: note.com
+                      - generic [ref=e1784]: Sansan 2026年5月期 第1四半期決算で見えたDX市場の勝者への道筋とは？売上+28%成長とARR44億円突破の裏に隠された戦略 - note
+                    - link [ref=e1786] [cursor=pointer]:
+                      - /url: https://ir.corp-sansan.com/ja/ir/library/report.html
+                      - generic [ref=e1787]: ir.corp-sansan.com
+                      - generic [ref=e1788]: 統合報告書 | IRライブラリ | 株主・投資家情報 | Sansan株式会社
+              - generic [ref=e1789]:
+                - generic [ref=e1790]:
+                  - img [ref=e1792]: spark
+                  - separator [ref=e1793]
+                - generic [ref=e1794]:
+                  - generic [ref=e1795]: 収益性の飛躍的向上とBill Oneの黒字定着
+                  - generic [ref=e1796]: 直近の2026年5月期第2四半期実績を詳細に分析した結果、調整後営業利益が前年同期比で約4倍（294.0%増）という驚異的な伸びを記録していることを確認しました。特に、高成長を続けてきた「Bill One」が売上高前年同期比40.1%増を維持しつつ、セグメントとしての黒字化を確固たるものにしています。データ化オペレーションの自動化が進んだことで売上総利益率が向上しており、売上の拡大がダイレクトに利益へと結びつく、SaaSモデル特有の収益レバレッジが効き始めているフェーズだと評価しています。
+              - generic [ref=e1797]:
+                - separator [ref=e1799]
+                - generic [ref=e1800]:
+                  - generic [ref=e1801]: 名刺管理を超えた「営業DX」への再加速
+                  - generic [ref=e1802]: 主力事業の「Sansan」において、一時期の踊り場を脱し、売上成長率が18.8%と再加速している点に注目しました。背景には、過去に積極採用した営業人員の戦力化に加え、名刺管理の枠を超えた「営業DXサービス」としての顧客単価向上（ARPU上昇）があります。解約率も0.41%と極めて低い水準を維持しており、大企業を中心とした強固な顧客基盤が、他社の追随を許さない圧倒的な参入障壁として機能していることを再認識しました。
+              - generic [ref=e1803]:
+                - separator [ref=e1805]
+                - generic [ref=e1806]:
+                  - generic [ref=e1807]: 次なる焦点：AI投資の効率性と海外展開の具体相
+                  - generic [ref=e1808]: 今後は、2027年5月期に向けた利益率20%超えという目標の確度を高めるため、売上高に対する研究開発費の投資比率や、生成AIの本格導入による更なるコスト削減余地を精査します。また、シンガポールを中心とした海外市場での売上寄与度について、国内で成功した「名刺から請求書へ」というクロスセルモデルがグローバルでも再現可能か、その進捗状況を具体的に掘り下げる予定です。法規制対応（インボイス制度等）の一巡後を見据えた、次なる成長ドライバーの探索に注力します。
+              - generic [ref=e1809]:
+                - separator [ref=e1811]
+                - generic [ref=e1812]:
+                  - generic [ref=e1813]: 中長期的な高成長継続と利益率の劇的な改善
+                  - generic [ref=e1814]: 最新の2026年5月期第3四半期までのデータを分析した結果、売上高が前年同期比30.2%増と成長を加速させていることを確認しました。中期財務方針として掲げる2027年までの売上高成長率（CAGR）22〜27%という目標に対し、極めて順調な進捗を見せています。特筆すべきは、売上拡大に伴うスケールメリットと広告宣伝費の効率化により、調整後営業利益率が四半期ベースで過去最高の18.7%に達している点です。本社移転関連の一時費用が剥落したことも加わり、利益重視のフェーズへ完全にシフトしたと評価しています。
+              - generic [ref=e1815]:
+                - separator [ref=e1817]
+                - generic [ref=e1818]:
+                  - generic [ref=e1819]: Bill Oneの圧倒的シェアとSansanの再成長
+                  - generic [ref=e1820]: 事業セグメント別では、クラウド請求書受領サービス「Bill One」が前年同期比52.4%増という驚異的な成長を維持しており、市場シェア3割超のトップランナーとしての地位を盤石にしています。一方、成熟事業と目されていた「Sansan」も、過去に採用した営業人員の戦力化により成長率が18.0%へと再加速しており、解約率0.41%という極めて低い水準を背景に、強固な収益基盤として機能しています。名刺と請求書という「一次データ」を独占的に保有していることが、競合他社に対する決定的な参入障壁となっていることを改めて確認しました。
+              - generic [ref=e1821]:
+                - separator [ref=e1823]
+                - generic [ref=e1824]:
+                  - generic [ref=e1825]: AIファースト戦略による構造的優位性の確立
+                  - generic [ref=e1826]: 今後の成長ドライバーとして、生成AIを活用した非構造化データの構造化プロセスに注目しています。独自のOCR技術とAIを組み合わせることで、データ化の精度向上とコスト削減を同時に実現しており、長期的な利益率30%以上という目標の実現可能性を思考しています。今後は、シンガポールを中心とした東南アジア市場での展開が、国内の成功モデルである「名刺から請求書、さらに決済へ」というクロスセル戦略をどこまで再現できるかを注視し、包括的な投資判断に資する最終的な提言をまとめていきます。
+            - generic [ref=e1828]:
+              - separator [ref=e1831]
+              - separator [ref=e1839]

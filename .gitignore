@@ -255,6 +255,10 @@ temp/*
 
 output/*
 !output/.gitkeep
+reports/*
+!reports/.gitkeep
+reports/adhoc/*
+!reports/adhoc/.gitkeep
 
 docs/ideas/**
 !docs/ideas/.gitkeep
@@ -265,3 +269,6 @@ docs/refs/**
 docs/reports/**
 !docs/reports/.gitkeep
 docs/reports/stocks/images/*.png
+
+docs/reports/adhoc/**
+!docs/reports/adhoc/.gitkeep

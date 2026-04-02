@@ -1,0 +1,150 @@
+- generic [ref=e1]:
+  - 'button "Google アカウント: Takuya Akashi (tak.akashi@gmail.com)" [ref=e8] [cursor=pointer]':
+    - img [ref=e10]
+    - img [ref=e16]
+  - main [ref=e18]:
+    - generic:
+      - button "メインメニュー" [ref=e20] [cursor=pointer]:
+        - img [ref=e21]: menu
+      - button "チャットを新規作成" [ref=e25] [cursor=pointer]:
+        - generic [ref=e27]: Gemini
+    - generic [ref=e42]:
+      - button "PRO" [disabled]:
+        - generic: PRO
+    - generic [ref=e44]:
+      - navigation [ref=e45]:
+        - generic [ref=e49]:
+          - group [ref=e50]:
+            - link "チャットを新規作成" [ref=e52] [cursor=pointer]:
+              - /url: /app
+              - img [ref=e55]: edit_square
+          - group [ref=e58]:
+            - button "Settings & help" [ref=e60] [cursor=pointer]:
+              - img [ref=e63]: settings_2
+      - generic [ref=e72]:
+        - generic [ref=e73]:
+          - heading "Gemini との会話" [level=1] [ref=e74]
+          - generic [ref=e269]:
+            - generic [ref=e274]:
+              - button "プロンプトをコピー" [ref=e276] [cursor=pointer]:
+                - img [ref=e277]: content_copy
+              - generic [ref=e280]:
+                - button "編集" [disabled]:
+                  - img: edit
+              - generic [ref=e282]:
+                - heading [level=2] [ref=e283]:
+                  - generic [ref=e284]: あなたのプロンプト
+                  - paragraph [ref=e285]: 以下の日本企業について、投資判断に役立つ包括的な深掘り調査を行ってください。
+                  - paragraph [ref=e286]
+                  - paragraph [ref=e287]: "企業: ビーアンドピー（証券コード: 7804）"
+                  - paragraph [ref=e288]: "セクター: その他製品（商業印刷）"
+                  - paragraph [ref=e289]: "事業概要: 業務用大判インクジェット印刷のニッチトップ企業。店舗・イベント向けサイン（看板）、壁紙、ディスプレイ等の企画・印刷・施工までワンストップで提供。子会社イデイ（広告企画・デザイン）を2024年11月に連結化。EC向けパッケージ事業を立ち上げ中。大阪本社、スタンダード市場上場。"
+                  - paragraph [ref=e290]
+                  - paragraph [ref=e291]: ■ 情報ソースに関する重要な指示
+                  - paragraph [ref=e292]: "- 企業のIR資料（決算短信、統合報告書、決算説明資料）だけでなく、以下の第三者ソースを積極的に参照すること:"
+                  - paragraph [ref=e293]: "- 業界調査レポート（矢野経済研究所、IDC Japan、富士キメラ総研、MM総研等）"
+                  - paragraph [ref=e294]: "- ビジネスメディアの分析記事（日経ビジネス、東洋経済、ダイヤモンド、Forbes Japan等）"
+                  - paragraph [ref=e295]: "- テック系メディア（ITmedia、日経クロステック、TechCrunch Japan等）"
+                  - paragraph [ref=e296]: "- 証券アナリストレポートの要旨（目標株価、レーティング、懸念事項）"
+                  - paragraph [ref=e297]: "- ユーザーレビューや導入事例の評価（ITreview、Boxil等）"
+                  - paragraph [ref=e298]: "- 競合企業のIR資料（競合視点からの市場分析）"
+                  - paragraph [ref=e299]: "- 個人投資家ブログやnote等の個人分析記事は情報ソースとして使用しないこと"
+                  - paragraph [ref=e300]: "- 企業自身が発信する情報にはポジティブバイアスがかかっている前提で、第三者視点との差異があれば明示すること"
+                  - paragraph [ref=e301]: "- 各セクションで参照したソースの種別（自社IR / 業界レポート / メディア記事 / アナリスト等）を明記すること"
+                  - paragraph [ref=e302]
+                  - paragraph [ref=e303]: 【必須（重点的に調査してください）】
+                  - paragraph [ref=e304]
+                  - paragraph [ref=e305]: 1. セグメント別事業分析
+                  - paragraph [ref=e306]: "- 事業セグメント一覧と各セグメントの概要"
+                  - paragraph [ref=e307]: "- セグメント別の売上構成比・利益構成比（最新決算ベース）"
+                  - paragraph [ref=e308]: "- セグメント別の前年比成長率"
+                  - paragraph [ref=e309]: "- 各セグメントの市場ポジションと差別化要因"
+                  - paragraph [ref=e310]: "- 主要プロダクト/サービスの競争力評価"
+                  - paragraph [ref=e311]: "- ユーザー評価や導入企業の声（ポジティブ・ネガティブ両面）"
+                  - paragraph [ref=e312]
+                  - paragraph [ref=e313]: 2. セグメント別成長性
+                  - paragraph [ref=e314]: "- 各セグメントの過去3〜5年の成長トレンド"
+                  - paragraph [ref=e315]: "- セグメント別の売上高CAGR（算出可能な場合）"
+                  - paragraph [ref=e316]: "- 今後の成長ドライバーとなるセグメント"
+                  - paragraph [ref=e317]: "- 縮小・撤退リスクのあるセグメント"
+                  - paragraph [ref=e318]: "- 成長の持続可能性に対する懐疑的な見方があればそれも記載"
+                  - paragraph [ref=e319]
+                  - paragraph [ref=e320]: 3. 業界動向・競争環境
+                  - paragraph [ref=e321]: "- 属する業界の市場規模と成長率（業界調査レポートのデータを優先）"
+                  - paragraph [ref=e322]: "- 業界の主要トレンドと今後3〜5年の見通し"
+                  - paragraph [ref=e323]: "- 参入障壁の高低とその要因"
+                  - paragraph [ref=e324]: "- 主要競合企業との比較（国内・海外）— 競合企業のIR資料も参照"
+                  - paragraph [ref=e325]: "- 市場シェアや競争優位性（第三者調査データを優先）"
+                  - paragraph [ref=e326]: "- 業界の課題や逆風要因"
+                  - paragraph [ref=e327]
+                  - paragraph [ref=e328]: 【あれば有益】
+                  - paragraph [ref=e329]
+                  - paragraph [ref=e330]: 4. 技術的優位性・知的財産
+                  - paragraph [ref=e331]: "- 保有する重要技術・特許"
+                  - paragraph [ref=e332]: "- R&D投資の方向性"
+                  - paragraph [ref=e333]: "- 技術面での競合との客観的比較"
+                  - paragraph [ref=e334]
+                  - paragraph [ref=e335]: 5. 規制環境・政策リスク
+                  - paragraph [ref=e336]: "- 現行の規制環境"
+                  - paragraph [ref=e337]: "- 今後の規制変更リスク"
+                  - paragraph [ref=e338]: "- 政策追い風/逆風の可能性"
+                  - paragraph [ref=e339]
+                  - paragraph [ref=e340]: 6. 海外展開状況
+                  - paragraph [ref=e341]: "- 海外売上比率"
+                  - paragraph [ref=e342]: "- 主要進出地域と戦略"
+                  - paragraph [ref=e343]: "- 為替リスク"
+                  - paragraph [ref=e344]
+                  - paragraph [ref=e345]: 【低優先度（Phase 1で十分カバー済み）】
+                  - paragraph [ref=e346]: "- 企業概要（簡潔に）"
+                  - paragraph [ref=e347]: "- 財務数値の詳細（Phase 1でカバー済み）"
+                  - paragraph [ref=e348]
+                  - paragraph [ref=e349]: ■ レポートの品質基準
+                  - paragraph [ref=e350]: "- 各項目は具体的なデータや数値を含めて回答すること"
+                  - paragraph [ref=e351]: "- 情報が得られない項目は「情報なし」と明記すること"
+                  - paragraph [ref=e352]: "- ポジティブな情報とネガティブな情報をバランスよく記載すること"
+                  - paragraph [ref=e353]: "- 企業の主張と第三者の評価に乖離がある場合は、その点を明記すること"
+                - button "開く" [ref=e354] [cursor=pointer]:
+                  - img [ref=e355]: expand_more
+            - generic [ref=e364]:
+              - generic [ref=e366]:
+                - generic:
+                  - generic:
+                    - img
+              - generic:
+                - img
+        - generic [ref=e90]:
+          - group [ref=e91]:
+            - generic [ref=e94]:
+              - textbox "Gemini へのプロンプトを入力" [active] [ref=e233]:
+                - text: 調べたい内容を入力
+                - paragraph [ref=e368]
+              - generic [ref=e101]:
+                - button "[ファイルをアップロード] メニューを開く" [ref=e152] [cursor=pointer]:
+                  - img [ref=e153]: add_2
+                - generic [ref=e158]:
+                  - button "ツール" [ref=e235] [cursor=pointer]:
+                    - img [ref=e237]: page_info
+                  - button "Deep Researchの選択を解除" [ref=e240]:
+                    - img [ref=e241]: travel_explore
+                    - generic [ref=e242]: Deep Research
+                    - img [ref=e243]: close
+              - generic [ref=e102]:
+                - button "モード選択ツールを開く" [ref=e167]:
+                  - generic [ref=e169]:
+                    - generic [ref=e170]: 思考モード
+                    - img [ref=e171]: keyboard_arrow_down
+                - generic [ref=e104]:
+                  - text: mic
+                  - button "回答を停止" [ref=e370] [cursor=pointer]:
+                    - text: send
+                    - img [ref=e372]: stop
+              - generic [ref=e248]:
+                - button "ソース、Google Google 検索 を選択" [ref=e250]:
+                  - generic [ref=e252]:
+                    - generic [ref=e256]: ソース
+                    - img [ref=e257]: keyboard_arrow_down
+                - button [ref=e261]:
+                  - generic [ref=e263]:
+                    - img [ref=e265]: upload
+                    - generic [ref=e266]: ファイル
+          - paragraph [ref=e375]: Gemini は AI であり、間違えることがあります。

@@ -1,0 +1,235 @@
+- generic [active] [ref=e1]:
+  - 'button "Google アカウント: Takuya Akashi (tak.akashi@gmail.com)" [ref=e8] [cursor=pointer]':
+    - img [ref=e10]
+    - img [ref=e16]
+  - main [ref=e18]:
+    - generic:
+      - button "メインメニュー" [ref=e20] [cursor=pointer]:
+        - img [ref=e21]: menu
+      - button "チャットを新規作成" [ref=e25] [cursor=pointer]:
+        - generic [ref=e27]: Gemini
+    - generic [ref=e29]:
+      - generic [ref=e463]: プラップジャパン深掘り調査計画
+      - generic [ref=e30]:
+        - link "アップグレード" [ref=e324]:
+          - img [ref=e325]: spark
+          - generic [ref=e327]: アップグレード
+        - generic [ref=e32]:
+          - button "会話を共有" [ref=e465] [cursor=pointer]:
+            - img [ref=e466]: share
+          - button "会話アクションのメニューを開く" [ref=e331] [cursor=pointer]:
+            - img [ref=e332]: more_vert
+    - generic [ref=e45]:
+      - navigation [ref=e46]:
+        - generic [ref=e50]:
+          - group [ref=e51]:
+            - link "チャットを新規作成" [ref=e53] [cursor=pointer]:
+              - /url: /app
+              - img [ref=e56]: edit_square
+          - group [ref=e59]:
+            - button "Settings & help" [ref=e61] [cursor=pointer]:
+              - img [ref=e64]: settings_2
+      - generic [ref=e73]:
+        - generic [ref=e74]:
+          - generic [ref=e75]:
+            - heading "Gemini との会話" [level=1] [ref=e76]
+            - generic [ref=e78]:
+              - generic [ref=e335]:
+                - generic [ref=e340]:
+                  - button "プロンプトをコピー" [ref=e342] [cursor=pointer]:
+                    - img [ref=e343]: content_copy
+                  - generic [ref=e348]:
+                    - heading [level=2] [ref=e349]:
+                      - generic [ref=e350]: あなたのプロンプト
+                      - paragraph [ref=e351]: 以下の日本企業について、投資判断に役立つ包括的な深掘り調査を行ってください。
+                      - paragraph [ref=e352]
+                      - paragraph [ref=e353]: "企業: プラップジャパン（証券コード: 2449）"
+                      - paragraph [ref=e354]: "セクター: サービス業 / PR・販売促進"
+                      - paragraph [ref=e355]: "事業概要: PR・広報コンサルティングの老舗。広報・PRはIT・ヘルスケア軸に定期契約着実。危機管理コンサルが強み。海外は中国・東南アジア展開。デジタルはSaaS「PRオートメーション」で広報DXを推進。"
+                      - paragraph [ref=e356]
+                      - paragraph [ref=e357]: ■ 情報ソースに関する重要な指示
+                      - paragraph [ref=e358]: "- 企業のIR資料（決算短信、統合報告書、決算説明資料）だけでなく、以下の第三者ソースを積極的に参照すること:"
+                      - paragraph [ref=e359]: "- 業界調査レポート（矢野経済研究所、IDC Japan、富士キメラ総研、MM総研等）"
+                      - paragraph [ref=e360]: "- ビジネスメディアの分析記事（日経ビジネス、東洋経済、ダイヤモンド、Forbes Japan等）"
+                      - paragraph [ref=e361]: "- テック系メディア（ITmedia、日経クロステック、TechCrunch Japan等）"
+                      - paragraph [ref=e362]: "- 証券アナリストレポートの要旨（目標株価、レーティング、懸念事項）"
+                      - paragraph [ref=e363]: "- ユーザーレビューや導入事例の評価（ITreview、Boxil等）"
+                      - paragraph [ref=e364]: "- 競合企業のIR資料（競合視点からの市場分析）"
+                      - paragraph [ref=e365]: "- 個人投資家ブログやnote等の個人分析記事は情報ソースとして使用しないこと"
+                      - paragraph [ref=e366]: "- 企業自身が発信する情報にはポジティブバイアスがかかっている前提で、第三者視点との差異があれば明示すること"
+                      - paragraph [ref=e367]: "- 各セクションで参照したソースの種別（自社IR / 業界レポート / メディア記事 / アナリスト等）を明記すること"
+                      - paragraph [ref=e368]
+                      - paragraph [ref=e369]: 【必須（重点的に調査してください）】
+                      - paragraph [ref=e370]
+                      - paragraph [ref=e371]: 1. セグメント別事業分析
+                      - paragraph [ref=e372]: "- 事業セグメント一覧と各セグメントの概要"
+                      - paragraph [ref=e373]: "- セグメント別の売上構成比・利益構成比（最新決算ベース）"
+                      - paragraph [ref=e374]: "- セグメント別の前年比成長率"
+                      - paragraph [ref=e375]: "- 各セグメントの市場ポジションと差別化要因"
+                      - paragraph [ref=e376]: "- 主要プロダクト/サービスの競争力評価"
+                      - paragraph [ref=e377]: "- ユーザー評価や導入企業の声（ポジティブ・ネガティブ両面）"
+                      - paragraph [ref=e378]
+                      - paragraph [ref=e379]: 2. セグメント別成長性
+                      - paragraph [ref=e380]: "- 各セグメントの過去3〜5年の成長トレンド"
+                      - paragraph [ref=e381]: "- セグメント別の売上高CAGR（算出可能な場合）"
+                      - paragraph [ref=e382]: "- 今後の成長ドライバーとなるセグメント"
+                      - paragraph [ref=e383]: "- 縮小・撤退リスクのあるセグメント"
+                      - paragraph [ref=e384]: "- 成長の持続可能性に対する懐疑的な見方があればそれも記載"
+                      - paragraph [ref=e385]
+                      - paragraph [ref=e386]: 3. 業界動向・競争環境
+                      - paragraph [ref=e387]: "- 属する業界の市場規模と成長率（業界調査レポートのデータを優先）"
+                      - paragraph [ref=e388]: "- 業界の主要トレンドと今後3〜5年の見通し"
+                      - paragraph [ref=e389]: "- 参入障壁の高低とその要因"
+                      - paragraph [ref=e390]: "- 主要競合企業との比較（国内・海外）— 競合企業のIR資料も参照"
+                      - paragraph [ref=e391]: "- 市場シェアや競争優位性（第三者調査データを優先）"
+                      - paragraph [ref=e392]: "- 業界の課題や逆風要因"
+                      - paragraph [ref=e393]
+                      - paragraph [ref=e394]: 【あれば有益】
+                      - paragraph [ref=e395]
+                      - paragraph [ref=e396]: 4. 技術的優位性・知的財産
+                      - paragraph [ref=e397]: "- 保有する重要技術・特許"
+                      - paragraph [ref=e398]: "- R&D投資の方向性"
+                      - paragraph [ref=e399]: "- 技術面での競合との客観的比較"
+                      - paragraph [ref=e400]
+                      - paragraph [ref=e401]: 5. 規制環境・政策リスク
+                      - paragraph [ref=e402]: "- 現行の規制環境"
+                      - paragraph [ref=e403]: "- 今後の規制変更リスク"
+                      - paragraph [ref=e404]: "- 政策追い風/逆風の可能性"
+                      - paragraph [ref=e405]
+                      - paragraph [ref=e406]: 6. 海外展開状況
+                      - paragraph [ref=e407]: "- 海外売上比率"
+                      - paragraph [ref=e408]: "- 主要進出地域と戦略"
+                      - paragraph [ref=e409]: "- 為替リスク"
+                      - paragraph [ref=e410]
+                      - paragraph [ref=e411]: 【低優先度（Phase 1で十分カバー済み）】
+                      - paragraph [ref=e412]: "- 企業概要（簡潔に）"
+                      - paragraph [ref=e413]: "- 財務数値の詳細（Phase 1でカバー済み）"
+                      - paragraph [ref=e414]
+                      - paragraph [ref=e415]: ■ レポートの品質基準
+                      - paragraph [ref=e416]: "- 各項目は具体的なデータや数値を含めて回答すること"
+                      - paragraph [ref=e417]: "- 情報が得られない項目は「情報なし」と明記すること"
+                      - paragraph [ref=e418]: "- ポジティブな情報とネガティブな情報をバランスよく記載すること"
+                      - paragraph [ref=e419]: "- 企業の主張と第三者の評価に乖離がある場合は、その点を明記すること"
+                    - button "開く" [ref=e420] [cursor=pointer]:
+                      - img [ref=e421]: expand_more
+                - generic [ref=e427]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - button "読み上げる":
+                              - img: volume_up
+                        - menu
+                  - generic [ref=e428]:
+                    - generic [ref=e433]:
+                      - generic:
+                        - generic:
+                          - img
+                    - generic [ref=e435]:
+                      - button [ref=e442]:
+                        - generic [ref=e444]:
+                          - status:
+                            - generic: 思考プロセスを表示
+                          - img [ref=e446]: expand_more
+                      - heading "Gemini の回答" [level=2] [ref=e449]
+                      - paragraph [ref=e544]:
+                        - text: 計画を作成しました。リサーチを開始する前に変更が必要でしたら、お知らせください。
+                        - generic [ref=e548]:
+                          - heading "プラップジャパン深掘り調査依頼" [level=3] [ref=e549]
+                          - generic [ref=e550]:
+                            - generic [ref=e551]:
+                              - generic [ref=e552]:
+                                - img [ref=e553]: select_window_2
+                                - generic [ref=e554]: ウェブサイトをリサーチ
+                              - generic [ref=e555]:
+                                - generic [ref=e556]: (1) プラップジャパン（2449）の最新の決算短信、有価証券報告書、決算説明資料を収集し、セグメント別の売上・利益構成、成長率、各事業の概要と過去5年の財務推移を整理する。 (2) 矢野経済研究所、IDC Japan、富士キメラ総研等の業界調査資料から、国内PR市場および広報DX（SaaS）市場の規模、CAGR、将来予測を確認し、同社の事業環境を客観的に把握する。 (3) 日経ビジネス、東洋経済、Forbes Japan等のビジネスメディアやITmedia、日経クロステック等のテックメディアを調査し、同社のデジタル戦略「PRオートメーション」や海外展開に関する第三者視点の分析記事を収集する。 (4) 証券アナリストのレポート要旨やレーティング情報を検索し、目標株価、業績予想の背景、投資家が懸念しているリスク要因（人件費高騰、景気敏感性等）を特定する。 (5) 主要競合（ベクトル、サニーサイドアップ、共同PR等）のIR資料を調査し、市場シェア、営業利益率、サービスラインナップの差異を比較分析してプラップジャパンの競争優位性と劣位性を明文化する。 (6) ITreviewやBoxil等のSaaS比較サイトにて、主力プロダクトである「PRオートメーション」のユーザーレビューを収集し、機能面やUI/UXにおける具体的評価（ポジティブ・ネガティブ双方）を抽出する。 (7) 海外事業（中国、東南アジア）の具体的な進出状況、地政学的リスク、為替感応度を、同社資料および現地経済ニュースや海外メディアの記事から分析する。 (8) 特許情報プラットフォーム等を用いて保有特許や知財戦略を確認し、R&D投資の効率性、および今後の景気後退や法的規制（ステルスマーケティング規制等）が事業に与える影響とリスクを総合的に評価する。
+                                - button "リサーチプランの詳細" [ref=e558] [cursor=pointer]:
+                                  - generic [ref=e559]: その他
+                            - generic [ref=e563]:
+                              - img [ref=e564]: sort
+                              - generic [ref=e565]: 結果を分析
+                            - generic [ref=e568]:
+                              - img [ref=e569]: travel_explore
+                              - generic [ref=e570]: レポートを作成
+                          - generic [ref=e571]:
+                            - img [ref=e572]: schedule
+                            - generic [ref=e573]: 数分で完了予定
+                          - generic [ref=e574]:
+                            - button "リサーチ計画を編集" [disabled]:
+                              - generic: 計画を編集
+                            - button "リサーチを開始" [disabled]:
+                              - generic: リサーチを開始
+              - generic [ref=e575]:
+                - generic [ref=e580]:
+                  - button "プロンプトをコピー" [ref=e582] [cursor=pointer]:
+                    - img [ref=e583]: content_copy
+                  - generic [ref=e586]:
+                    - button "編集" [disabled]:
+                      - img: edit
+                  - heading "あなたのプロンプト リサーチを開始" [level=2] [ref=e589]:
+                    - generic [ref=e590]: あなたのプロンプト
+                    - paragraph [ref=e591]: リサーチを開始
+                - generic [ref=e595]:
+                  - generic [ref=e599]:
+                    - generic [ref=e601]:
+                      - generic:
+                        - generic:
+                          - img
+                    - generic:
+                      - img
+                  - generic [ref=e604]:
+                    - heading "Gemini の回答" [level=2] [ref=e605]
+                    - paragraph [ref=e610]:
+                      - text: リサーチを行っている間、ご自由にこのチャットからご退出ください。完了次第、お知らせします。
+                      - generic [ref=e616] [cursor=pointer]:
+                        - generic [ref=e617]:
+                          - generic [ref=e619]:
+                            - generic:
+                              - img
+                          - img [ref=e620]: select_window_2
+                        - status [ref=e621]:
+                          - generic [ref=e622]: プラップジャパン深掘り調査依頼
+                          - generic [ref=e625]: リサーチを開始しています...
+          - generic [ref=e101]:
+            - group [ref=e102]:
+              - generic [ref=e105]:
+                - textbox "Gemini へのプロンプトを入力" [ref=e249]:
+                  - text: 調べたい内容を入力
+                  - paragraph [ref=e452]
+                - generic [ref=e112]:
+                  - button "[ファイルをアップロード] メニューを開く" [ref=e117] [cursor=pointer]:
+                    - img [ref=e118]: add_2
+                  - generic [ref=e123]:
+                    - text: page_info
+                    - button "Deep Researchの選択を解除" [ref=e256]:
+                      - img [ref=e257]: travel_explore
+                      - img [ref=e259]: close
+                - generic [ref=e131]:
+                  - button "モード選択ツールを開く" [ref=e134]:
+                    - generic [ref=e136]:
+                      - generic [ref=e137]: 思考モード
+                      - img [ref=e138]: keyboard_arrow_down
+                  - generic [ref=e141]:
+                    - text: mic
+                    - button "回答を停止" [ref=e454] [cursor=pointer]:
+                      - text: send
+                      - img [ref=e627]: stop
+            - paragraph [ref=e459]: Gemini は AI であり、間違えることがあります。
+        - generic [ref=e629]:
+          - generic [ref=e631]:
+            - generic [ref=e632]:
+              - img [ref=e633]: travel_explore
+              - heading "プラップジャパン深掘り調査依頼" [level=2] [ref=e634]
+              - separator [ref=e635]
+              - button "思考プロセスを表示" [ref=e636]:
+                - generic [ref=e637]: 思考プロセスを表示
+                - img [ref=e638]: keyboard_arrow_down
+            - button "パネルを閉じる" [ref=e642] [cursor=pointer]:
+              - img [ref=e643]: close
+          - generic [ref=e649]:
+            - separator [ref=e652]
+            - separator [ref=e660]
+            - separator [ref=e668]
+            - separator [ref=e676]
+  - generic [ref=e152]: Gemini が回答しました

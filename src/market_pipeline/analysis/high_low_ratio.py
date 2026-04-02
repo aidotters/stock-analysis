@@ -13,10 +13,10 @@ project_root = os.path.dirname(
 )
 sys.path.insert(0, project_root)
 
-from market_pipeline.utils.parallel_processor import (
+from market_pipeline.utils.parallel_processor import (  # noqa: E402
     BatchDatabaseProcessor,
     measure_performance,
-)  # noqa: E402
+)
 
 # --- Constants ---
 JQUANTS_DB_PATH = "/Users/tak/Markets/Stocks/Stock-Analysis/data/jquants.db"

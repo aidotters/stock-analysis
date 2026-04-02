@@ -1,0 +1,93 @@
+- generic [ref=e1]:
+  - 'button "Google アカウント: Takuya Akashi (tak.akashi@gmail.com)" [ref=e8] [cursor=pointer]':
+    - img [ref=e10]
+    - img [ref=e16]
+  - main [ref=e18]:
+    - generic:
+      - button "メインメニュー" [ref=e20] [cursor=pointer]:
+        - img [ref=e21]: menu
+      - button "チャットを新規作成" [disabled] [ref=e25]:
+        - generic [ref=e27]: Gemini
+    - generic [ref=e32]:
+      - button "一時チャット" [ref=e35] [cursor=pointer]:
+        - img [ref=e38]
+      - generic [ref=e43]:
+        - button "PRO" [disabled]:
+          - generic: PRO
+    - generic [ref=e45]:
+      - navigation [ref=e46]:
+        - generic [ref=e50]:
+          - group [ref=e51]:
+            - link "チャットを新規作成" [ref=e53] [cursor=pointer]:
+              - /url: /app
+              - img [ref=e56]: edit_square
+          - group [ref=e59]:
+            - button "Settings & help" [ref=e61] [cursor=pointer]:
+              - img [ref=e64]: settings_2
+      - generic [ref=e74]:
+        - generic [ref=e75]:
+          - heading "Gemini との会話" [level=1] [ref=e76]
+          - generic [ref=e78]:
+            - generic [ref=e138]:
+              - generic [ref=e139]:
+                - img [ref=e141]: upload_file
+                - generic [ref=e142]:
+                  - heading "メモリーを移行しましょう" [level=3] [ref=e143]
+                  - generic [ref=e144]: 他の AI アプリからメモリーをインポートして、最初からやり直すことなく Gemini にスムーズに切り替えられます
+              - generic [ref=e145]:
+                - button "後で" [ref=e147]:
+                  - generic [ref=e149]: 後で
+                - button "使ってみる" [ref=e153]:
+                  - generic [ref=e155]: 使ってみる
+            - generic [ref=e81]:
+              - generic [ref=e82]:
+                - generic [ref=e159]: Takuya さん
+                - heading "何から始めますか？" [level=1] [ref=e162]
+              - generic [ref=e169]:
+                - button "🖼️ 画像の作成、ボタン、タップしてツールを使用" [ref=e171] [cursor=pointer]:
+                  - generic [ref=e172]: 🖼️ 画像の作成
+                - button "🎸 音楽を作成、ボタン、タップしてツールを使用" [ref=e174] [cursor=pointer]:
+                  - generic [ref=e175]: 🎸 音楽を作成
+                - button "動画の作成、ボタン、タップしてツールを使用" [ref=e177] [cursor=pointer]:
+                  - generic [ref=e178]: 動画の作成
+                - button "何でも書く、ボタン、タップしてツールを使用" [ref=e180] [cursor=pointer]:
+                  - generic [ref=e181]: 何でも書く
+                - button "一日を盛り上げる、ボタン、タップしてツールを使用" [ref=e183] [cursor=pointer]:
+                  - generic [ref=e184]: 一日を盛り上げる
+                - button "知識習得サポート、ボタン、タップしてツールを使用" [ref=e186] [cursor=pointer]:
+                  - generic [ref=e187]: 知識習得サポート
+        - generic [ref=e92]:
+          - group [ref=e93]:
+            - generic [ref=e96]:
+              - textbox "Gemini へのプロンプトを入力" [active] [ref=e255]:
+                - text: 調べたい内容を入力
+                - paragraph [ref=e256]
+              - generic [ref=e103]:
+                - button "[ファイルをアップロード] メニューを開く" [ref=e192] [cursor=pointer]:
+                  - img [ref=e193]: add_2
+                - generic [ref=e106]:
+                  - button "ツール" [ref=e257] [cursor=pointer]:
+                    - img [ref=e259]: page_info
+                  - button "Deep Researchの選択を解除" [ref=e262]:
+                    - img [ref=e263]: travel_explore
+                    - generic [ref=e264]: Deep Research
+                    - img [ref=e265]: close
+              - generic [ref=e114]:
+                - button "モード選択ツールを開く" [ref=e117]:
+                  - generic [ref=e119]:
+                    - generic [ref=e120]: 高速モード
+                    - img [ref=e121]: keyboard_arrow_down
+                - generic [ref=e124]:
+                  - button "マイク" [ref=e127] [cursor=pointer]:
+                    - img [ref=e129]: mic
+                  - text: send
+              - generic [ref=e270]:
+                - button "ソース、Google Google 検索 を選択" [ref=e272]:
+                  - generic [ref=e274]:
+                    - generic [ref=e278]: ソース
+                    - img [ref=e279]: keyboard_arrow_down
+                - button [ref=e283]:
+                  - generic [ref=e285]:
+                    - img [ref=e287]: upload
+                    - generic [ref=e288]: ファイル
+          - paragraph [ref=e134]

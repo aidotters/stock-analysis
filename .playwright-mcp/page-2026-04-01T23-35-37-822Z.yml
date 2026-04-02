@@ -1,0 +1,100 @@
+- generic [ref=e1]:
+  - 'button "Google アカウント: Takuya Akashi (tak.akashi@gmail.com)" [ref=e8] [cursor=pointer]':
+    - img [ref=e10]
+    - img [ref=e16]
+  - main [ref=e18]:
+    - generic:
+      - button "メインメニュー" [ref=e20] [cursor=pointer]:
+        - img [ref=e21]: menu
+      - button "チャットを新規作成" [disabled] [ref=e25]:
+        - generic [ref=e27]: Gemini
+    - generic [ref=e32]:
+      - button "一時チャット" [ref=e35] [cursor=pointer]:
+        - img [ref=e38]
+      - generic [ref=e43]:
+        - button "PRO" [disabled]:
+          - generic: PRO
+    - generic [ref=e45]:
+      - navigation [ref=e46]:
+        - generic [ref=e50]:
+          - group [ref=e51]:
+            - link "チャットを新規作成" [ref=e53] [cursor=pointer]:
+              - /url: /app
+              - img [ref=e56]: edit_square
+          - group [ref=e59]:
+            - button "Settings & help" [ref=e61] [cursor=pointer]:
+              - img [ref=e64]: settings_2
+      - generic [ref=e74]:
+        - generic [ref=e75]:
+          - heading "Gemini との会話" [level=1] [ref=e76]
+          - generic [ref=e78]:
+            - generic [ref=e81]:
+              - generic [ref=e82]:
+                - generic [ref=e145]: Takuya さん
+                - heading "何から始めますか？" [level=1] [ref=e148]
+              - generic [ref=e155]:
+                - button "🖼️ 画像の作成、ボタン、タップしてツールを使用" [ref=e157] [cursor=pointer]:
+                  - generic [ref=e158]: 🖼️ 画像の作成
+                - button "🎸 音楽を作成、ボタン、タップしてツールを使用" [ref=e160] [cursor=pointer]:
+                  - generic [ref=e161]: 🎸 音楽を作成
+                - button "知識習得サポート、ボタン、タップしてツールを使用" [ref=e163] [cursor=pointer]:
+                  - generic [ref=e164]: 知識習得サポート
+                - button "一日を盛り上げる、ボタン、タップしてツールを使用" [ref=e166] [cursor=pointer]:
+                  - generic [ref=e167]: 一日を盛り上げる
+                - button "何でも書く、ボタン、タップしてツールを使用" [ref=e169] [cursor=pointer]:
+                  - generic [ref=e170]: 何でも書く
+                - button "動画の作成、ボタン、タップしてツールを使用" [ref=e172] [cursor=pointer]:
+                  - generic [ref=e173]: 動画の作成
+            - generic [ref=e177]:
+              - button "閉じる" [ref=e178] [cursor=pointer]:
+                - img [ref=e179]: close
+              - generic [ref=e182]:
+                - generic [ref=e184]: 音楽を作ってみましょう。長い、高品質なトラックを生成するには「思考モード」を選択してください。
+                - button "試してみる" [ref=e186]:
+                  - generic [ref=e187]: 試してみる
+        - generic [ref=e92]:
+          - group [ref=e93]:
+            - generic [ref=e96]:
+              - textbox "Gemini へのプロンプトを入力" [ref=e101]:
+                - text: Gemini に相談
+                - paragraph [ref=e102]
+              - generic [ref=e103]:
+                - button "[ファイルをアップロード] メニューを開く" [ref=e108] [cursor=pointer]:
+                  - img [ref=e109]: add_2
+                - button "ツール" [expanded] [ref=e115] [cursor=pointer]:
+                  - img [ref=e116]: page_info
+                  - generic [ref=e119]: ツール
+              - generic [ref=e122]:
+                - button "モード選択ツールを開く" [ref=e125]:
+                  - generic [ref=e127]:
+                    - generic [ref=e128]: 思考モード
+                    - img [ref=e129]: keyboard_arrow_down
+                - generic [ref=e132]:
+                  - button "マイク" [ref=e135] [cursor=pointer]:
+                    - img [ref=e137]: mic
+                  - text: send
+          - paragraph [ref=e142]
+  - menu [active] [ref=e194]:
+    - generic [ref=e195]: ツール
+    - menuitemcheckbox "画像を作成 New" [ref=e197] [cursor=pointer]:
+      - img [ref=e198]: photo_prints
+      - generic [ref=e201]:
+        - generic [ref=e203]: 画像を作成
+        - generic [ref=e204]: New
+    - menuitemcheckbox "Canvas" [ref=e206] [cursor=pointer]:
+      - img [ref=e207]: note_stack_add
+      - generic [ref=e212]: Canvas
+    - menuitemcheckbox "Deep Research" [ref=e214] [cursor=pointer]:
+      - img [ref=e215]: travel_explore
+      - generic [ref=e220]: Deep Research
+    - menuitemcheckbox "動画を作成" [ref=e222] [cursor=pointer]:
+      - img [ref=e223]: movie
+      - generic [ref=e228]: 動画を作成
+    - menuitemcheckbox "音楽を作成 New" [ref=e230] [cursor=pointer]:
+      - img [ref=e231]: music_note
+      - generic [ref=e234]:
+        - generic [ref=e236]: 音楽を作成
+        - generic [ref=e237]: New
+    - menuitemcheckbox "ガイド付き学習" [ref=e239] [cursor=pointer]:
+      - img [ref=e240]: auto_stories
+      - generic [ref=e245]: ガイド付き学習

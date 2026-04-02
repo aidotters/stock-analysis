@@ -1,0 +1,197 @@
+- generic [active] [ref=e1]:
+  - 'button "Google アカウント: Takuya Akashi (tak.akashi@gmail.com)" [ref=e8] [cursor=pointer]':
+    - img [ref=e10]
+    - img [ref=e16]
+  - main [ref=e18]:
+    - generic:
+      - button "メインメニュー" [ref=e20] [cursor=pointer]:
+        - img [ref=e21]: menu
+      - button "チャットを新規作成" [ref=e25] [cursor=pointer]:
+        - generic [ref=e27]: Gemini
+    - generic [ref=e29]:
+      - generic [ref=e430]: Sansan 企業深掘り調査計画
+      - generic [ref=e30]:
+        - link "アップグレード" [ref=e311]:
+          - img [ref=e312]: spark
+          - generic [ref=e314]: アップグレード
+        - generic [ref=e32]:
+          - button "会話を共有" [ref=e432] [cursor=pointer]:
+            - img [ref=e433]: share
+          - button "会話アクションのメニューを開く" [ref=e318] [cursor=pointer]:
+            - img [ref=e319]: more_vert
+    - generic [ref=e45]:
+      - navigation [ref=e46]:
+        - generic [ref=e50]:
+          - group [ref=e51]:
+            - link "チャットを新規作成" [ref=e53] [cursor=pointer]:
+              - /url: /app
+              - img [ref=e56]: edit_square
+          - group [ref=e59]:
+            - button "Settings & help" [ref=e61] [cursor=pointer]:
+              - img [ref=e64]: settings_2
+      - generic [ref=e74]:
+        - generic [ref=e75]:
+          - heading "Gemini との会話" [level=1] [ref=e76]
+          - generic [ref=e78]:
+            - generic [ref=e322]:
+              - generic [ref=e327]:
+                - button "プロンプトをコピー" [ref=e329] [cursor=pointer]:
+                  - img [ref=e330]: content_copy
+                - generic [ref=e335]:
+                  - 'heading "あなたのプロンプト 以下の日本企業について、投資判断に役立つ包括的な深掘り調査を行ってください。 企業: Sansan（証券コード: 4443） セクター: 情報・通信業（クラウドSaaS） 事業概要: 営業DXサービス「Sansan」、クラウド請求書受領サービス「Bill One」、個人向け名刺アプリ「Eight」を展開。法人向け名刺管理市場で国内シェア約8割。 【必須（重点的に調査してください）】 1. セグメント別事業分析 - 事業セグメント一覧と各セグメントの概要 - セグメント別の売上構成比・利益構成比（最新決算ベース） - セグメント別の前年比成長率 - 各セグメントの市場ポジションと差別化要因 - 主要プロダクト/サービスの競争力評価 2. セグメント別成長性 - 各セグメントの過去3〜5年の成長トレンド - セグメント別の売上高CAGR（算出可能な場合） - 今後の成長ドライバーとなるセグメント - 縮小・撤退リスクのあるセグメント 3. 業界動向・競争環境 - 属する業界の市場規模と成長率 - 業界の主要トレンドと今後3〜5年の見通し - 参入障壁の高低とその要因 - 主要競合企業との比較（国内・海外） - 市場シェアや競争優位性 【あれば有益】 4. 技術的優位性・知的財産 - 保有する重要技術・特許 - R&D投資の方向性 5. 規制環境・政策リスク - 現行の規制環境 - 今後の規制変更リスク - 政策追い風/逆風の可能性 6. 海外展開状況 - 海外売上比率 - 主要進出地域と戦略 - 為替リスク 【低優先度（Phase 1で十分カバー済み）】 - 企業概要（簡潔に） - 財務数値の詳細（Phase 1でカバー済み） 各項目は具体的なデータや数値を含めて回答してください。情報が得られない項目は「情報なし」と明記してください。" [level=2] [ref=e336]':
+                    - generic [ref=e337]: あなたのプロンプト
+                    - paragraph [ref=e338]: 以下の日本企業について、投資判断に役立つ包括的な深掘り調査を行ってください。
+                    - paragraph [ref=e339]
+                    - paragraph [ref=e340]: "企業: Sansan（証券コード: 4443）"
+                    - paragraph [ref=e341]: "セクター: 情報・通信業（クラウドSaaS）"
+                    - paragraph [ref=e342]: "事業概要: 営業DXサービス「Sansan」、クラウド請求書受領サービス「Bill One」、個人向け名刺アプリ「Eight」を展開。法人向け名刺管理市場で国内シェア約8割。"
+                    - paragraph [ref=e343]
+                    - paragraph [ref=e344]: 【必須（重点的に調査してください）】
+                    - paragraph [ref=e345]
+                    - paragraph [ref=e346]: 1. セグメント別事業分析
+                    - paragraph [ref=e347]: "- 事業セグメント一覧と各セグメントの概要"
+                    - paragraph [ref=e348]: "- セグメント別の売上構成比・利益構成比（最新決算ベース）"
+                    - paragraph [ref=e349]: "- セグメント別の前年比成長率"
+                    - paragraph [ref=e350]: "- 各セグメントの市場ポジションと差別化要因"
+                    - paragraph [ref=e351]: "- 主要プロダクト/サービスの競争力評価"
+                    - paragraph [ref=e352]
+                    - paragraph [ref=e353]: 2. セグメント別成長性
+                    - paragraph [ref=e354]: "- 各セグメントの過去3〜5年の成長トレンド"
+                    - paragraph [ref=e355]: "- セグメント別の売上高CAGR（算出可能な場合）"
+                    - paragraph [ref=e356]: "- 今後の成長ドライバーとなるセグメント"
+                    - paragraph [ref=e357]: "- 縮小・撤退リスクのあるセグメント"
+                    - paragraph [ref=e358]
+                    - paragraph [ref=e359]: 3. 業界動向・競争環境
+                    - paragraph [ref=e360]: "- 属する業界の市場規模と成長率"
+                    - paragraph [ref=e361]: "- 業界の主要トレンドと今後3〜5年の見通し"
+                    - paragraph [ref=e362]: "- 参入障壁の高低とその要因"
+                    - paragraph [ref=e363]: "- 主要競合企業との比較（国内・海外）"
+                    - paragraph [ref=e364]: "- 市場シェアや競争優位性"
+                    - paragraph [ref=e365]
+                    - paragraph [ref=e366]: 【あれば有益】
+                    - paragraph [ref=e367]
+                    - paragraph [ref=e368]: 4. 技術的優位性・知的財産
+                    - paragraph [ref=e369]: "- 保有する重要技術・特許"
+                    - paragraph [ref=e370]: "- R&D投資の方向性"
+                    - paragraph [ref=e371]
+                    - paragraph [ref=e372]: 5. 規制環境・政策リスク
+                    - paragraph [ref=e373]: "- 現行の規制環境"
+                    - paragraph [ref=e374]: "- 今後の規制変更リスク"
+                    - paragraph [ref=e375]: "- 政策追い風/逆風の可能性"
+                    - paragraph [ref=e376]
+                    - paragraph [ref=e377]: 6. 海外展開状況
+                    - paragraph [ref=e378]: "- 海外売上比率"
+                    - paragraph [ref=e379]: "- 主要進出地域と戦略"
+                    - paragraph [ref=e380]: "- 為替リスク"
+                    - paragraph [ref=e381]
+                    - paragraph [ref=e382]: 【低優先度（Phase 1で十分カバー済み）】
+                    - paragraph [ref=e383]: "- 企業概要（簡潔に）"
+                    - paragraph [ref=e384]: "- 財務数値の詳細（Phase 1でカバー済み）"
+                    - paragraph [ref=e385]
+                    - paragraph [ref=e386]: 各項目は具体的なデータや数値を含めて回答してください。情報が得られない項目は「情報なし」と明記してください。
+                  - button "開く" [ref=e387] [cursor=pointer]:
+                    - img [ref=e388]: expand_more
+              - generic [ref=e394]:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - button "読み上げる":
+                            - img: volume_up
+                      - menu
+                - generic [ref=e395]:
+                  - generic [ref=e400]:
+                    - generic:
+                      - generic:
+                        - img
+                  - generic [ref=e402]:
+                    - button [ref=e409]:
+                      - generic [ref=e411]:
+                        - status:
+                          - generic: 思考プロセスを表示
+                        - img [ref=e413]: expand_more
+                    - heading "Gemini の回答" [level=2] [ref=e416]
+                    - paragraph [ref=e511]:
+                      - text: 計画を作成しました。リサーチを開始する前に変更が必要でしたら、お知らせください。
+                      - generic [ref=e514]:
+                        - generic [ref=e515]:
+                          - heading "Sansan深掘り調査：投資判断資料" [level=3] [ref=e516]
+                          - generic [ref=e517]:
+                            - generic [ref=e518]:
+                              - generic [ref=e519]:
+                                - img [ref=e520]: select_window_2
+                                - generic [ref=e521]: ウェブサイトをリサーチ
+                              - generic [ref=e522]:
+                                - generic [ref=e523]: (1) Sansan（4443）の最新の有価証券報告書、決算短信、および決算説明資料（2026年4月時点での最新分）を調査し、Sansan、Bill One、Eight等のセグメント別売上高、営業利益、前年比成長率を抽出する。 (2) 過去5年分のセグメント別売上データを収集し、各セグメントのCAGR（年平均成長率）を算出するとともに、成長トレンドの変遷を特定する。 (3) 営業DX（名刺管理）市場およびクラウド請求書受領市場の国内市場規模、成長予測を調査し、マネーフォワードやインフォマート等の主要競合との比較、およびSansanの市場シェアを特定する。 (4) 中期経営計画やアナリストレポートから、今後の成長ドライバーとなる特定セグメント（特にBill Oneの進捗）や、新規事業への投資計画、既存事業の解約率（Churn Rate）の推移を確認する。 (5) 同社の技術的優位性を裏付けるAI・OCR技術の精度、データクレンジングの仕組み、および保有する重要特許やR&D投資額の対売上比率を調査する。 (6) 電子帳簿保存法、インボイス制度などの税制・法的規制の動向と、それらがBill OneやSansanの需要に与える長期的影響、および今後の規制変更によるリスクを分析する。 (7) 海外事業の展開状況を調査し、シンガポールを中心とした東南アジア市場での進捗、海外売上比率、地域別戦略、および為替感応度を特定する。 (8) 調査したデータを総合し、参入障壁（ネットワーク外部性等）の強固さ、競合優位性の持続可能性、および投資判断に影響を与える可能性のある事業リスクを評価する。
+                                - button "リサーチプランの詳細" [ref=e525] [cursor=pointer]:
+                                  - generic [ref=e526]: その他
+                            - generic [ref=e530]:
+                              - img [ref=e531]: sort
+                              - generic [ref=e532]: 結果を分析
+                            - generic [ref=e535]:
+                              - img [ref=e536]: travel_explore
+                              - generic [ref=e537]: レポートを作成
+                          - generic [ref=e538]:
+                            - img [ref=e539]: schedule
+                            - generic [ref=e540]: 数分で完了予定
+                          - generic [ref=e541]:
+                            - button "リサーチ計画を編集" [ref=e542]:
+                              - generic [ref=e543]: 計画を編集
+                            - button "リサーチを開始" [ref=e546]:
+                              - generic [ref=e547]: リサーチを開始
+                        - button "Deep Research なしで再試行" [ref=e551]:
+                          - generic: Deep Research なしで再試行
+                - generic [ref=e488]:
+                  - button "良い回答" [ref=e490] [cursor=pointer]:
+                    - img [ref=e491]: thumb_up
+                  - button "悪い回答" [ref=e495] [cursor=pointer]:
+                    - img [ref=e496]: thumb_down
+                  - button "コピー" [ref=e500]:
+                    - img [ref=e501]: content_copy
+                  - button "他のオプションを表示" [ref=e507]:
+                    - img [ref=e508]: more_vert
+            - generic [ref=e554]:
+              - generic [ref=e559]:
+                - button "プロンプトをコピー" [ref=e561] [cursor=pointer]:
+                  - img [ref=e562]: content_copy
+                - generic [ref=e565]:
+                  - button "編集" [disabled]:
+                    - img: edit
+                - heading "あなたのプロンプト リサーチを開始" [level=2] [ref=e568]:
+                  - generic [ref=e569]: あなたのプロンプト
+                  - paragraph [ref=e570]: リサーチを開始
+              - generic [ref=e577]:
+                - generic [ref=e579]:
+                  - generic:
+                    - generic:
+                      - img
+                - generic:
+                  - img
+        - generic [ref=e100]:
+          - group [ref=e101]:
+            - generic [ref=e104]:
+              - textbox "Gemini へのプロンプトを入力" [ref=e274]:
+                - text: 調べたい内容を入力
+                - paragraph [ref=e419]
+              - generic [ref=e111]:
+                - button "[ファイルをアップロード] メニューを開く" [ref=e116] [cursor=pointer]:
+                  - img [ref=e117]: add_2
+                - generic [ref=e122]:
+                  - button "ツール" [ref=e276] [cursor=pointer]:
+                    - img [ref=e278]: page_info
+                  - button "Deep Researchの選択を解除" [ref=e281]:
+                    - img [ref=e282]: travel_explore
+                    - generic [ref=e283]: Deep Research
+                    - img [ref=e284]: close
+              - generic [ref=e130]:
+                - button "モード選択ツールを開く" [ref=e133]:
+                  - generic [ref=e135]:
+                    - generic [ref=e136]: 高速モード
+                    - img [ref=e137]: keyboard_arrow_down
+                - generic [ref=e140]:
+                  - text: mic
+                  - button "回答を停止" [ref=e421] [cursor=pointer]:
+                    - text: send
+                    - img [ref=e582]: stop
+          - paragraph [ref=e426]: Gemini は AI であり、間違えることがあります。

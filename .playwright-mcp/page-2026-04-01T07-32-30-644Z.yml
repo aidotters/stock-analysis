@@ -1,0 +1,577 @@
+- generic [active] [ref=e1]:
+  - 'button "Google アカウント: Takuya Akashi (tak.akashi@gmail.com)" [ref=e8] [cursor=pointer]':
+    - img [ref=e10]
+    - img [ref=e16]
+  - main [ref=e18]:
+    - generic:
+      - button "メインメニュー" [ref=e20] [cursor=pointer]:
+        - img [ref=e21]: menu
+      - button "チャットを新規作成" [ref=e25] [cursor=pointer]:
+        - generic [ref=e27]: Gemini
+    - generic [ref=e29]:
+      - generic [ref=e379]: CGSホールディングス深掘り調査計画
+      - generic [ref=e30]:
+        - link "アップグレード" [ref=e381]:
+          - img [ref=e382]: spark
+          - generic [ref=e384]: アップグレード
+        - generic [ref=e32]:
+          - button "会話を共有" [ref=e388] [cursor=pointer]:
+            - img [ref=e389]: share
+          - button "会話アクションのメニューを開く" [ref=e393] [cursor=pointer]:
+            - img [ref=e394]: more_vert
+    - generic [ref=e45]:
+      - navigation [ref=e46]:
+        - generic [ref=e50]:
+          - group [ref=e51]:
+            - link "チャットを新規作成" [ref=e53] [cursor=pointer]:
+              - /url: /app
+              - img [ref=e56]: edit_square
+          - group [ref=e59]:
+            - button "Settings & help" [ref=e61] [cursor=pointer]:
+              - img [ref=e64]: settings_2
+      - generic [ref=e73]:
+        - generic [ref=e74]:
+          - generic [ref=e75]:
+            - heading "Gemini との会話" [level=1] [ref=e76]
+            - generic [ref=e78]:
+              - generic [ref=e397]:
+                - generic [ref=e402]:
+                  - button "プロンプトをコピー" [ref=e404] [cursor=pointer]:
+                    - img [ref=e405]: content_copy
+                  - generic [ref=e414]:
+                    - heading [level=2] [ref=e415]:
+                      - generic [ref=e416]: あなたのプロンプト
+                      - paragraph [ref=e417]: 以下の日本企業について、投資判断に役立つ包括的な深掘り調査を行ってください。
+                      - paragraph [ref=e418]
+                      - paragraph [ref=e419]: "企業: CGSホールディングス（証券コード: 6633）"
+                      - paragraph [ref=e420]: "セクター: 電気機器（CAD/CAMソフト）"
+                      - paragraph [ref=e421]: "事業概要: 金型用CAD/CAMソフト開発のC&Gシステムズと、製造業向けITソリューションのNDES（旧NTTデータエンジニアリングシステムズ）を傘下に持つ純粋持株会社。金型製造事業（カナダ子会社）も展開。2025年10月にNDESを連結子会社化（51%取得）。"
+                      - paragraph [ref=e422]
+                      - paragraph [ref=e423]: ■ 情報ソースに関する重要な指示
+                      - paragraph [ref=e424]: "- 企業のIR資料（決算短信、統合報告書、決算説明資料）だけでなく、以下の第三者ソースを積極的に参照すること:"
+                      - paragraph [ref=e425]: "- 業界調査レポート（矢野経済研究所、IDC Japan、富士キメラ総研、MM総研等）"
+                      - paragraph [ref=e426]: "- ビジネスメディアの分析記事（日経ビジネス、東洋経済、ダイヤモンド、Forbes Japan等）"
+                      - paragraph [ref=e427]: "- テック系メディア（ITmedia、日経クロステック、TechCrunch Japan等）"
+                      - paragraph [ref=e428]: "- 証券アナリストレポートの要旨（目標株価、レーティング、懸念事項）"
+                      - paragraph [ref=e429]: "- ユーザーレビューや導入事例の評価（ITreview、Boxil等）"
+                      - paragraph [ref=e430]: "- 競合企業のIR資料（競合視点からの市場分析）"
+                      - paragraph [ref=e431]: "- 個人投資家ブログやnote等の個人分析記事は情報ソースとして使用しないこと"
+                      - paragraph [ref=e432]: "- 企業自身が発信する情報にはポジティブバイアスがかかっている前提で、第三者視点との差異があれば明示すること"
+                      - paragraph [ref=e433]: "- 各セクションで参照したソースの種別（自社IR / 業界レポート / メディア記事 / アナリスト等）を明記すること"
+                      - paragraph [ref=e434]
+                      - paragraph [ref=e435]: 【必須（重点的に調査してください）】
+                      - paragraph [ref=e436]
+                      - paragraph [ref=e437]: 1. セグメント別事業分析
+                      - paragraph [ref=e438]: "- 事業セグメント一覧と各セグメントの概要"
+                      - paragraph [ref=e439]: "- セグメント別の売上構成比・利益構成比（最新決算ベース）"
+                      - paragraph [ref=e440]: "- セグメント別の前年比成長率"
+                      - paragraph [ref=e441]: "- 各セグメントの市場ポジションと差別化要因"
+                      - paragraph [ref=e442]: "- 主要プロダクト/サービスの競争力評価"
+                      - paragraph [ref=e443]: "- ユーザー評価や導入企業の声（ポジティブ・ネガティブ両面）"
+                      - paragraph [ref=e444]
+                      - paragraph [ref=e445]: 2. セグメント別成長性
+                      - paragraph [ref=e446]: "- 各セグメントの過去3〜5年の成長トレンド"
+                      - paragraph [ref=e447]: "- セグメント別の売上高CAGR（算出可能な場合）"
+                      - paragraph [ref=e448]: "- 今後の成長ドライバーとなるセグメント"
+                      - paragraph [ref=e449]: "- 縮小・撤退リスクのあるセグメント"
+                      - paragraph [ref=e450]: "- 成長の持続可能性に対する懐疑的な見方があればそれも記載"
+                      - paragraph [ref=e451]
+                      - paragraph [ref=e452]: 3. 業界動向・競争環境
+                      - paragraph [ref=e453]: "- 属する業界の市場規模と成長率（業界調査レポートのデータを優先）"
+                      - paragraph [ref=e454]: "- 業界の主要トレンドと今後3〜5年の見通し"
+                      - paragraph [ref=e455]: "- 参入障壁の高低とその要因"
+                      - paragraph [ref=e456]: "- 主要競合企業との比較（国内・海外）— 競合企業のIR資料も参照"
+                      - paragraph [ref=e457]: "- 市場シェアや競争優位性（第三者調査データを優先）"
+                      - paragraph [ref=e458]: "- 業界の課題や逆風要因"
+                      - paragraph [ref=e459]
+                      - paragraph [ref=e460]: 【あれば有益】
+                      - paragraph [ref=e461]
+                      - paragraph [ref=e462]: 4. 技術的優位性・知的財産
+                      - paragraph [ref=e463]: "- 保有する重要技術・特許"
+                      - paragraph [ref=e464]: "- R&D投資の方向性"
+                      - paragraph [ref=e465]: "- 技術面での競合との客観的比較"
+                      - paragraph [ref=e466]
+                      - paragraph [ref=e467]: 5. 規制環境・政策リスク
+                      - paragraph [ref=e468]: "- 現行の規制環境"
+                      - paragraph [ref=e469]: "- 今後の規制変更リスク"
+                      - paragraph [ref=e470]: "- 政策追い風/逆風の可能性"
+                      - paragraph [ref=e471]
+                      - paragraph [ref=e472]: 6. 海外展開状況
+                      - paragraph [ref=e473]: "- 海外売上比率"
+                      - paragraph [ref=e474]: "- 主要進出地域と戦略"
+                      - paragraph [ref=e475]: "- 為替リスク"
+                      - paragraph [ref=e476]
+                      - paragraph [ref=e477]: 【低優先度（Phase 1で十分カバー済み）】
+                      - paragraph [ref=e478]: "- 企業概要（簡潔に）"
+                      - paragraph [ref=e479]: "- 財務数値の詳細（Phase 1でカバー済み）"
+                      - paragraph [ref=e480]
+                      - paragraph [ref=e481]: ■ レポートの品質基準
+                      - paragraph [ref=e482]: "- 各項目は具体的なデータや数値を含めて回答すること"
+                      - paragraph [ref=e483]: "- 情報が得られない項目は「情報なし」と明記すること"
+                      - paragraph [ref=e484]: "- ポジティブな情報とネガティブな情報をバランスよく記載すること"
+                      - paragraph [ref=e485]: "- 企業の主張と第三者の評価に乖離がある場合は、その点を明記すること"
+                    - button "開く" [ref=e486] [cursor=pointer]:
+                      - img [ref=e487]: expand_more
+                - generic [ref=e493]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - button "読み上げる":
+                              - img: volume_up
+                        - menu
+                  - generic [ref=e494]:
+                    - generic [ref=e499]:
+                      - generic:
+                        - generic:
+                          - img
+                    - generic [ref=e501]:
+                      - button [ref=e508]:
+                        - generic [ref=e510]:
+                          - status:
+                            - generic: 思考プロセスを表示
+                          - img [ref=e512]: expand_more
+                      - heading "Gemini の回答" [level=2] [ref=e515]
+                      - paragraph [ref=e589]:
+                        - text: リサーチ計画をまとめました。変更が必要な箇所があればお知らせください。
+                        - generic [ref=e593]:
+                          - heading "CGSホールディングス深掘り調査依頼" [level=3] [ref=e594]
+                          - generic [ref=e595]:
+                            - generic [ref=e596]:
+                              - generic [ref=e597]:
+                                - img [ref=e598]: select_window_2
+                                - generic [ref=e599]: ウェブサイトをリサーチ
+                              - generic [ref=e600]:
+                                - generic [ref=e601]: (1) CGSホールディングス（6633）の最新の決算短信、決算説明資料、有価証券報告書を調査し、NDES連結後のセグメント構成、売上・利益比率、成長率、海外売上比率、R&D投資額などの定量的データを収集する。 (2) 矢野経済研究所、IDC Japan、富士キメラ総研等のレポートを検索し、金型用CAD/CAM市場および製造業向けITソリューション市場の規模、成長率、主要トレンド、市場シェアに関する客観的データを抽出する。 (3) 日経ビジネス、東洋経済、ITmedia、日経クロステック等の主要メディアから、CGSホールディングス、C&Gシステムズ、NDESに関する分析記事を検索し、専門家による事業評価や業界内での立ち位置、課題を特定する。 (4) 証券アナリストによるレポート要旨を検索し、目標株価、レーティング、および投資家が懸念すべきリスク要因（NDES買収のシナジー、金型業界の構造的変化、為替影響等）を調査する。 (5) ITreviewやBoxil等のレビューサイトで「EXCESS-HYBRID」等の主力製品に対するユーザーの評価（操作性、機能、サポート体制等）を収集し、ポジティブ・ネガティブ両面から競争力を分析する。 (6) 国内外の主要競合企業（牧野フライス製作所、日本ユニシス、Autodesk、Hexagon等）のIR資料を調査し、CGSホールディングスとの比較における優位性や劣位性、競合から見た市場認識を抽出する。 (7) 知財図鑑や特許検索データベースを用いて、同社の保有する重要特許や技術的特徴を調査し、R&Dの方向性と技術的障壁の強さを評価する。 (8) カナダ子会社を含む海外事業の展開状況と為替感応度、および製造業に関連する規制環境（DX推進政策、排出権取引、サプライチェーン規制等）が事業に与える影響を精査する。
+                                - button "リサーチプランの詳細" [ref=e603] [cursor=pointer]:
+                                  - generic [ref=e604]: その他
+                            - generic [ref=e608]:
+                              - img [ref=e609]: sort
+                              - generic [ref=e610]: 結果を分析
+                            - generic [ref=e613]:
+                              - img [ref=e614]: travel_explore
+                              - generic [ref=e615]: レポートを作成
+                          - generic [ref=e616]:
+                            - img [ref=e617]: schedule
+                            - generic [ref=e618]: 数分で完了予定
+                          - generic [ref=e619]:
+                            - button "リサーチ計画を編集" [disabled]:
+                              - generic: 計画を編集
+                            - button "リサーチを開始" [disabled]:
+                              - generic: リサーチを開始
+              - generic [ref=e620]:
+                - generic [ref=e625]:
+                  - button "プロンプトをコピー" [ref=e627] [cursor=pointer]:
+                    - img [ref=e628]: content_copy
+                  - button "編集" [ref=e712] [cursor=pointer]:
+                    - img [ref=e713]: edit
+                  - heading "あなたのプロンプト リサーチを開始" [level=2] [ref=e634]:
+                    - generic [ref=e635]: あなたのプロンプト
+                    - paragraph [ref=e636]: リサーチを開始
+                - generic [ref=e640]:
+                  - generic [ref=e641]:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - button "読み上げる":
+                              - img: volume_up
+                        - menu
+                    - generic [ref=e646]:
+                      - generic:
+                        - generic:
+                          - img
+                  - generic [ref=e649]:
+                    - heading "Gemini の回答" [level=2] [ref=e650]
+                    - paragraph [ref=e716]:
+                      - text: リサーチを行っている間、ご自由にこのチャットからご退出ください。完了次第、お知らせします。
+                      - generic [ref=e722] [cursor=pointer]:
+                        - generic [ref=e723]:
+                          - generic [ref=e725]:
+                            - generic:
+                              - img
+                          - img [ref=e726]: sort
+                        - status [ref=e727]:
+                          - generic [ref=e728]: CGSホールディングス深掘り調査依頼
+                          - generic [ref=e1045]: 結果を分析中...
+          - generic [ref=e122]:
+            - group [ref=e123]:
+              - generic [ref=e126]:
+                - textbox "Gemini へのプロンプトを入力" [ref=e233]:
+                  - text: 調べたい内容を入力
+                  - paragraph [ref=e368]
+                - generic [ref=e133]:
+                  - button "[ファイルをアップロード] メニューを開く" [ref=e138] [cursor=pointer]:
+                    - img [ref=e139]: add_2
+                  - generic [ref=e144]:
+                    - text: page_info
+                    - button "Deep Researchの選択を解除" [ref=e240]:
+                      - img [ref=e241]: travel_explore
+                      - img [ref=e243]: close
+                - generic [ref=e152]:
+                  - button "モード選択ツールを開く" [ref=e155]:
+                    - generic [ref=e157]:
+                      - generic [ref=e158]: 思考モード
+                      - img [ref=e159]: keyboard_arrow_down
+                  - generic [ref=e162]:
+                    - text: mic
+                    - button "回答を停止" [ref=e370] [cursor=pointer]:
+                      - text: send
+                      - img [ref=e657]: stop
+            - paragraph [ref=e375]: Gemini は AI であり、間違えることがあります。
+        - generic [ref=e659]:
+          - generic [ref=e661]:
+            - generic [ref=e662]:
+              - img [ref=e663]: travel_explore
+              - heading "CGSホールディングス深掘り調査依頼" [level=2] [ref=e664]
+              - separator [ref=e665]
+              - button "思考プロセスを表示" [ref=e666]:
+                - generic [ref=e667]: 思考プロセスを表示
+                - img [ref=e668]: keyboard_arrow_down
+            - button "パネルを閉じる" [ref=e672] [cursor=pointer]:
+              - img [ref=e673]: close
+          - generic [ref=e677]:
+            - generic [ref=e732]:
+              - generic [ref=e733]:
+                - generic [ref=e734]:
+                  - img [ref=e736]: spark
+                  - separator [ref=e737]
+                - generic [ref=e738]:
+                  - generic [ref=e739]: 持株会社体制への移行とNDES子会社化の構造把握
+                  - generic [ref=e740]: CGSホールディングス（6633）の最新状況を精査したところ、C&GシステムズとNDES（旧NTTデータエンジニアリングシステムズ）の統合によるシナジー創出が、現在の経営戦略の核心であることを再認識しました。特に2025年10月の連結子会社化を経て、製造業向けITソリューションと金型用CAD/CAM開発がどのように融合し、連結業績に反映されているかを最新の決算短信や有価証券報告書から読み解いています。
+              - generic [ref=e741]:
+                - separator [ref=e743]
+                - generic [ref=e744]:
+                  - generic [ref=e745]: 第三者視点による市場ポジションの検証
+                  - generic [ref=e746]: 企業の自己評価と市場の実態を比較するため、矢野経済研究所などの業界レポートやITmedia等のテック系メディアを横断的に調査しています。金型製造DXの進展に伴い、同社の主力製品である「EXCESS-HYBRID」等が競合他社と比較してどのような優位性（操作性や自動化機能など）を持っているのか、またユーザーレビューサイトでの実際の評価と開発側の主張に乖離がないか、多角的な視点で分析を試みています。
+              - generic [ref=e747]:
+                - separator [ref=e749]
+                - generic [ref=e750]:
+                  - generic [ref=e751]: 今後の調査方針とアクション
+                  - generic [ref=e752]: 今後は、主要競合企業のIR資料や証券アナリストのレポートを詳しく分析し、目標株価の妥当性や潜在的なリスク要因（カナダ子会社の採算性や為替変動の影響など）を深掘りします。特にNDES統合後のPMI（ポスト・マージ・インテグレーション）が順調か、また製造業のIT投資動向が同社の成長CAGRにどう寄与するか、より具体的な数値を伴う検証を行う予定です。
+              - generic [ref=e753]:
+                - separator [ref=e756]
+                - generic [ref=e758]:
+                  - generic [ref=e759]: Researching websites...
+                  - generic [ref=e760]:
+                    - link "minkabu.jp ＣＧＳＨＤ Research Memo（4）：2025年12月期は主に金型製造事業の回復で116.3%の営業増益" [ref=e762] [cursor=pointer]:
+                      - /url: https://minkabu.jp/news/4473747
+                      - generic [ref=e763]: minkabu.jp
+                      - generic [ref=e764]: ＣＧＳＨＤ Research Memo（4）：2025年12月期は主に金型製造事業の回復で116.3%の営業増益
+                    - link "finance.yahoo.co.jp (株)ＣＧＳホールディングス【6633】：決算情報 - Yahoo!ファイナンス" [ref=e766] [cursor=pointer]:
+                      - /url: https://finance.yahoo.co.jp/quote/6633.T/financials
+                      - generic [ref=e767]: finance.yahoo.co.jp
+                      - generic [ref=e768]: (株)ＣＧＳホールディングス【6633】：決算情報 - Yahoo!ファイナンス
+                    - link "it.impress.co.jp 2024年度の国内CAD/EDA市場は5.4%増、EDAが牽引し2025年度も同程度の成長へ 矢野経済研究所 | IT Leaders" [ref=e770] [cursor=pointer]:
+                      - /url: https://it.impress.co.jp/articles/-/28651
+                      - generic [ref=e771]: it.impress.co.jp
+                      - generic [ref=e772]: 2024年度の国内CAD/EDA市場は5.4%増、EDAが牽引し2025年度も同程度の成長へ 矢野経済研究所 | IT Leaders
+                    - link "yano.co.jp CAD/EDA市場に関する調査を実施（2025年） | ニュース・トピックス" [ref=e774] [cursor=pointer]:
+                      - /url: https://www.yano.co.jp/press-release/show/press_id/3962
+                      - generic [ref=e775]: yano.co.jp
+                      - generic [ref=e776]: CAD/EDA市場に関する調査を実施（2025年） | ニュース・トピックス
+                    - link "gii.co.jp CAD、CAM、CAEソフトウェア市場 | 市場規模 分析 予測 2025-2032年 【市場調査レポート】" [ref=e778] [cursor=pointer]:
+                      - /url: https://www.gii.co.jp/report/ires1827464-cad-cam-cae-software-market-by-type-user-interface.html
+                      - generic [ref=e779]: gii.co.jp
+                      - generic [ref=e780]: CAD、CAM、CAEソフトウェア市場 | 市場規模 分析 予測 2025-2032年 【市場調査レポート】
+                    - link "my.idc.com 国内ITサービス市場予測を発表～AI活用の実践とユースケース拡大が市場成長を促進～" [ref=e782] [cursor=pointer]:
+                      - /url: https://my.idc.com/getdoc.jsp?containerId=prJPJ53253625
+                      - generic [ref=e783]: my.idc.com
+                      - generic [ref=e784]: 国内ITサービス市場予測を発表～AI活用の実践とユースケース拡大が市場成長を促進～
+                    - link "pc-webzine.com IT・PC・サーバー市場の今後を解説―IDC、ノークリサーチ、MM総研 - PC-Webzine" [ref=e786] [cursor=pointer]:
+                      - /url: https://www.pc-webzine.com/article/502
+                      - generic [ref=e787]: pc-webzine.com
+                      - generic [ref=e788]: IT・PC・サーバー市場の今後を解説―IDC、ノークリサーチ、MM総研 - PC-Webzine
+                    - link "finance.yahoo.co.jp CGSホールディングス――資本コストや株価を意識した経営の実現に向けた対応(アップデート)" [ref=e790] [cursor=pointer]:
+                      - /url: https://finance.yahoo.co.jp/news/detail/463c9574dd636acde21bdc09074030b3ba76fcc6
+                      - generic [ref=e791]: finance.yahoo.co.jp
+                      - generic [ref=e792]: CGSホールディングス――資本コストや株価を意識した経営の実現に向けた対応(アップデート)
+                    - link "finance.yahoo.co.jp 【アナリスト評価】ＳＧＨ、レーティング中立を据置き、目標株価1550円に引下げ（米系大手証券）" [ref=e794] [cursor=pointer]:
+                      - /url: https://finance.yahoo.co.jp/news/detail/2434ca46cadb2c4eee7bcd434a87b3c272901a5a
+                      - generic [ref=e795]: finance.yahoo.co.jp
+                      - generic [ref=e796]: 【アナリスト評価】ＳＧＨ、レーティング中立を据置き、目標株価1550円に引下げ（米系大手証券）
+                    - 'link "minkabu.jp ＣＧＳホールディングス (6633) : 株価/予想・目標株価 [CGS HOLDINGS] - みんかぶ" [ref=e798] [cursor=pointer]':
+                      - /url: https://minkabu.jp/stock/6633
+                      - generic [ref=e799]: minkabu.jp
+                      - generic [ref=e800]: "ＣＧＳホールディングス (6633) : 株価/予想・目標株価 [CGS HOLDINGS] - みんかぶ"
+                    - link "finance.yahoo.co.jp 【アナリスト評価】ＳＧＨ、レーティング強気に引上げ、目標株価1850円に引下げ（日系大手証券）" [ref=e802] [cursor=pointer]:
+                      - /url: https://finance.yahoo.co.jp/news/detail/70377eec04954b0ecdfd51d87da9622bea07e539
+                      - generic [ref=e803]: finance.yahoo.co.jp
+                      - generic [ref=e804]: 【アナリスト評価】ＳＧＨ、レーティング強気に引上げ、目標株価1850円に引下げ（日系大手証券）
+              - generic [ref=e805]:
+                - generic [ref=e806]:
+                  - img [ref=e808]: spark
+                  - separator [ref=e809]
+                - generic [ref=e810]:
+                  - generic [ref=e811]: 2025年12月期決算に見る急成長の要因分析
+                  - generic [ref=e812]: 2025年12月期の連結業績を精査したところ、売上高が前期比26.9%増、営業利益が116.3%増と大幅な増収増益を達成していることが分かりました。この躍進は主にカナダの金型製造事業における受注回復が牽引しており、製造現場の実需が業績にダイレクトに寄与した形です。また、2025年10月に実施されたNDESの連結子会社化に伴い、のれん代の計上や自己資本比率の変動（約47%への低下）など、財務構造にも大きな変化が生じていることを確認しました。
+              - generic [ref=e813]:
+                - separator [ref=e815]
+                - generic [ref=e816]:
+                  - generic [ref=e817]: CAD/CAM市場のトレンドと競争優位性の再定義
+                  - generic [ref=e818]: 国内のCAD/EDA市場が年間約5%台の安定成長を維持している中、同社グループが製造業のデジタルビジネス化やAI利活用の波をどう捉えているかを思考しています。特にITサービス市場全体では既存システムのクラウド移行やモダナイゼーションへの投資が活発化しており、旧NTTデータ系のNDESが持つソリューション力と、C&Gシステムズの金型特化型技術が統合されることで、単なるソフト販売を超えた「製造ITコンサルティング」としての付加価値を市場がどう評価しているか、その乖離を検証しています。
+              - generic [ref=e819]:
+                - separator [ref=e821]
+                - generic [ref=e822]:
+                  - generic [ref=e823]: PMIの進捗確認と2026年度以降の収益予測への移行
+                  - generic [ref=e824]: 今後は、NDESが通期で寄与する2026年12月期の業績インパクトを算出するため、買収前のNDES単体の財務プロファイルや製品ラインナップ（Space-E等）を詳細に調査します。特に、既存のEXCESS-HYBRIDとの製品重複の有無や、クロスセルによるシナジーが具体化しているかに焦点を当てます。また、資本コストを意識した経営方針の発表内容を深掘りし、アナリストが指摘する投資判断のポイントや目標株価との整合性を明らかにしていきます。
+              - generic [ref=e825]:
+                - separator [ref=e828]
+                - generic [ref=e830]:
+                  - generic [ref=e831]: Researching websites...
+                  - generic [ref=e832]:
+                    - link "fisco.co.jp C&G システムズ - フィスコ" [ref=e834] [cursor=pointer]:
+                      - /url: https://www.fisco.co.jp/wordpress/wp-content/uploads/CGsystems20210915.pdf
+                      - generic [ref=e835]: fisco.co.jp
+                      - generic [ref=e836]: C&G システムズ - フィスコ
+                    - link "cgsys.co.jp 2024年12月期 決算説明動画配信 株式会社Ｃ＆Ｇシステムズ" [ref=e838] [cursor=pointer]:
+                      - /url: https://www.cgsys.co.jp/wp-content/uploads/2025/02/presentation_20250228.pdf
+                      - generic [ref=e839]: cgsys.co.jp
+                      - generic [ref=e840]: 2024年12月期 決算説明動画配信 株式会社Ｃ＆Ｇシステムズ
+                    - link "jp.investing.com ＣＧＳＨＤ Research Memo（4）：2025年12月期は主に金型製造事業の回復で116.3%の営業増益" [ref=e842] [cursor=pointer]:
+                      - /url: https://jp.investing.com/news/stock-market-news/article-1472241
+                      - generic [ref=e843]: jp.investing.com
+                      - generic [ref=e844]: ＣＧＳＨＤ Research Memo（4）：2025年12月期は主に金型製造事業の回復で116.3%の営業増益
+                    - link "minkabu.jp ＣＧＳＨＤ Research Memo（4）：2025年12月期は主に金型製造 ..." [ref=e846] [cursor=pointer]:
+                      - /url: https://minkabu.jp/news/4473747
+                      - generic [ref=e847]: minkabu.jp
+                      - generic [ref=e848]: ＣＧＳＨＤ Research Memo（4）：2025年12月期は主に金型製造 ...
+                    - link "finance.yahoo.co.jp (株)ＣＧＳホールディングス【6633】：決算情報 - Yahoo ..." [ref=e850] [cursor=pointer]:
+                      - /url: https://finance.yahoo.co.jp/quote/6633.T/financials
+                      - generic [ref=e851]: finance.yahoo.co.jp
+                      - generic [ref=e852]: (株)ＣＧＳホールディングス【6633】：決算情報 - Yahoo ...
+              - generic [ref=e853]:
+                - generic [ref=e854]:
+                  - img [ref=e856]: spark
+                  - separator [ref=e857]
+                - generic [ref=e858]:
+                  - generic [ref=e859]: NDES統合による新生CGSグループの規模感と財務的インパクト
+                  - generic [ref=e860]: 2026年度の業績見通しを精査したところ、売上高65.5億円、営業利益4.4億円という野心的な計画の背景には、NDES（旧NTTデータエンジニアリングシステムズ）の通期連結化が大きく寄与していることを突き止めました。連結子会社化に伴い約3億円ののれんが発生している一方で、現金同等物は約27億円と潤沢な水準を維持しており、この資金力が次なる成長投資や株主還元にどう振り向けられるかを思考しています。特にNDESの既存事業規模が加わることで、グループ全体の売上構成がソフト開発からITソリューションまで重層化された点に注目しています。
+              - generic [ref=e861]:
+                - separator [ref=e863]
+                - generic [ref=e864]:
+                  - generic [ref=e865]: 主力製品「Space-E」と「EXCESS-HYBRID」の市場補完性
+                  - generic [ref=e866]: C&Gシステムズが誇る「EXCESS-HYBRID」と、旧NTTデータ系から引き継いだ「Space-E」という二大ブランドの共存状況を分析しています。これら双方が金型業界で高い認知度を持つ中、両製品のユーザー基盤が重複しているのか、あるいはターゲット層が異なるのかを技術的特許や導入事例から検証しています。国内CAD/EDA市場が2,300億円規模で着実に成長する中、2つの強力なプロダクトを保持することが、開発コストの重複を上回る市場シェア拡大に繋がっているのか、その実効性を評価し始めています。
+              - generic [ref=e867]:
+                - separator [ref=e869]
+                - generic [ref=e870]:
+                  - generic [ref=e871]: 今後のアクション：PMIの具体策と外部評価の多角的な検証
+                  - generic [ref=e872]: 今後は、NDES買収後の統合プロセス（PMI）が具体的にどの段階にあるかを確認するため、製品統合のロードマップや営業組織の再編状況を深掘りします。また、ユーザーレビューサイト等を通じて、実際の利用者が製品の機能性や保守体制をどう評価しているかという「現場の声」を収集し、企業側の主張するシナジー効果との整合性を確かめます。あわせて、証券アナリストが懸念する買収後の収益性維持のリスクや、EVシフトに伴う金型需要の変化が中長期的なCAGRに与える影響を特定する予定です。
+              - generic [ref=e873]:
+                - separator [ref=e876]
+                - generic [ref=e878]:
+                  - generic [ref=e879]: Researching websites...
+                  - generic [ref=e880]:
+                    - link "group.ntt NTT株式会社" [ref=e882] [cursor=pointer]:
+                      - /url: https://group.ntt/jp/ir/library/presentation/2025/pdf/250926.pdf
+                      - generic [ref=e883]: group.ntt
+                      - generic [ref=e884]: NTT株式会社
+                    - link "group.ntt IRプレゼンテーション - NTT Group" [ref=e886] [cursor=pointer]:
+                      - /url: https://group.ntt/jp/ir/library/material/2025/pdf/irpresentation2508.pdf
+                      - generic [ref=e887]: group.ntt
+                      - generic [ref=e888]: IRプレゼンテーション - NTT Group
+                    - link "smbcnikko.co.jp 2025～2026 年度の企業業績見通しを発表 - ＳＭＢＣ日興証券" [ref=e890] [cursor=pointer]:
+                      - /url: https://www.smbcnikko.co.jp/news/release/2026/pdf/260319_02.pdf
+                      - generic [ref=e891]: smbcnikko.co.jp
+                      - generic [ref=e892]: 2025～2026 年度の企業業績見通しを発表 - ＳＭＢＣ日興証券
+                    - 'link "minkabu.jp ＣＧＳホールディングス (6633) : 株価/予想・目標株価 [CGS HOLDINGS] - みんかぶ" [ref=e894] [cursor=pointer]':
+                      - /url: https://minkabu.jp/stock/6633
+                      - generic [ref=e895]: minkabu.jp
+                      - generic [ref=e896]: "ＣＧＳホールディングス (6633) : 株価/予想・目標株価 [CGS HOLDINGS] - みんかぶ"
+              - generic [ref=e897]:
+                - generic [ref=e898]:
+                  - img [ref=e900]: spark
+                  - separator [ref=e901]
+                - generic [ref=e902]:
+                  - generic [ref=e903]: NDES統合による収益構造の劇的な変化とシナジーの源泉
+                  - generic [ref=e904]: 2026年12月期の売上高が前期比で30%以上増加し、65億円規模に達するという予測の確実性を分析しています。この急成長の核となるNDES（旧NTTデータエンジニアリングシステムズ）の連結効果について、買収前の財務プロファイルと照らし合わせ、単なる合算以上のシナジーがどこに存在するかを精査しました。特に、金型設計・製造支援システム「Space-E」の既存顧客基盤が、CGSの主力製品とクロスセル可能な状態にあるか、あるいはクラウドネイティブなITソリューションとしての新展開が期待できるかという点に注目し、新生CGSグループの真の収益力を再評価しています。
+              - generic [ref=e905]:
+                - separator [ref=e907]
+                - generic [ref=e908]:
+                  - generic [ref=e909]: 市場の期待値と資本効率向上への戦略的コミットメント
+                  - generic [ref=e910]: 最新のアナリスト評価や市場の反応を合成した結果、同社が発表した「資本コストや株価を意識した経営」への転換が、投資家からの関心を集める重要な転換点になっていると判断しました。自己資本比率が買収に伴い47%台へ低下したものの、依然として27億円規模の現預金を保持しており、これがR&Dや株主還元、あるいは追加のM&Aにどう活用されるかが焦点です。国内CAD/EDA市場が年間5%超の成長を続ける中、同社が「製造業ITコンサルティング」への脱皮を図る姿勢が、PERやROEといった資本効率の指標にどう反映されるかを思考しています。
+              - generic [ref=e911]:
+                - separator [ref=e913]
+                - generic [ref=e914]:
+                  - generic [ref=e915]: 製品競争力の現場評価と今後の深掘りアクション
+                  - generic [ref=e916]: 今後は、主力製品群のユーザー満足度や乗り換え障壁の実態を把握するため、導入現場での具体的な評価（操作性、自動化、サポート体制）をさらに深掘りします。特に、競合他社であるBIPROGY（旧日本ユニシス）や牧野フライス製作所といった強力なプレイヤーの動向と比較し、CGSグループが持つ独自の技術的特許や「AI・クラウド対応」のロードマップが、差別化要因として十分に機能しているかを検証します。また、EV化に伴う金型産業の構造変化が、中長期的な受注トレンドに与える影響を特定するための調査を継続します。
+              - generic [ref=e917]:
+                - separator [ref=e920]
+                - generic [ref=e922]:
+                  - generic [ref=e923]: Researching websites...
+                  - generic [ref=e924]:
+                    - link "researchnester.jp 日本の金型市場調査レポート、規模とシェア、予測2036年" [ref=e926] [cursor=pointer]:
+                      - /url: https://www.researchnester.jp/industry-reports/japan-mold-market/873
+                      - generic [ref=e927]: researchnester.jp
+                      - generic [ref=e928]: 日本の金型市場調査レポート、規模とシェア、予測2036年
+                    - link "fcr.co.jp 2025 デジタルトランスフォーメーション市場の将来展望 市場編 - 富士キメラ総研" [ref=e930] [cursor=pointer]:
+                      - /url: https://www.fcr.co.jp/report/244q06a.htm
+                      - generic [ref=e931]: fcr.co.jp
+                      - generic [ref=e932]: 2025 デジタルトランスフォーメーション市場の将来展望 市場編 - 富士キメラ総研
+                    - link "minkabu.jp ＣＧＳＨＤ Research Memo（4）：2025年12月期は主に金型製造 ..." [ref=e934] [cursor=pointer]:
+                      - /url: https://minkabu.jp/news/4473747
+                      - generic [ref=e935]: minkabu.jp
+                      - generic [ref=e936]: ＣＧＳＨＤ Research Memo（4）：2025年12月期は主に金型製造 ...
+              - generic [ref=e937]:
+                - generic [ref=e938]:
+                  - img [ref=e940]: spark
+                  - separator [ref=e941]
+                - generic [ref=e942]:
+                  - generic [ref=e943]: NDESの単体収益力と連結寄与の定量的把握
+                  - generic [ref=e944]: NDES（旧NTTデータエンジニアリングシステムズ）がグループ全体の業績を押し上げる主要因であることを再確認し、その収益構造を精査しています。2025年12月期における売上高約50億円（前期比27%増）という実績に対し、NDESの通期寄与が見込まれる2026年度には65億円規模への飛躍が予見されています。買収に伴うのれん発生や自己資本比率の47.2%への低下といった財務的変化を整理しつつ、NDESが従来から保持していた製造業向けITサービスの顧客基盤が、グループ全体の営業利益率向上にどう連動するかを推論しています。
+              - generic [ref=e945]:
+                - separator [ref=e947]
+                - generic [ref=e948]:
+                  - generic [ref=e949]: 国内CAD/EDA市場の堅調な拡大と製造業DXの追い風
+                  - generic [ref=e950]: 最新の業界調査から、国内のCAD/EDA市場が2,300億円規模に達し、前年度比5.4%増の安定成長を維持している背景を読み解きました。特に製造業のデジタルビジネス化やAI利活用の実践フェーズへの移行が、ITサービス市場全体をCAGR 6.6%で牽引する要因となっています。この市場環境下で、CGSグループが既存の金型専用ソフト提供から、より広範な「製造ITコンサルティング」やマネージドサービスへと領域を拡大する戦略が、時代の要請と合致しているか、競合他社との市場シェア争いの観点から分析を深めています。
+              - generic [ref=e951]:
+                - separator [ref=e953]
+                - generic [ref=e954]:
+                  - generic [ref=e955]: 主力製品のシナジー創出と次なる検証ステップ
+                  - generic [ref=e956]: 今後は「Space-E」と「EXCESS-HYBRID」という二大ブランドの技術的融合と、BIPROGYや牧野フライス製作所といった強力な競合に対する差別化の源泉を特定することに注力します。特に、NDESの単体時代の財務指標を掘り下げ、統合による効率化の余地を算出するとともに、現場ユーザーの声を反映した製品力（操作性やクラウド対応）の評価を収集します。これにより、資本効率の改善に向けた経営方針が実際の製品競争力や受注獲得にどう結びついているか、その実効性を明らかにするアクションへと移行します。
+              - generic [ref=e957]:
+                - separator [ref=e960]
+                - generic [ref=e962]:
+                  - generic [ref=e963]: Researching websites...
+                  - generic [ref=e964]:
+                    - link "nttdata.com 2025年3月期 決算短信〔ＩＦＲＳ〕(連結) - NTT Data" [ref=e966] [cursor=pointer]:
+                      - /url: https://www.nttdata.com/global/ja/-/media/nttdataglobal-ja/files/investors/library/earning/2024/4q/20254qbsr_all.pdf?rev=b8021a7e82de4a87a1a8d1af3e18382e
+                      - generic [ref=e967]: nttdata.com
+                      - generic [ref=e968]: 2025年3月期 決算短信〔ＩＦＲＳ〕(連結) - NTT Data
+                    - link "nttdata.com 2024年3月期 決算説明資料 - NTT Data" [ref=e970] [cursor=pointer]:
+                      - /url: https://www.nttdata.com/global/ja/-/media/nttdataglobal-ja/files/investors/library/earning/2023/4q/20244qpre_j01.pdf?rev=e2b5ffe008874dc1bf5270a3aff5fba4
+                      - generic [ref=e971]: nttdata.com
+                      - generic [ref=e972]: 2024年3月期 決算説明資料 - NTT Data
+                    - link "nttdata.com 2024年3月期 決算説明資料 - NTT Data" [ref=e974] [cursor=pointer]:
+                      - /url: https://www.nttdata.com/global/ja/-/media/nttdataglobal-ja/files/investors/library/earning/2023/4q/20234qpre_j01t.pdf?rev=a37d6747bca545dc980b9f2e42d02528
+                      - generic [ref=e975]: nttdata.com
+                      - generic [ref=e976]: 2024年3月期 決算説明資料 - NTT Data
+                    - link "moneypost.jp ＣＧＳＨＤ Research Memo（5）：2026年12月期は28.9%の営業増益を見込む - マネーポストWEB" [ref=e978] [cursor=pointer]:
+                      - /url: https://www.moneypost.jp/1383471
+                      - generic [ref=e979]: moneypost.jp
+                      - generic [ref=e980]: ＣＧＳＨＤ Research Memo（5）：2026年12月期は28.9%の営業増益を見込む - マネーポストWEB
+              - generic [ref=e981]:
+                - generic [ref=e982]:
+                  - img [ref=e984]: spark
+                  - separator [ref=e985]
+                - generic [ref=e986]:
+                  - generic [ref=e987]: 金型製造事業の回復と収益基盤の強化
+                  - generic [ref=e988]: 直近の業績動向を精査したところ、売上高が前期比で約27%増、営業利益が116%増と大幅な伸長を見せている背景には、カナダ子会社を中心とした金型製造事業の受注回復が大きく寄与していることを突き止めました。また、2025年12月期末時点で現預金を27.7億円保持しており、自己資本比率が47.2%へ低下したものの、依然として強固なキャッシュポジションを維持している点に注目しています。この財務的な余力が、NDES統合後の成長投資を支える基盤となっていることを分析しました。
+              - generic [ref=e989]:
+                - separator [ref=e991]
+                - generic [ref=e992]:
+                  - generic [ref=e993]: 国内CAD/EDA市場の成長と製造DXへの適応
+                  - generic [ref=e994]: 矢野経済研究所などの最新レポートを合成し、国内のCAD/EDA市場が2,300億円規模で前年比5.4%増と着実に拡大している市場環境を再定義しました。特に、2025年度もEDA領域が牽引する形で5.5%増の成長が継続する見通しであり、製造業のデジタルビジネス化に向けた既存システムのモダナイゼーション投資が活発化しています。CGSグループが提唱する「製造ITコンサルティング」へのシフトが、この旺盛なDX需要をどの程度取り込めているのか、競合他社とのシェア争いの観点から思考を深めています。
+              - generic [ref=e995]:
+                - separator [ref=e997]
+                - generic [ref=e998]:
+                  - generic [ref=e999]: NDESの定量的分析と製品ブランド間の補完性検証
+                  - generic [ref=e1000]: 今後は、NDES買収時の開示情報を掘り下げ、子会社化前後の単体業績プロファイルを比較することで、統合による純粋な収益底上げ効果を算出します。また、金型設計・製造支援システムとして双璧をなす「Space-E」と「EXCESS-HYBRID」について、現場ユーザーの評価を直接参照し、機能的な棲み分けやクロスセルの実効性を検証します。あわせて、BIPROGYや牧野フライス製作所といった強力な競合に対する技術的優位性の源泉を特定し、2026年度の売上目標65億円達成に向けた具体的な道筋を明らかにする予定です。
+              - generic [ref=e1001]:
+                - separator [ref=e1004]
+                - generic [ref=e1006]:
+                  - generic [ref=e1007]: Researching websites...
+                  - generic [ref=e1008]:
+                    - link "finance.yahoo.co.jp ＣＧＳＨＤ Research Memo（2）：「CAD/CAMシステム等事業」と「金型製造事業」が事業の2本柱（1）(フィスコ) - Yahoo!ファイナンス" [ref=e1010] [cursor=pointer]:
+                      - /url: https://finance.yahoo.co.jp/news/detail/466b7010371e585e95073c90312d90e878905d5b
+                      - generic [ref=e1011]: finance.yahoo.co.jp
+                      - generic [ref=e1012]: ＣＧＳＨＤ Research Memo（2）：「CAD/CAMシステム等事業」と「金型製造事業」が事業の2本柱（1）(フィスコ) - Yahoo!ファイナンス
+                    - link "fisco.co.jp C&G システムズ - フィスコ" [ref=e1014] [cursor=pointer]:
+                      - /url: https://www.fisco.co.jp/wordpress/wp-content/uploads/FISCO/CGsystems20250321.pdf
+                      - generic [ref=e1015]: fisco.co.jp
+                      - generic [ref=e1016]: C&G システムズ - フィスコ
+                    - link "moneypost.jp ＣＧＳＨＤ Research Memo（1）：CAD/CAM事業会社を連結子会社化し、組織再編スキームを完了 | マネーポストWEB" [ref=e1018] [cursor=pointer]:
+                      - /url: https://www.moneypost.jp/1383467
+                      - generic [ref=e1019]: moneypost.jp
+                      - generic [ref=e1020]: ＣＧＳＨＤ Research Memo（1）：CAD/CAM事業会社を連結子会社化し、組織再編スキームを完了 | マネーポストWEB
+              - generic [ref=e1021]:
+                - generic [ref=e1022]:
+                  - img [ref=e1024]: spark
+                  - separator [ref=e1025]
+                - generic [ref=e1026]:
+                  - generic [ref=e1027]: 中期経営計画「CGS Challenge 2026」と100億円企業への道筋
+                  - generic [ref=e1028]: 長期戦略として売上高100億円規模を目指す「CGS Challenge 2026」の具体性を検証しています。2025年12月期に売上高約50億円を達成し、2026年度にはNDESの通期連結化によって65.5億円への到達を見込むなど、成長スピードが加速している点に注目しました。この飛躍的な増収計画の背景には、国内の金型用CAD/CAM市場で約20%という高いシェアを確保し、製造現場のDX需要を確実に取り込んでいる現状があると分析しています。
+              - generic [ref=e1046]:
+                - separator [ref=e1048]
+                - generic [ref=e1049]:
+                  - generic [ref=e1029]: カナダ子会社の業績回復とグループ全体のキャッシュ創出力
+                  - generic [ref=e1030]: 直近の営業利益が116.3%増と急伸した要因を深掘りしたところ、ソフトウェア事業の安定に加え、カナダの子会社を中心とした金型製造事業の受注が力強く回復していることが判明しました。財務面では、M&Aに伴うのれん計上などで自己資本比率が47.2%に低下したものの、依然として約28億円の潤沢な現預金を保持しています。この強固なキャッシュポジションが、資本コストを意識した経営改善や次なる成長投資への原動力となっていることを思考しています。
+              - generic [ref=e1050]:
+                - separator [ref=e1052]
+                - generic [ref=e1053]:
+                  - generic [ref=e1031]: 次なるアクション：製品間シナジーの定量的検証と競合比較
+                  - generic [ref=e1032]: 今後は、NDESの主力製品「Space-E」とC&Gシステムズの「EXCESS-HYBRID」の技術的な棲み分けや、顧客基盤のクロスセルが具体的にどの程度進捗しているかを精査します。また、BIPROGYや牧野フライス製作所といった競合他社のソリューションと比較し、同社グループの技術的優位性やユーザーからの直接的な評判を多角的に分析します。あわせて、カナダ拠点の地政学的・為替的リスクが中長期的な収益性に与える影響についても特定を進めていく予定です。
+              - generic [ref=e1054]:
+                - separator [ref=e1056]
+                - generic [ref=e1034]:
+                  - generic [ref=e1035]: Researching websites...
+                  - generic [ref=e1036]:
+                    - link "group.ntt 2023年度決算、 2024年度業績予想について - NTT Group" [ref=e1038] [cursor=pointer]:
+                      - /url: https://group.ntt/jp/ir/library/timely_disclosure/2024/pdf/007.pdf
+                      - generic [ref=e1039]: group.ntt
+                      - generic [ref=e1040]: 2023年度決算、 2024年度業績予想について - NTT Group
+                    - link "fisco.co.jp C&G システムズ - 株式会社フィスコ" [ref=e1042] [cursor=pointer]:
+                      - /url: https://www.fisco.co.jp/wordpress/wp-content/uploads/FISCO/CGsystems20240919.pdf
+                      - generic [ref=e1043]: fisco.co.jp
+                      - generic [ref=e1044]: C&G システムズ - 株式会社フィスコ
+              - generic [ref=e1058]:
+                - generic [ref=e1059]:
+                  - img [ref=e1061]: spark
+                  - separator [ref=e1062]
+                - generic [ref=e1063]:
+                  - generic [ref=e1064]: NDES統合による収益規模の飛躍的拡大と財務基盤の変容
+                  - generic [ref=e1065]: 2025年12月期の連結決算を精査したところ、売上高49.8億円（前期比26.9%増）、営業利益3.4億円（同116.3%増）と極めて力強い成長を確認しました。この躍進の主因は、2025年10月に連結子会社化したNDES（旧NTTデータエンジニアリングシステムズ）の寄与と、カナダ子会社における金型製造事業の受注回復にあります。負債合計が約28%増加し、自己資本比率が47.2%へ低下したものの、依然として27.7億円の現預金を保持しており、M&Aに伴うのれん代（約3億円）を抱えつつも、次なる成長投資に向けた余力を維持している点を高く評価しています。
+              - generic [ref=e1066]:
+                - separator [ref=e1068]
+                - generic [ref=e1069]:
+                  - generic [ref=e1070]: 国内CAD/EDA市場の安定成長と製造DXへの戦略的適応
+                  - generic [ref=e1071]: 矢野経済研究所の最新データ（2025年11月発表）に基づき、国内のCAD/EDA市場が2,300億円規模に達し、年間約5.4〜5.5%の安定した成長を継続している市場環境を再定義しました。特に、製造業におけるAI利活用や既存システムのクラウド移行（モダナイゼーション）への投資が加速しており、ITサービス市場全体では2029年までにCAGR 6.6%の成長が見込まれています。CGSグループが国内の金型用CAD/CAM市場で約20%のシェアを堅持しつつ、NDESのソリューション力を融合させることで、単なるソフト販売から「製造ITコンサルティング」へと事業領域を拡張させている妥当性を思考しています。
+              - generic [ref=e1072]:
+                - separator [ref=e1074]
+                - generic [ref=e1075]:
+                  - generic [ref=e1076]: 今後のアクション：製品間シナジーの定量的検証と現場評価の収集
+                  - generic [ref=e1077]: 今後は、NDESが通期で寄与する2026年12月期の売上目標65.5億円の達成可能性を検証するため、旧NTTデータ系から承継した「Space-E」と主力の「EXCESS-HYBRID」の技術的な棲み分けや、顧客基盤のクロスセル状況を深掘りします。特に、BIPROGYや牧野フライス製作所といった強力な競合に対する差別化要因を特定するため、導入事例やユーザーレビューを通じて「現場での操作性」や「サポート体制」の評価を直接的に収集する予定です。あわせて、資本コストを意識した経営改善策が、実際のROE向上や株主還元にどう結びつくかを明らかにしていきます。
+              - generic [ref=e1078]:
+                - separator [ref=e1081]
+                - generic [ref=e1083]:
+                  - generic [ref=e1084]: Researching websites...
+                  - link "nttdata.com 2024年3月期 決算説明資料 - NTT Data" [ref=e1087] [cursor=pointer]:
+                    - /url: https://www.nttdata.com/global/ja/-/media/nttdataglobal-ja/files/investors/library/earning/2023/4q/20234qpre_j01t.pdf?rev=a37d6747bca545dc980b9f2e42d02528
+                    - generic [ref=e1088]: nttdata.com
+                    - generic [ref=e1089]: 2024年3月期 決算説明資料 - NTT Data
+              - generic [ref=e1090]:
+                - generic [ref=e1091]:
+                  - img [ref=e1093]: spark
+                  - separator [ref=e1094]
+                - generic [ref=e1095]:
+                  - generic [ref=e1096]: NDES統合による収益構造の劇的な飛躍と財務プロファイル
+                  - generic [ref=e1097]: 2025年12月期の連結決算を精査した結果、売上高が前期比26.9%増の約50億円、営業利益が116.3%増の3.4億円と、極めて力強い成長を確認しました。この躍進は、2025年10月に連結子会社化したNDES（旧NTTデータエンジニアリングシステムズ）の寄与に加え、カナダ子会社での金型製造事業が受注回復を見せたことが主因です。M&Aに伴いのれん約3億円を計上し、自己資本比率は47.2%へ低下したものの、依然として27.7億円の現預金を保持しており、財務の健全性と次なる成長投資への余力を両立させている点を分析しています。
+              - generic [ref=e1098]:
+                - separator [ref=e1100]
+                - generic [ref=e1101]:
+                  - generic [ref=e1102]: 国内CAD/CAM市場シェア20%の堅持と製造DXへの適応
+                  - generic [ref=e1103]: 最新の業界レポートに基づき、国内のCAD/EDA市場が2,300億円規模で安定成長（年率約5.4%）を続けている市場環境を再定義しました。CGSグループは金型用CAD/CAM領域で国内トップクラスの約20%のシェアを誇りますが、現在は単なるソフト販売から、AI利活用やクラウド移行を含む「製造ITコンサルティング」への事業変革を急いでいます。特にNDESのソリューション力とC&Gシステムズの金型特化技術が融合することで、製造現場のモダナイゼーション需要を多角的に取り込む戦略の妥当性を思考しています。
+              - generic [ref=e1104]:
+                - separator [ref=e1106]
+                - generic [ref=e1107]:
+                  - generic [ref=e1108]: 製品ブランド「Space-E」と「EXCESS-HYBRID」のシナジー検証
+                  - generic [ref=e1109]: 今後は、旧NTTデータ系から継承した「Space-E」と、主力の「EXCESS-HYBRID」という二大ブランドの技術的・営業的シナジーを深掘りします。具体的には、両製品の機能的な棲み分けや顧客基盤のクロスセルが、2026年度の売上目標65.5億円達成に向けてどの程度進捗しているかを精査します。また、BIPROGYや牧野フライス製作所といった競合他社に対する操作性やサポート体制の優位性を、現場ユーザーの評価を通じて多角的に検証し、資本効率の向上に向けた経営改善策の実効性を明らかにするアクションへと移行します。
+              - generic [ref=e1110]:
+                - separator [ref=e1112]
+                - generic [ref=e1113]:
+                  - generic [ref=e1114]: NDES統合による収益構造の劇的な飛躍と財務プロファイル
+                  - generic [ref=e1115]: 2025年12月期の連結決算を精査した結果、売上高が前期比26.9%増の約50億円、営業利益が116.3%増の3.4億円と、極めて力強い成長を確認しました。この躍進は、2025年10月に連結子会社化したNDES（旧NTTデータエンジニアリングシステムズ）の寄与に加え、カナダ子会社での金型製造事業が受注回復を見せたことが主因です。M&Aに伴いのれん約3億円を計上し、自己資本比率は47.2%へ低下したものの、依然として27.7億円の現預金を保持しており、財務の健全性と次なる成長投資への余力を両立させている点を分析しています。
+              - generic [ref=e1116]:
+                - separator [ref=e1118]
+                - generic [ref=e1119]:
+                  - generic [ref=e1120]: 国内CAD/CAM市場シェア20%の堅持と製造DXへの適応
+                  - generic [ref=e1121]: 最新の業界レポートに基づき、国内のCAD/EDA市場が2,300億円規模で安定成長（年率約5.4%）を続けている市場環境を再定義しました。CGSグループは金型用CAD/CAM領域で国内トップクラスの約20%のシェアを誇りますが、現在は単なるソフト販売から、AI利活用やクラウド移行を含む「製造ITコンサルティング」への事業変革を急いでいます。特にNDESのソリューション力とC&Gシステムズの金型特化技術が融合することで、製造現場のモダナイゼーション需要を多角的に取り込む戦略の妥当性を思考しています。
+              - generic [ref=e1122]:
+                - separator [ref=e1124]
+                - generic [ref=e1125]:
+                  - generic [ref=e1126]: 製品ブランド「Space-E」と「EXCESS-HYBRID」のシナジー検証
+                  - generic [ref=e1127]: 今後は、旧NTTデータ系から継承した「Space-E」と、主力の「EXCESS-HYBRID」という二大ブランドの技術的・営業的シナジーを深掘りします。具体的には、両製品の機能的な棲み分けや顧客基盤のクロスセルが、2026年度の売上目標65.5億円達成に向けてどの程度進捗しているかを精査します。また、BIPROGYや牧野フライス製作所といった競合他社に対する操作性やサポート体制の優位性を、現場ユーザーの評価を通じて多角的に検証し、資本効率の向上に向けた経営改善策の実効性を明らかにするアクションへと移行します。
+            - generic [ref=e679]:
+              - separator [ref=e682]
+              - separator [ref=e690]

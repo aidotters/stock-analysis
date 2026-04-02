@@ -22,10 +22,10 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from market_pipeline.utils.parallel_processor import (
+from market_pipeline.utils.parallel_processor import (  # noqa: E402
     BatchDatabaseProcessor,
     measure_performance,
-)  # noqa: E402
+)
 from market_pipeline.utils.cache_manager import get_cache  # noqa: E402
 
 load_dotenv()

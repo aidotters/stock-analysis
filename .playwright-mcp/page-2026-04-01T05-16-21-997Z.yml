@@ -1,0 +1,89 @@
+- generic [ref=e1]:
+  - 'button "Google アカウント: Takuya Akashi (tak.akashi@gmail.com)" [ref=e8] [cursor=pointer]':
+    - img [ref=e10]
+    - img [ref=e16]
+  - main [ref=e18]:
+    - generic:
+      - button "メインメニュー" [ref=e20] [cursor=pointer]:
+        - img [ref=e21]: menu
+      - button "チャットを新規作成" [disabled] [ref=e25]:
+        - generic [ref=e27]: Gemini
+    - generic [ref=e32]:
+      - button "一時チャット" [ref=e35] [cursor=pointer]:
+        - img [ref=e38]
+      - generic [ref=e43]:
+        - button "PRO" [disabled]:
+          - generic: PRO
+    - generic [ref=e45]:
+      - navigation [ref=e46]:
+        - generic [ref=e50]:
+          - group [ref=e51]:
+            - link "チャットを新規作成" [ref=e53] [cursor=pointer]:
+              - /url: /app
+              - img [ref=e56]: edit_square
+          - generic:
+            - progressbar "Gem と最近の会話を読み込んでいます":
+              - generic:
+                - img
+              - generic:
+                - generic:
+                  - generic:
+                    - img
+                  - generic:
+                    - img
+                  - generic:
+                    - img
+          - group [ref=e59]:
+            - button "Settings & help" [ref=e61] [cursor=pointer]:
+              - img [ref=e64]: settings_2
+      - generic [ref=e74]:
+        - generic [ref=e75]:
+          - heading "Gemini との会話" [level=1] [ref=e76]
+          - generic [ref=e81]:
+            - generic [ref=e82]:
+              - generic [ref=e88]: Takuya さん
+              - generic [ref=e94]:
+                - heading "何から始めますか？" [level=1]
+            - generic [ref=e100]:
+              - generic:
+                - generic:
+                  - generic:
+                    - button "🖼️ 画像の作成、ボタン、タップしてツールを使用":
+                      - generic: 🖼️ 画像の作成
+                  - generic:
+                    - button "🎸 音楽を作成、ボタン、タップしてツールを使用":
+                      - generic: 🎸 音楽を作成
+                  - generic:
+                    - button "動画の作成、ボタン、タップしてツールを使用":
+                      - generic: 動画の作成
+                  - generic:
+                    - button "何でも書く、ボタン、タップしてツールを使用":
+                      - generic: 何でも書く
+                  - generic:
+                    - button "一日を盛り上げる、ボタン、タップしてツールを使用":
+                      - generic: 一日を盛り上げる
+                  - generic:
+                    - button "知識習得サポート、ボタン、タップしてツールを使用":
+                      - generic: 知識習得サポート
+        - generic [ref=e101]:
+          - group [ref=e102]:
+            - generic [ref=e105]:
+              - textbox "Gemini へのプロンプトを入力" [active] [ref=e110]:
+                - text: Gemini に相談
+                - paragraph [ref=e111]
+              - generic [ref=e112]:
+                - button "[ファイルをアップロード] メニューを開く" [ref=e117] [cursor=pointer]:
+                  - img [ref=e118]: add_2
+                - button "ツール" [ref=e124]:
+                  - img [ref=e125]: page_info
+                  - generic [ref=e128]: ツール
+              - generic [ref=e131]:
+                - button "モード選択ツールを開く" [ref=e134]:
+                  - generic [ref=e136]:
+                    - generic [ref=e137]: 高速モード
+                    - img [ref=e138]: keyboard_arrow_down
+                - generic [ref=e141]:
+                  - button "マイク" [ref=e144] [cursor=pointer]:
+                    - img [ref=e146]: mic
+                  - text: send
+          - paragraph [ref=e151]
