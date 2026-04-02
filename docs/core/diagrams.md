@@ -60,7 +60,7 @@ flowchart TB
 
 ```mermaid
 graph LR
-    subgraph Backend["backend/market_pipeline/"]
+    subgraph Backend["src/market_pipeline/"]
         subgraph Config["config/"]
             SET[settings.py]
             INIT[__init__.py]
@@ -96,13 +96,13 @@ graph LR
         end
     end
 
-    subgraph MarketReader["backend/market_reader/"]
+    subgraph MarketReader["src/market_reader/"]
         DR[reader.py<br/>DataReader]
         EX[exceptions.py]
         UT[utils.py]
     end
 
-    subgraph TechTools["backend/technical_tools/"]
+    subgraph TechTools["src/technical_tools/"]
         TA[analyzer.py<br/>TechnicalAnalyzer]
         IND[indicators.py]
         SIG[signals.py]

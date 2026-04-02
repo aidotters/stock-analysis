@@ -4,7 +4,7 @@
 
 ```
 Stock-Analysis/
-├── backend/                          # バックエンドパッケージ群
+├── src/                              # バックエンドパッケージ群
 │   ├── __init__.py
 │   │
 │   ├── market_pipeline/              # コアロジックとデータ処理（旧core/）
@@ -230,33 +230,33 @@ Stock-Analysis/
 
 | パス | 説明 |
 |-----|------|
-| `backend/market_pipeline/config/settings.py` | Pydantic Settings による設定管理 |
-| `backend/market_pipeline/jquants/data_processor.py` | 非同期株価データ取得（~500行） |
-| `backend/market_pipeline/jquants/statements_processor.py` | 財務諸表取得（~400行） |
-| `backend/market_pipeline/jquants/fundamentals_calculator.py` | 財務指標計算（~300行） |
-| `backend/market_pipeline/analysis/minervini.py` | ミネルヴィニ分析 |
-| `backend/market_pipeline/analysis/high_low_ratio.py` | HL比率計算 |
-| `backend/market_pipeline/analysis/relative_strength.py` | RSP/RSI計算 |
-| `backend/market_pipeline/analysis/chart_classification.py` | チャートパターン分類 |
-| `backend/market_pipeline/analysis/integrated_analysis2.py` | DB保存 + CSV/Excel出力 |
-| `backend/market_pipeline/analysis/integrated_scores_repository.py` | integrated_scoresテーブルCRUD |
-| `backend/market_pipeline/utils/parallel_processor.py` | 並列処理ラッパー |
-| `backend/market_pipeline/utils/cache_manager.py` | キャッシュ管理 |
-| `backend/market_pipeline/utils/slack_notifier.py` | Slack Incoming Webhook通知（SlackNotifier, JobContext, JobResult） |
-| `backend/market_pipeline/news/config_parser.py` | ニュース巡回先YAML設定パーサー |
-| `backend/market_reader/reader.py` | DataReaderクラス（pandas_datareader風API） |
-| `backend/market_reader/exceptions.py` | カスタム例外クラス |
-| `backend/technical_tools/analyzer.py` | TechnicalAnalyzerファサードクラス（テクニカル分析統合） |
-| `backend/technical_tools/indicators.py` | テクニカル指標計算（SMA, EMA, RSI, MACD, BB） |
-| `backend/technical_tools/signals.py` | シグナル検出（ゴールデンクロス/デッドクロス） |
-| `backend/technical_tools/charts.py` | plotlyインタラクティブチャート生成 |
-| `backend/technical_tools/screener.py` | StockScreenerクラス（銘柄スクリーニング） |
-| `backend/technical_tools/backtester.py` | Backtesterクラス（シグナルベースバックテスト） |
-| `backend/technical_tools/backtest_results.py` | BacktestResultsクラス（結果分析・可視化） |
-| `backend/technical_tools/virtual_portfolio.py` | VirtualPortfolioクラス（仮想ポートフォリオ） |
-| `backend/technical_tools/backtest_signals/` | バックテスト用シグナル定義（プラグイン形式） |
-| `backend/technical_tools/optimizer.py` | StrategyOptimizerクラス（戦略パラメータ最適化） |
-| `backend/technical_tools/optimization_results.py` | OptimizationResultsクラス（最適化結果分析・可視化） |
+| `src/market_pipeline/config/settings.py` | Pydantic Settings による設定管理 |
+| `src/market_pipeline/jquants/data_processor.py` | 非同期株価データ取得（~500行） |
+| `src/market_pipeline/jquants/statements_processor.py` | 財務諸表取得（~400行） |
+| `src/market_pipeline/jquants/fundamentals_calculator.py` | 財務指標計算（~300行） |
+| `src/market_pipeline/analysis/minervini.py` | ミネルヴィニ分析 |
+| `src/market_pipeline/analysis/high_low_ratio.py` | HL比率計算 |
+| `src/market_pipeline/analysis/relative_strength.py` | RSP/RSI計算 |
+| `src/market_pipeline/analysis/chart_classification.py` | チャートパターン分類 |
+| `src/market_pipeline/analysis/integrated_analysis2.py` | DB保存 + CSV/Excel出力 |
+| `src/market_pipeline/analysis/integrated_scores_repository.py` | integrated_scoresテーブルCRUD |
+| `src/market_pipeline/utils/parallel_processor.py` | 並列処理ラッパー |
+| `src/market_pipeline/utils/cache_manager.py` | キャッシュ管理 |
+| `src/market_pipeline/utils/slack_notifier.py` | Slack Incoming Webhook通知（SlackNotifier, JobContext, JobResult） |
+| `src/market_pipeline/news/config_parser.py` | ニュース巡回先YAML設定パーサー |
+| `src/market_reader/reader.py` | DataReaderクラス（pandas_datareader風API） |
+| `src/market_reader/exceptions.py` | カスタム例外クラス |
+| `src/technical_tools/analyzer.py` | TechnicalAnalyzerファサードクラス（テクニカル分析統合） |
+| `src/technical_tools/indicators.py` | テクニカル指標計算（SMA, EMA, RSI, MACD, BB） |
+| `src/technical_tools/signals.py` | シグナル検出（ゴールデンクロス/デッドクロス） |
+| `src/technical_tools/charts.py` | plotlyインタラクティブチャート生成 |
+| `src/technical_tools/screener.py` | StockScreenerクラス（銘柄スクリーニング） |
+| `src/technical_tools/backtester.py` | Backtesterクラス（シグナルベースバックテスト） |
+| `src/technical_tools/backtest_results.py` | BacktestResultsクラス（結果分析・可視化） |
+| `src/technical_tools/virtual_portfolio.py` | VirtualPortfolioクラス（仮想ポートフォリオ） |
+| `src/technical_tools/backtest_signals/` | バックテスト用シグナル定義（プラグイン形式） |
+| `src/technical_tools/optimizer.py` | StrategyOptimizerクラス（戦略パラメータ最適化） |
+| `src/technical_tools/optimization_results.py` | OptimizationResultsクラス（最適化結果分析・可視化） |
 
 ### スクリプト
 

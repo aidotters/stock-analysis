@@ -74,7 +74,7 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 ┌───────────────────────────────────────────────────────────────────────────────┐
 │                         クエリインターフェース                                 │
 │  ┌────────────────────────────────────────────────────────────────────────┐  │
-│  │  backend/technical_tools/screener.py                                   │  │
+│  │  src/technical_tools/screener.py                                   │  │
 │  │    StockScreener クラス                                                │  │
 │  │    - filter(): 条件フィルタリング（テクニカル/財務/バリュエーション/パターン）│  │
 │  │      - includeパラメータでカラムグループ制御（scores/fundamentals/valuation）│  │
@@ -91,7 +91,7 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 ┌───────────────────────────────────────────────────────────────────────────────┐
 │                       バックテスト・シミュレーション                             │
 │  ┌────────────────────────────────────────────────────────────────────────┐  │
-│  │  backend/technical_tools/backtester.py                                 │  │
+│  │  src/technical_tools/backtester.py                                 │  │
 │  │    Backtester クラス                                                   │  │
 │  │    - add_signal(): シグナル追加（プラグイン形式）                         │  │
 │  │    - add_exit_rule(): エグジットルール追加                              │  │
@@ -102,7 +102,7 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 │  │    BacktestResults: 結果分析・可視化・エクスポート                       │  │
 │  └────────────────────────────────────────────────────────────────────────┘  │
 │  ┌────────────────────────────────────────────────────────────────────────┐  │
-│  │  backend/technical_tools/virtual_portfolio.py                          │  │
+│  │  src/technical_tools/virtual_portfolio.py                          │  │
 │  │    VirtualPortfolio クラス                                             │  │
 │  │    - buy()/sell(): 売買記録                                           │  │
 │  │    - summary()/holdings(): 現状確認                                   │  │
@@ -126,7 +126,7 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 | `run_weekly_tasks.py` | 土曜 06:00 | 財務諸表取得 + 統合分析実行 |
 | `run_monthly_master.py` | 毎月1日 20:30 | 銘柄マスターデータ更新 |
 
-### 2. API連携レイヤー (`backend/market_pipeline/jquants/`)
+### 2. API連携レイヤー (`src/market_pipeline/jquants/`)
 
 | モジュール | 機能 |
 |-----------|------|
@@ -134,7 +134,7 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 | `statements_processor.py` | 財務諸表APIフェッチャー |
 | `fundamentals_calculator.py` | PER, PBR, ROE, ROA等の財務指標計算 |
 
-### 2.5 yfinanceバリュエーション (`backend/market_pipeline/yfinance/`)
+### 2.5 yfinanceバリュエーション (`src/market_pipeline/yfinance/`)
 
 | モジュール | 機能 |
 |-----------|------|
@@ -145,7 +145,7 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 - 出力: `statements.db` → `yfinance_valuation`テーブル
 - StockScreenerから`net_cash_ratio`, `cash_neutral_per`でフィルタリング可能
 
-### 3. 分析レイヤー (`backend/market_pipeline/analysis/`)
+### 3. 分析レイヤー (`src/market_pipeline/analysis/`)
 
 | モジュール | 分析手法 | 出力テーブル |
 |-----------|---------|-------------|
@@ -157,7 +157,7 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 | `integrated_analysis2.py` | DB保存 + CSV/Excel出力 | integrated_scores |
 | `integrated_scores_repository.py` | integrated_scoresテーブルCRUD | integrated_scores |
 
-### 4. ユーティリティレイヤー (`backend/market_pipeline/utils/`)
+### 4. ユーティリティレイヤー (`src/market_pipeline/utils/`)
 
 | モジュール | 機能 |
 |-----------|------|
@@ -165,7 +165,7 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 | `cache_manager.py` | APIレスポンス・計算結果のメモリキャッシュ |
 | `slack_notifier.py` | Slack Incoming Webhook通知（SlackNotifier, JobContext, JobResult） |
 
-### 4.1 ニュース巡回設定 (`backend/market_pipeline/news/`)
+### 4.1 ニュース巡回設定 (`src/market_pipeline/news/`)
 
 `/discover-stocks`、`/research-stock-news`スキルで使用するニュース巡回先サイトのYAML設定パーサー:
 
@@ -177,7 +177,7 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 
 `disclosure` カテゴリは適時開示情報の巡回に使用され、`filter_keywords`（`include`/`exclude`リスト）によるタイトルベースのフィルタリングをサポートする。
 
-### 5. データアクセスレイヤー (`backend/market_reader/`)
+### 5. データアクセスレイヤー (`src/market_reader/`)
 
 pandas_datareader風のシンプルなAPIでJ-Quantsデータにアクセス:
 
@@ -194,7 +194,7 @@ df = reader.get_prices("7203", start="2024-01-01", end="2024-12-31")
 | `exceptions.py` | カスタム例外（StockNotFoundError等） |
 | `utils.py` | ユーティリティ関数 |
 
-### 5.1 テクニカル分析レイヤー (`backend/technical_tools/`)
+### 5.1 テクニカル分析レイヤー (`src/technical_tools/`)
 
 Jupyter Notebook向けのテクニカル分析ツール。日本株（J-Quants）と米国株（yfinance）の統一インターフェースを提供:
 
@@ -231,7 +231,7 @@ signals = analyzer.detect_crosses("7203", patterns=[(5, 25), (25, 75)])
 | `optimization_results.py` | OptimizationResultsクラス（最適化結果分析・可視化） |
 | `backtest_signals/` | バックテスト用シグナル定義（プラグイン形式） |
 
-### 6. 設定レイヤー (`backend/market_pipeline/config/`)
+### 6. 設定レイヤー (`src/market_pipeline/config/`)
 
 Pydantic Settingsベースの型安全な設定管理システム:
 
@@ -376,7 +376,7 @@ CREATE INDEX idx_integrated_scores_composite_rank ON integrated_scores (Date, co
 
 ### 2. 設定の一元管理
 
-`backend/market_pipeline/config/settings.py`で全設定を集約:
+`src/market_pipeline/config/settings.py`で全設定を集約:
 
 - 環境変数からの読み込み
 - 型安全なアクセス

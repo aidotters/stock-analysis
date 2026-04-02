@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+### Changed
+- ソースコードディレクトリを `backend/` から `src/` にリネーム
+  - `backend/market_pipeline/` → `src/market_pipeline/`
+  - `backend/__init__.py` → `src/__init__.py`
+  - pyproject.toml、テスト設定、mypy設定を `src/` に更新
+  - 全Claude Codeスキルファイル（9ファイル）の `backend/` パス参照を `src/` に更新
+  - コアドキュメント（CLAUDE.md, README.md, docs/core/）を `src/` パスに更新
+
 ### Added
 - `/analyze-stock` スキルにDeep Research統合を追加（Phase 2）
   - `--deep-research`: 確認プロンプトをスキップしてGemini Advanced Deep Researchを即実行
@@ -27,15 +35,15 @@
   - `StockScreener.filter()`でequity_ratio, roa, roe_maxによるフィルタリングが可能に
   - テストDBフィクスチャをconftest.pyに共通化（`create_screener_analysis_db()`, `create_screener_statements_db()`）
 - yfinanceバリュエーション指標取得・スクリーニング機能
-  - `backend/market_pipeline/yfinance/valuation_fetcher.py`: `ValuationFetcher`クラス新規追加
+  - `src/market_pipeline/yfinance/valuation_fetcher.py`: `ValuationFetcher`クラス新規追加
     - yfinance APIからBS情報（現金等・有利子負債）・時価総額・PERをローリング取得（デフォルト150銘柄/日）
     - 優先順位ロジック: BS未取得(PER低い順) → 90日経過(PER低い順) → 更新日古い順
     - `net_cash_ratio`（純ネットキャッシュ比率）、`cash_neutral_per`（キャッシュニュートラルPER）を自動計算
     - データ保存先: `statements.db` → `yfinance_valuation`テーブル
-  - `backend/technical_tools/screener.py`: StockScreenerにバリュエーションフィルタ追加
+  - `src/technical_tools/screener.py`: StockScreenerにバリュエーションフィルタ追加
     - `ScreenerFilter`に`net_cash_ratio_min/max`, `cash_neutral_per_min/max`フィールド追加
     - `yfinance_valuation`テーブルの遅延JOINによるフィルタリング
-  - `backend/market_pipeline/config/settings.py`: `YFinanceSettings`にバリュエーション設定追加
+  - `src/market_pipeline/config/settings.py`: `YFinanceSettings`にバリュエーション設定追加
     - `valuation_batch_size`, `valuation_wait_seconds`, `valuation_max_workers`
   - `scripts/run_daily_analysis.py`: `yfinance_valuation`モジュール追加（`--modules yfinance_valuation`で単独実行可）
   - `tests/test_valuation_fetcher.py`: ValuationFetcherの単体テスト（18テスト）
@@ -68,9 +76,9 @@
 ### Changed
 - `.claude/skills/discover-stocks/SKILL.md`: 適時開示巡回ステップ追加（`--category disclosure`対応）
 - `.claude/skills/analyze-stock/SKILL.md`: `/research-stock-news`相当のニュース情報を自動統合
-- `backend/market_pipeline/news/__init__.py`: `FilterKeywords`エクスポート追加
+- `src/market_pipeline/news/__init__.py`: `FilterKeywords`エクスポート追加
 
-- `backend/market_pipeline/news/config_parser.py`: ニュース巡回先設定パーサーモジュール
+- `src/market_pipeline/news/config_parser.py`: ニュース巡回先設定パーサーモジュール
   - `NewsSource` frozenデータクラス: 巡回先サイト情報（name, auth, url, selector等）
   - `NewsConfig`データクラス: カテゴリ別ソース管理
   - `load_config()`: YAML設定ファイルの読み込みとバリデーション
@@ -80,14 +88,14 @@
 - `tests/test_news_config.py`: ニュース巡回先設定パーサーのテスト
 - `pyproject.toml`: `pyyaml>=6.0`, `types-PyYAML>=6.0`, `nbformat>=5.10.4` 依存関係追加
 
-- `backend/market_pipeline/utils/slack_notifier.py`: Slack Incoming Webhook通知モジュール
+- `src/market_pipeline/utils/slack_notifier.py`: Slack Incoming Webhook通知モジュール
   - `SlackNotifier`クラス: 成功・エラー・警告の3種類の通知送信
   - `JobContext`コンテキストマネージャ: `with`文によるジョブの自動通知
   - `JobResult`データクラス: ジョブ実行結果（メトリクス、警告、実行時間）を保持
   - リトライロジック（最大3回、1秒間隔）
   - 通知失敗がジョブの処理結果に影響しない設計
-- `backend/market_pipeline/utils/__init__.py`: SlackNotifier, JobContext, JobResultのエクスポート
-- `backend/market_pipeline/config/settings.py`: `SlackSettings`クラス追加
+- `src/market_pipeline/utils/__init__.py`: SlackNotifier, JobContext, JobResultのエクスポート
+- `src/market_pipeline/config/settings.py`: `SlackSettings`クラス追加
   - `SLACK_WEBHOOK_URL`, `SLACK_ERROR_WEBHOOK_URL`, `SLACK_ENABLED`, `SLACK_TIMEOUT_SECONDS`, `SLACK_MAX_RETRIES`環境変数サポート
 - `tests/test_slack_notifier.py`: SlackNotifier/JobContext/JobResultのテスト
 - `.env.example`: Slack通知設定セクション追加
@@ -98,7 +106,7 @@
 - `scripts/run_weekly_tasks.py`: JobContext統合（財務データ・統合分析の完了状況を通知）
 - `scripts/run_monthly_master.py`: JobContext統合（総銘柄数・アクティブ銘柄数を通知）
 
-- `backend/technical_tools/optimizer.py`: 戦略パラメータ最適化エンジン
+- `src/technical_tools/optimizer.py`: 戦略パラメータ最適化エンジン
   - `StrategyOptimizer`クラス: Backtesterを利用したパラメータ最適化
   - `add_search_space()`: 探索パラメータの定義（MA期間、RSI閾値、エグジットルール等）
   - `add_constraint()`: パラメータ制約条件の追加
@@ -107,7 +115,7 @@
   - ウォークフォワード分析（過学習対策）
   - タイムアウト機能
   - ストリーミング出力（JSONL形式）
-- `backend/technical_tools/optimization_results.py`: 最適化結果分析クラス
+- `src/technical_tools/optimization_results.py`: 最適化結果分析クラス
   - `OptimizationResults`: 結果の保持・分析・可視化
   - `TrialResult`: 個別試行結果データクラス
   - `best()`: 最良パラメータの取得
@@ -115,37 +123,37 @@
   - `plot_heatmap()`: パラメータ空間のヒートマップ可視化
   - `save()`/`load()`: JSON/CSV形式での永続化
   - `load_streaming()`: JSONL形式からの読み込み
-- `backend/technical_tools/exceptions.py`: 最適化関連例外追加
+- `src/technical_tools/exceptions.py`: 最適化関連例外追加
   - `OptimizerError`, `InvalidSearchSpaceError`, `NoValidParametersError`, `OptimizationTimeoutError`
 - テストファイル追加:
   - `tests/test_optimizer.py`: StrategyOptimizerクラステスト
   - `tests/test_optimization_results.py`: OptimizationResultsクラステスト
 
-- `backend/technical_tools/backtester.py`: シグナルベースバックテストエンジン
+- `src/technical_tools/backtester.py`: シグナルベースバックテストエンジン
   - `Backtester`クラス: backtesting.pyをラップしたシンプルなAPI
   - `add_signal()`: プラグイン形式のシグナル追加
   - `add_exit_rule()`: エグジットルール追加（stop_loss, take_profit, max_holding_days, trailing_stop）
   - `run()`: 並列処理対応のバックテスト実行
   - `run_with_screener()`: StockScreener連携バックテスト
-- `backend/technical_tools/backtest_results.py`: バックテスト結果分析クラス
+- `src/technical_tools/backtest_results.py`: バックテスト結果分析クラス
   - `BacktestResults`: 結果の保持・分析・可視化
   - `summary()`: パフォーマンス指標（勝率、シャープレシオ、最大DD等）
   - `plot()`: plotlyによる資産推移・ドローダウンチャート
   - `export()`: CSV/Excel/HTML出力
   - `by_symbol()`, `by_sector()`, `monthly_returns()`, `yearly_returns()`: 詳細分析
   - `Trade`データクラス: 個別取引情報
-- `backend/technical_tools/virtual_portfolio.py`: 仮想ポートフォリオ管理
+- `src/technical_tools/virtual_portfolio.py`: 仮想ポートフォリオ管理
   - `VirtualPortfolio`クラス: JSON永続化対応の仮想ポートフォリオ
   - `buy()`: 株数指定または金額指定での購入
   - `sell()`, `sell_all()`: 売却
   - `summary()`, `holdings()`, `performance()`: 状態確認
   - `plot()`: plotlyによるポートフォリオチャート
   - `buy_from_screener()`: StockScreener連携の一括購入
-- `backend/technical_tools/backtest_signals/`: バックテスト用シグナルモジュール
+- `src/technical_tools/backtest_signals/`: バックテスト用シグナルモジュール
   - `BaseSignal`: シグナル抽象基底クラス
   - `SignalRegistry`: シグナルのプラグイン登録・取得
   - 対応シグナル: golden_cross, dead_cross, rsi_oversold, rsi_overbought, macd_cross, bollinger_breakout, bollinger_squeeze, volume_spike, volume_breakout
-- `backend/technical_tools/exceptions.py`: バックテスト・ポートフォリオ関連例外追加
+- `src/technical_tools/exceptions.py`: バックテスト・ポートフォリオ関連例外追加
   - `BacktestError`, `BacktestInsufficientDataError`, `InvalidSignalError`, `InvalidRuleError`, `PortfolioError`
 - テストファイル追加:
   - `tests/test_backtester.py`: Backtesterクラステスト
@@ -156,12 +164,12 @@
 - `pyproject.toml`: `backtesting>=0.3.3` 依存関係追加
 
 ### Fixed
-- `backend/technical_tools/data_sources/jquants.py`: 株式分割を考慮した調整後価格（AdjustmentOpen/High/Low/Close/Volume）を使用するように修正
+- `src/technical_tools/data_sources/jquants.py`: 株式分割を考慮した調整後価格（AdjustmentOpen/High/Low/Close/Volume）を使用するように修正
   - 以前は未調整価格（Open/High/Low/Close/Volume）を使用していたため、株式分割時にチャートにギャップが生じていた
 
 ### Changed
-- `backend/technical_tools/__init__.py`: StrategyOptimizer, OptimizationResults, TrialResult, 最適化例外クラスをエクスポート追加
-- `backend/technical_tools/__init__.py`: Backtester, BacktestResults, Trade, VirtualPortfolio, 新例外クラスをエクスポート追加
+- `src/technical_tools/__init__.py`: StrategyOptimizer, OptimizationResults, TrialResult, 最適化例外クラスをエクスポート追加
+- `src/technical_tools/__init__.py`: Backtester, BacktestResults, Trade, VirtualPortfolio, 新例外クラスをエクスポート追加
 - パッケージバージョンは0.1.0（pyproject.toml）
 
 ### Documentation
@@ -178,7 +186,7 @@
 ## [Previous]
 
 ### Added
-- `backend/market_reader/` パッケージ: pandas_datareader風のデータアクセスAPI（旧 `stock_reader/`）
+- `src/market_reader/` パッケージ: pandas_datareader風のデータアクセスAPI（旧 `stock_reader/`）
   - `DataReader`クラス: コンストラクタで `db_path` と `strict` パラメータをサポート
   - `get_prices()`: 単一/複数銘柄対応、日付自動デフォルト（end=DB最新日、start=5年前）
   - カラム選択: "simple"（OHLCV + AdjustmentClose）、"full"（全16カラム）、カスタムリスト
@@ -188,8 +196,8 @@
   - PRAGMA最適化（WALモード、キャッシュ設定）
 - `notebooks/` ディレクトリ: 分析・可視化用Jupyterノートブック
 - `py.typed` マーカーファイル: PEP 561準拠の型ヒントサポート
-  - `backend/market_pipeline/py.typed`
-  - `backend/market_reader/py.typed`
+  - `src/market_pipeline/py.typed`
+  - `src/market_reader/py.typed`
 - パフォーマンスベンチマークファイル（テストから分離）:
   - `tests/benchmark_integrated_analysis_optimization.py`
   - `tests/benchmark_jquants_performance.py`
@@ -200,8 +208,8 @@
 - FundamentalsCalculator: J-Quantsデータを使用した財務指標計算への移行
 - ドキュメント構造の再編成（`docs/refs/`、`docs/core/`）
 - リポジトリ構造のリファクタリング:
-  - `core/` → `backend/market_pipeline/` へ移動
-  - `stock_reader/` → `backend/market_reader/` へ移動
+  - `core/` → `src/market_pipeline/` へ移動
+  - `stock_reader/` → `src/market_reader/` へ移動
 - `notebook/` を `notebooks/` にリネーム
 - テストファイルの整理:
   - パフォーマンステストを `benchmark_*.py` に分離

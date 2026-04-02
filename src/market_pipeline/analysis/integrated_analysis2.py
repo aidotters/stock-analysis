@@ -36,7 +36,7 @@ warnings.filterwarnings("ignore")
 # --- Constants and Configuration ---
 
 # Determine the project root directory based on the script's location
-# The script is in backend/market_pipeline/analysis, so the root is three levels up.
+# The script is in src/market_pipeline/analysis, so the root is three levels up.
 PROJECT_ROOT = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "..", "..")
 )
