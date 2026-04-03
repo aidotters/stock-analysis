@@ -50,7 +50,8 @@ Stock-Analysis/
 │   │   │
 │   │   └── yfinance/                     # yfinance連携
 │   │       ├── data_processor.py          # レガシー株価取得
-│   │       └── valuation_fetcher.py       # BSデータ・バリュエーション指標取得（ローリング更新）
+│   │       ├── valuation_fetcher.py       # BSデータ・バリュエーション指標取得（ローリング更新）
+│   │       └── historical_price_fetcher.py # 過去20年分日足データ取得（J-Quantsデータ補完）
 │   │
 │   ├── market_reader/                    # pandas_datareader風データアクセスAPI（旧stock_reader/）
 │   │   ├── __init__.py                   # パッケージエクスポート
@@ -94,6 +95,8 @@ Stock-Analysis/
 │   ├── run_monthly_master.py         # 月次マスター更新（1日20:30）
 │   ├── run_adhoc_integrated_analysis.py # アドホック統合分析
 │   ├── create_database_indexes.py    # DBインデックス作成
+│   ├── run_historical_prices.py      # yfinance過去データ一括取得（手動、初回）
+│   ├── migrate_add_source_column.py  # daily_quotesにsourceカラム追加マイグレーション
 │   └── _old/
 │       ├── run_daily_jquants.py
 │       └── run_daily_analysis.py
@@ -244,6 +247,7 @@ Stock-Analysis/
 | `src/market_pipeline/utils/cache_manager.py` | キャッシュ管理 |
 | `src/market_pipeline/utils/slack_notifier.py` | Slack Incoming Webhook通知（SlackNotifier, JobContext, JobResult） |
 | `src/market_pipeline/news/config_parser.py` | ニュース巡回先YAML設定パーサー |
+| `src/market_pipeline/yfinance/historical_price_fetcher.py` | HistoricalPriceFetcher（yfinance過去20年分日足データ取得） |
 | `src/market_reader/reader.py` | DataReaderクラス（pandas_datareader風API） |
 | `src/market_reader/exceptions.py` | カスタム例外クラス |
 | `src/technical_tools/analyzer.py` | TechnicalAnalyzerファサードクラス（テクニカル分析統合） |
@@ -268,12 +272,14 @@ Stock-Analysis/
 | `scripts/run_weekly_tasks.py` | 土曜06:00 | 財務諸表取得 + 統合分析 |
 | `scripts/run_monthly_master.py` | 毎月1日20:30 | マスターデータ更新 |
 | `scripts/create_database_indexes.py` | 初回のみ | DBインデックス作成 |
+| `scripts/run_historical_prices.py` | 手動（初回） | yfinanceから過去20年分の日足データ取得 |
+| `scripts/migrate_add_source_column.py` | 手動（初回） | daily_quotesにsourceカラム追加マイグレーション |
 
 ### データベース
 
 | ファイル | サイズ | 主要テーブル |
 |---------|-------|-------------|
-| `data/jquants.db` | 820MB | daily_quotes |
+| `data/jquants.db` | 820MB | daily_quotes（sourceカラムで'jquants'/'yfinance'を区別） |
 | `data/statements.db` | 30MB | financial_statements, calculated_fundamentals |
 | `data/analysis_results.db` | 1.7GB | hl_ratio, minervini, relative_strength, classification_results, integrated_scores |
 | `data/master.db` | 964KB | stocks_master |
@@ -306,6 +312,7 @@ Stock-Analysis/
 | `tests/test_optimization_results.py` | OptimizationResultsクラス |
 | `tests/test_slack_notifier.py` | SlackNotifier/JobContext/JobResult |
 | `tests/test_news_config.py` | ニュース巡回先設定パーサー |
+| `tests/test_historical_price_fetcher.py` | HistoricalPriceFetcher（yfinance過去データ取得・カラムマッピング・マイグレーション） |
 | `tests/test_type8_optimization.py` | Type8最適化 |
 | `tests/test_rsi_optimization.py` | RSI最適化 |
 | `tests/test_fixes.py` | バグ修正検証 |

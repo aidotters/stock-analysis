@@ -188,6 +188,84 @@ net_cash_ratio, cash_neutral_perを計算。
 
 **戻り値**: `dict` - `{success: int, failed: int, skipped: int, elapsed: float}`
 
+### HistoricalPriceFetcher
+
+yfinanceから過去20年分の日足データを取得し、jquants.dbのdaily_quotesテーブルに挿入するクラス。J-Quantsデータが既に存在する期間は除外し、J-Quantsデータを優先する。
+
+```python
+from market_pipeline.yfinance.historical_price_fetcher import HistoricalPriceFetcher
+
+fetcher = HistoricalPriceFetcher()
+result = fetcher.run()  # {'success': 3500, 'failed': 50, 'skipped': 400, 'total_records': 5000000, 'elapsed': 600.0}
+```
+
+#### コンストラクタ
+
+```python
+HistoricalPriceFetcher(
+    jquants_db_path: str | None = None,
+    master_db_path: str | None = None,
+    max_workers: int = 4,
+    wait_seconds: float = 0.5,
+    batch_size: int = 1000,
+    years: int = 20,
+)
+```
+
+**パラメータ**:
+- `jquants_db_path`: jquants.dbのパス（省略時はsettings.paths.jquants_dbを使用）
+- `master_db_path`: master.dbのパス（省略時はsettings.paths.master_dbを使用）
+- `max_workers`: 並列取得スレッド数（デフォルト: 4）
+- `wait_seconds`: API呼び出し間のウェイト秒（デフォルト: 0.5）
+- `batch_size`: バッチINSERTのレコード数（デフォルト: 1000）
+- `years`: 取得年数（デフォルト: 20）
+
+#### メソッド
+
+##### `get_target_codes(symbols: list[str] | None = None) -> list[dict]`
+
+アクティブ銘柄一覧を取得し、各銘柄のjquants.db最古日を付与。
+
+**パラメータ**:
+- `symbols` (`list[str] | None`): 指定銘柄のみ取得（省略時は全アクティブ銘柄）
+
+**戻り値**: `list[dict]` - `{code, yfinance_symbol, earliest_date}`のリスト
+
+##### `get_earliest_date(code: str) -> str | None`
+
+指定銘柄のjquants.dbにおける最古日を返す。データがなければNone。
+
+##### `fetch_single(target: dict) -> pd.DataFrame | None`
+
+1銘柄分のyfinanceデータを取得しマッピング済みDataFrameを返す。最大3回リトライ（1秒間隔）。
+
+##### `map_columns(df: pd.DataFrame, code: str) -> pd.DataFrame`
+
+yfinance DataFrame → daily_quotesカラム形式に変換。
+
+**カラムマッピング**:
+- yfinance Open/High/Low/Close/Volume → AdjustmentOpen/High/Low/Close/Volume
+- 未調整カラム（Open, High, Low, Close, Volume）→ NULL
+- AdjustmentFactor, TurnoverValue → NULL
+- source → 'yfinance'
+- Code → 5桁形式
+
+##### `save_batch(records: list[dict]) -> int`
+
+daily_quotesにバッチINSERT（INSERT OR IGNORE）。
+
+**戻り値**: `int` - 実際に挿入されたレコード数（COUNT差分方式）
+
+##### `run(symbols: list[str] | None = None, dry_run: bool = False) -> dict`
+
+全銘柄を処理し、結果サマリを返す。
+
+**パラメータ**:
+- `symbols`: 指定銘柄のみ取得（Noneで全アクティブ銘柄）
+- `dry_run`: Trueの場合、DB書き込みをスキップ
+
+**戻り値**: `dict` - `{success: int, failed: int, skipped: int, total_records: int, elapsed: float}`
+
 ---
 
 ## ニュース巡回設定モジュール (`src/market_pipeline/news/`)

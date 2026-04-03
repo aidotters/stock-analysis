@@ -4,6 +4,23 @@
 
 ## [Unreleased]
 
+### Added
+- yfinance過去日足データ取得機能（J-Quants Light 5年分の範囲外を補完）
+  - `src/market_pipeline/yfinance/historical_price_fetcher.py`: `HistoricalPriceFetcher`クラス新規追加
+    - yfinanceから最大20年分の日足データを取得し、daily_quotesテーブルに挿入
+    - J-Quantsデータの最古日以前のデータのみを取得（INSERT OR IGNOREでJ-Quants優先）
+    - yfinance OHLCVをAdjustmentOpen/High/Low/Close/Volumeにマッピング（未調整カラムはNULL）
+    - ThreadPoolExecutor + リトライ（最大3回、1秒間隔）
+    - `--dry-run`, `--symbols`, `--years` オプション対応
+  - `scripts/run_historical_prices.py`: 一括取得実行スクリプト（JobContext Slack通知統合）
+  - `scripts/migrate_add_source_column.py`: daily_quotesテーブルにsourceカラム追加マイグレーション
+    - 既存レコードは`source='jquants'`に一括UPDATE（10万件単位で分割）
+    - 冪等性確保（カラム存在時はスキップ）
+  - `tests/test_historical_price_fetcher.py`: HistoricalPriceFetcherの単体テスト
+
+### Changed
+- `src/market_pipeline/jquants/data_processor.py`: J-Quantsデータ挿入時に`source='jquants'`を付与
+
 ### Changed
 - ソースコードディレクトリを `backend/` から `src/` にリネーム
   - `backend/market_pipeline/` → `src/market_pipeline/`

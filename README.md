@@ -60,7 +60,7 @@
 │   │   ├── master/      # 銘柄マスター関連の処理
 │   │   ├── news/        # ニュース巡回設定（YAML設定パーサー）
 │   │   ├── utils/       # ユーティリティ（キャッシュ、並列処理、Slack通知等）
-│   │   └── yfinance/    # yfinance連携（バリュエーション指標取得）
+│   │   └── yfinance/    # yfinance連携（バリュエーション指標・過去日足データ取得）
 │   ├── market_reader/   # pandas_datareader風のデータアクセスAPI（旧stock_reader/）
 │   └── technical_tools/ # Jupyter Notebook用テクニカル分析ツール
 ├── data/                # データベースファイル（.sqlite, .db）を格納
@@ -87,7 +87,7 @@
 このプロジェクトでは、主に以下のSQLiteデータベースファイルを使用します。
 
 *   **`data/jquants.db`**:
-    *   J-Quants APIから取得した日次株価データ（`daily_quotes`テーブル）が格納されます。
+    *   J-Quants APIおよびyfinanceから取得した日次株価データ（`daily_quotes`テーブル、`source`カラムで`'jquants'`/`'yfinance'`を区別）が格納されます。
 *   **`data/statements.db`**:
     *   J-Quants Statements APIから取得した財務諸表データと、計算済み財務指標が格納されます。
     *   主なテーブル:
@@ -196,6 +196,25 @@
 
     # バッチサイズの調整（メモリ使用量の制御）
     python src/market_pipeline/analysis/chart_classification.py --mode full --batch-size 50
+    ```
+
+- **yfinance過去データ一括取得（初回のみ）:**
+    J-Quants Light契約（5年分）の範囲外を補完し、最大20年分の日足データをyfinanceから取得します。
+    ```bash
+    # マイグレーション（sourceカラム追加、初回のみ）
+    python scripts/migrate_add_source_column.py
+
+    # 全銘柄の過去データ取得
+    python scripts/run_historical_prices.py
+
+    # DB書き込みなしで確認
+    python scripts/run_historical_prices.py --dry-run
+
+    # 指定銘柄のみ
+    python scripts/run_historical_prices.py --symbols 7203 9984
+
+    # 過去10年分のみ
+    python scripts/run_historical_prices.py --years 10
     ```
 
 ### launchdによる自動実行

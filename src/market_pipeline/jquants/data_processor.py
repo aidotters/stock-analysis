@@ -312,6 +312,9 @@ class JQuantsDataProcessor:
                 all_records.extend(records)
 
         if all_records:
+            # Add source='jquants' to each record
+            for record in all_records:
+                record["source"] = "jquants"
             # Batch insert all records
             inserted = self.db_processor.batch_insert(
                 "daily_quotes", all_records, on_conflict="REPLACE"
@@ -577,6 +580,7 @@ class JQuantsDataProcessor:
                     AdjustmentLow REAL,
                     AdjustmentClose REAL,
                     AdjustmentVolume INTEGER,
+                    source TEXT,
                     PRIMARY KEY (Code, Date)
                 )
             """)

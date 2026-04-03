@@ -8,7 +8,7 @@ flowchart TB
         JQ[J-Quants API<br/>日次株価]
         JS[J-Quants Statements<br/>財務諸表]
         MA[Master API<br/>銘柄マスター]
-        YF[yfinance API<br/>BS・時価総額・PER]
+        YF[yfinance API<br/>BS・時価総額・PER・過去日足]
     end
 
     subgraph Collection["データ収集レイヤー"]
@@ -31,6 +31,7 @@ flowchart TB
         RSP[relative_strength.py]
         CHR[chart_classification.py]
         VF[valuation_fetcher.py<br/>ローリング更新]
+        HPF[historical_price_fetcher.py<br/>過去20年日足取得]
     end
 
     subgraph Integration["統合・出力"]
@@ -50,6 +51,8 @@ flowchart TB
     JDB --> CHR --> ADB
     MDB --> VF
     YF --> VF --> SDB
+    MDB --> HPF
+    YF --> HPF --> JDB
 
     ADB --> IA1
     SDB --> IA1
@@ -89,6 +92,7 @@ graph LR
 
         subgraph YFinance["yfinance/"]
             VFM[valuation_fetcher.py<br/>ValuationFetcher]
+            HPFM[historical_price_fetcher.py<br/>HistoricalPriceFetcher]
         end
 
         subgraph News["news/"]

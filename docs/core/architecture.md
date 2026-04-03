@@ -125,6 +125,8 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 | `run_adhoc_integrated_analysis.py` | 平日 19:00 | アドホック統合分析実行 |
 | `run_weekly_tasks.py` | 土曜 06:00 | 財務諸表取得 + 統合分析実行 |
 | `run_monthly_master.py` | 毎月1日 20:30 | 銘柄マスターデータ更新 |
+| `run_historical_prices.py` | 手動（初回） | yfinanceから過去20年分の日足データを取得 |
+| `migrate_add_source_column.py` | 手動（初回） | daily_quotesにsourceカラムを追加するマイグレーション |
 
 ### 2. API連携レイヤー (`src/market_pipeline/jquants/`)
 
@@ -134,16 +136,25 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 | `statements_processor.py` | 財務諸表APIフェッチャー |
 | `fundamentals_calculator.py` | PER, PBR, ROE, ROA等の財務指標計算 |
 
-### 2.5 yfinanceバリュエーション (`src/market_pipeline/yfinance/`)
+### 2.5 yfinance連携 (`src/market_pipeline/yfinance/`)
 
 | モジュール | 機能 |
 |-----------|------|
 | `valuation_fetcher.py` | BSデータ（現金等・有利子負債）・時価総額・PER取得、ネットキャッシュ指標計算 |
+| `historical_price_fetcher.py` | 過去20年分の日足データ取得（J-Quantsデータ範囲外を補完） |
 
+**ValuationFetcher:**
 - ローリング更新: 毎日150銘柄ずつ処理（約20営業日で全銘柄一巡）
 - 優先順: BS未取得(PER低い順) → 90日経過(PER低い順) → 更新日古い順
 - 出力: `statements.db` → `yfinance_valuation`テーブル
 - StockScreenerから`net_cash_ratio`, `cash_neutral_per`でフィルタリング可能
+
+**HistoricalPriceFetcher:**
+- J-Quants Light契約（過去5年分）の範囲外を補完し、最大20年分の日足データを提供
+- yfinance OHLCVをAdjustmentOpen/High/Low/Close/Volumeにマッピング（未調整カラムはNULL）
+- INSERT OR IGNOREにより既存J-Quantsデータを優先（重複なし）
+- ThreadPoolExecutor + リトライ（最大3回、1秒間隔）
+- 出力: `jquants.db` → `daily_quotes`テーブル（`source='yfinance'`）
 
 ### 3. 分析レイヤー (`src/market_pipeline/analysis/`)
 
@@ -272,6 +283,7 @@ CREATE TABLE daily_quotes (
     AdjustmentLow REAL,
     AdjustmentClose REAL,
     AdjustmentVolume REAL,
+    source TEXT,  -- 'jquants' or 'yfinance'
     PRIMARY KEY (Date, Code)
 );
 

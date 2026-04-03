@@ -46,6 +46,17 @@ python scripts/run_weekly_tasks.py --analysis-only    # Run integrated analysis 
 
 # Monthly master data update (1st of month 20:30)
 python scripts/run_monthly_master.py
+
+# Fetch historical prices from yfinance (one-time, up to 20 years)
+python scripts/run_historical_prices.py
+
+# Historical prices options
+python scripts/run_historical_prices.py --dry-run              # DB書き込みなしで確認
+python scripts/run_historical_prices.py --symbols 7203 9984    # 指定銘柄のみ
+python scripts/run_historical_prices.py --years 10             # 過去10年分
+
+# Migration: add source column to daily_quotes (run before historical prices)
+python scripts/migrate_add_source_column.py
 ```
 
 ### Chart Classification
@@ -74,12 +85,13 @@ mypy .
 
 ### Data Flow
 1. **Price Collection** (scripts/run_daily_jquants.py) -> J-Quants API -> data/jquants.db
-2. **Financial Data** (scripts/run_weekly_tasks.py) -> J-Quants Statements API -> data/statements.db
-3. **Analysis** (scripts/run_daily_analysis.py) -> reads jquants.db -> writes to data/analysis_results.db (includes integrated_scores daily)
-4. **Integration** (src/market_pipeline/analysis/integrated_analysis2.py) -> reads analysis_results.db + statements.db -> outputs to DB/CSV/Excel
+2. **Historical Prices** (scripts/run_historical_prices.py) -> yfinance -> data/jquants.db (daily_quotes, source='yfinance')
+3. **Financial Data** (scripts/run_weekly_tasks.py) -> J-Quants Statements API -> data/statements.db
+4. **Analysis** (scripts/run_daily_analysis.py) -> reads jquants.db -> writes to data/analysis_results.db (includes integrated_scores daily)
+5. **Integration** (src/market_pipeline/analysis/integrated_analysis2.py) -> reads analysis_results.db + statements.db -> outputs to DB/CSV/Excel
 
 ### Key Databases (data/)
-- `jquants.db`: Daily stock prices (daily_quotes table)
+- `jquants.db`: Daily stock prices (daily_quotes table, sourceカラムで'jquants'/'yfinance'を区別)
 - `statements.db`: Financial statements and calculated fundamentals (financial_statements, calculated_fundamentals tables)
 - `analysis_results.db`: Analysis outputs (minervini, hl_ratio, relative_strength, classification_results, integrated_scores tables)
 - `master.db`: Stock master data
@@ -89,11 +101,17 @@ mypy .
 - `statements_processor.py`: Financial statements API fetcher
 - `fundamentals_calculator.py`: Calculates PER, PBR, ROE, ROA, etc. from raw statements
 
-### yfinance Valuation (src/market_pipeline/yfinance/)
+### yfinance Modules (src/market_pipeline/yfinance/)
 - `valuation_fetcher.py`: `ValuationFetcher` class for rolling yfinance BS data collection
   - Fetches cash & equivalents, total debt, market cap, PER from yfinance
   - Calculates net_cash_ratio and cash_neutral_per
   - Rolling update: processes N stocks/day (default 150), prioritizing stale/missing data
+- `historical_price_fetcher.py`: `HistoricalPriceFetcher` class for fetching up to 20 years of daily prices from yfinance
+  - Fills historical price gaps before J-Quants data range (J-Quants Light = 5 years)
+  - Maps yfinance OHLCV to AdjustmentOpen/High/Low/Close/Volume; raw columns are NULL
+  - INSERT OR IGNORE preserves existing J-Quants data (no overlap)
+  - ThreadPoolExecutor + retry (max 3, 1s interval) for rate limiting
+  - `--dry-run`, `--symbols`, `--years` options via run_historical_prices.py
   - Data stored in `statements.db` → `yfinance_valuation` table
   - Integrated into `run_daily_analysis.py` as `yfinance_valuation` module
 
@@ -690,3 +708,4 @@ settings = reload_settings()
   - `tests/test_analysis_integration.py`: 分析統合テスト
   - `tests/test_data_processor.py`: データプロセッサテスト
   - `tests/test_valuation_fetcher.py`: ValuationFetcherテスト（yfinance BS取得・バリュエーション計算）
+  - `tests/test_historical_price_fetcher.py`: HistoricalPriceFetcherテスト（yfinance過去データ取得・カラムマッピング・マイグレーション）
