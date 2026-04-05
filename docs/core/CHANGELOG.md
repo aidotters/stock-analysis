@@ -5,6 +5,8 @@
 ## [Unreleased]
 
 ### Added
+- `scripts/migrate_refetch_yfinance.py`: yfinanceデータを削除してauto_adjust=Falseで再取得するマイグレーションスクリプト（--dry-run, --symbols, --years対応）
+- `scripts/migrate_rescale_yfinance.py`: yfinanceデータをJ-Quants境界比率でリスケールするマイグレーションスクリプト（--dry-run, --symbols対応）
 - yfinance過去日足データ取得機能（J-Quants Light 5年分の範囲外を補完）
   - `src/market_pipeline/yfinance/historical_price_fetcher.py`: `HistoricalPriceFetcher`クラス新規追加
     - yfinanceから最大20年分の日足データを取得し、daily_quotesテーブルに挿入
@@ -17,19 +19,6 @@
     - 既存レコードは`source='jquants'`に一括UPDATE（10万件単位で分割）
     - 冪等性確保（カラム存在時はスキップ）
   - `tests/test_historical_price_fetcher.py`: HistoricalPriceFetcherの単体テスト
-
-### Changed
-- `src/market_pipeline/jquants/data_processor.py`: J-Quantsデータ挿入時に`source='jquants'`を付与
-
-### Changed
-- ソースコードディレクトリを `backend/` から `src/` にリネーム
-  - `backend/market_pipeline/` → `src/market_pipeline/`
-  - `backend/__init__.py` → `src/__init__.py`
-  - pyproject.toml、テスト設定、mypy設定を `src/` に更新
-  - 全Claude Codeスキルファイル（9ファイル）の `backend/` パス参照を `src/` に更新
-  - コアドキュメント（CLAUDE.md, README.md, docs/core/）を `src/` パスに更新
-
-### Added
 - `/analyze-stock` スキルにDeep Research統合を追加（Phase 2）
   - `--deep-research`: 確認プロンプトをスキップしてGemini Advanced Deep Researchを即実行
   - `--merge-deep-research`: 既存レポートにDeep Research結果を後から統合
@@ -39,7 +28,6 @@
 - レポート出力先を`output/reports/stocks/YYYYMMDD-HHMM-{code}-analysis/`に移行
   - タイムスタンプ付きディレクトリで過去分析結果を保持
   - `base_report.md`, `deep_research_report.md`, `chart.png` を同一ディレクトリに格納
-
 - StockScreener.filter()に`include`パラメータとカラム最小化を追加
   - `include`パラメータでカラムグループ("scores", "fundamentals", "valuation", "all")を指定可能
   - デフォルトで常時5カラム(date, code, long_name, sector, market_cap)のみ返却、フィルタ使用項目は自動追加
@@ -66,35 +54,12 @@
   - `tests/test_valuation_fetcher.py`: ValuationFetcherの単体テスト（18テスト）
   - `tests/test_stock_screener.py`: バリュエーションフィルタのテスト追加
   - `.env.example`: `YFINANCE_VALUATION_*`環境変数追加
-
-### Changed
-- Backtester.run_with_screener()、VirtualPortfolio.buy_from_screener()のカラム参照を`Code`→`code`に修正（StockScreenerのsnake_case出力に追従）
-- `.claude/skills/analyze-stock/SKILL.md`: レポートテンプレートに財務状況（2.2）・キャッシュフロー（2.3）・ネットキャッシュ分析（2.4）セクションを追加、四季報データ抽出JSを強化
-- `.claude/skills/analyze-stock/SKILL.md`: レポート構成を8セクションに拡張（事業構造・セグメント分析、四季報ライバル比較テーブル、gemini CLIプロンプト強化）
-  - 新セクション「2. 事業構造・セグメント分析」追加（セグメント別売上・利益構成、成長性・競争力、CAGR）
-  - 四季報ライバル比較セクションからデータ抽出（`browser_run_code` JavaScript拡張）
-  - gemini CLIプロンプトを5→8セクション構成に拡張（セグメント分析・プロダクト別競争力評価・セグメント別成長性追加）
-  - 投資判断サマリーにセグメント分析・成長性の判断根拠を追加
-
-- `/analyze-stock` チャートPNG画像生成機能
-  - `TechnicalAnalyzer.plot_chart()` + `fig.write_image()` でローソク足+SMA+RSI+MACD+GC/DCシグナルのチャートPNG画像を自動生成
-  - 保存先: `docs/reports/stocks/images/{code}-chart-YYYYMMDD-HHMM.png`（1200x800px）
-  - `kaleido>=1.0.0` をオプショナル依存（`chart-export`）として追加
-  - チャート生成失敗時はスキップしてテキストのみのレポートを生成（エラー耐性）
-  - `.gitignore` に `docs/reports/stocks/images/*.png` を追加
-
 - ニュース駆動型銘柄発見 Phase 3: 適時開示情報対応と銘柄ニュース調査スキル
   - `FilterKeywords` dataclass: タイトルベースのキーワードフィルタリング設定（`include`/`exclude`リスト）
   - `NewsSource.filter_keywords` フィールド追加: 適時開示等のフィルタリング対応
   - `config/news_sources.yaml`: `disclosure`カテゴリ追加（会社四季報適時開示ページ、16個のinclude / 3個のexcludeキーワード）
   - `.claude/skills/research-stock-news/SKILL.md`: 銘柄ニュース調査スキル新規作成
   - `tests/test_news_config.py`: `FilterKeywords`バリデーション・パーステスト追加
-
-### Changed
-- `.claude/skills/discover-stocks/SKILL.md`: 適時開示巡回ステップ追加（`--category disclosure`対応）
-- `.claude/skills/analyze-stock/SKILL.md`: `/research-stock-news`相当のニュース情報を自動統合
-- `src/market_pipeline/news/__init__.py`: `FilterKeywords`エクスポート追加
-
 - `src/market_pipeline/news/config_parser.py`: ニュース巡回先設定パーサーモジュール
   - `NewsSource` frozenデータクラス: 巡回先サイト情報（name, auth, url, selector等）
   - `NewsConfig`データクラス: カテゴリ別ソース管理
@@ -104,7 +69,6 @@
 - `config/news_sources.yaml`: ニュース巡回先設定ファイル（news, analysis, financialカテゴリ）
 - `tests/test_news_config.py`: ニュース巡回先設定パーサーのテスト
 - `pyproject.toml`: `pyyaml>=6.0`, `types-PyYAML>=6.0`, `nbformat>=5.10.4` 依存関係追加
-
 - `src/market_pipeline/utils/slack_notifier.py`: Slack Incoming Webhook通知モジュール
   - `SlackNotifier`クラス: 成功・エラー・警告の3種類の通知送信
   - `JobContext`コンテキストマネージャ: `with`文によるジョブの自動通知
@@ -116,13 +80,6 @@
   - `SLACK_WEBHOOK_URL`, `SLACK_ERROR_WEBHOOK_URL`, `SLACK_ENABLED`, `SLACK_TIMEOUT_SECONDS`, `SLACK_MAX_RETRIES`環境変数サポート
 - `tests/test_slack_notifier.py`: SlackNotifier/JobContext/JobResultのテスト
 - `.env.example`: Slack通知設定セクション追加
-
-### Changed
-- `scripts/run_daily_jquants.py`: JobContext統合（レコード数・銘柄数・データ期間を通知）
-- `scripts/run_daily_analysis.py`: JobContext統合（対象日・実行モジュールを通知）
-- `scripts/run_weekly_tasks.py`: JobContext統合（財務データ・統合分析の完了状況を通知）
-- `scripts/run_monthly_master.py`: JobContext統合（総銘柄数・アクティブ銘柄数を通知）
-
 - `src/technical_tools/optimizer.py`: 戦略パラメータ最適化エンジン
   - `StrategyOptimizer`クラス: Backtesterを利用したパラメータ最適化
   - `add_search_space()`: 探索パラメータの定義（MA期間、RSI閾値、エグジットルール等）
@@ -145,7 +102,6 @@
 - テストファイル追加:
   - `tests/test_optimizer.py`: StrategyOptimizerクラステスト
   - `tests/test_optimization_results.py`: OptimizationResultsクラステスト
-
 - `src/technical_tools/backtester.py`: シグナルベースバックテストエンジン
   - `Backtester`クラス: backtesting.pyをラップしたシンプルなAPI
   - `add_signal()`: プラグイン形式のシグナル追加
@@ -180,14 +136,81 @@
 - `data/portfolios/`: VirtualPortfolio用JSONファイル格納ディレクトリ（.gitignore追加）
 - `pyproject.toml`: `backtesting>=0.3.3` 依存関係追加
 
+### Changed
+- `HistoricalPriceFetcher.map_columns()`: `auto_adjust=False`に変更し、生OHLCV + Adj Close比率による調整済み価格を正しく格納
+  - 生OHLCV → Open/High/Low/Close/Volume
+  - AdjustmentOpen/High/Low = 生値 × (Adj Close / Close)
+  - AdjustmentClose = Adj Close
+- `JQuantsDataProcessor.get_all_prices_for_past_5_years_to_db_optimized()`: `Dict[str, int]`を返却（total_listed, codes_to_update, codes_updated, records_inserted, codes_failed）
+- `JQuantsDataProcessor.update_prices_to_db_optimized()`: 同上
+- `JQuantsDataProcessor.get_listed_info_cached()`: MIN_EXPECTED_COMPANIES（100社）を下回るキャッシュ/API結果に対する検証ロジックを追加
+- `run_daily_jquants.py`: ジョブ実績メトリクス（対象銘柄数、更新銘柄数、新規レコード数、失敗銘柄数）をSlack通知に追加
+- StockScreener `pattern_window` パラメータ: `WindowInput`型を導入
+  - int（累積）、tuple[int,int]（スライス (240,480)等）、str（"240-480", "w240_480", "pattern_w240_480"）に対応
+  - list[WindowInput]によるマルチウィンドウANDフィルタ
+  - マルチウィンドウ時のワイド形式ピボット出力（pattern_w240_480, score_w240_480 等）
+- `PATTERN_LABELS` 定数をtechnical_toolsパッケージからエクスポート
+- チャートパターン分類の「不明」ラベルを廃止
+  - r < 0.3でもベストマッチのラベルをそのまま保存（スコアで信頼度を判断）
+  - `MIN_CORRELATION_THRESHOLD`による上書きロジックを削除
+  - `PATTERN_LABELS`から「不明」を除外
+- StockScreenerの`pattern_labels`フィルタロジックを修正
+  - `pattern_window="all"` + `pattern_labels`: 存在する全ウィンドウがマッチする銘柄のみ（AND、NaN無視）
+  - `pattern_window=[list]` + `pattern_labels`: 指定全ウィンドウでAND条件
+  - 単一ウィンドウ指定: 従来通りセル単位フィルタ
+  - "all"モードの欠損ウィンドウ補完を`pd.NA`から`np.nan`に統一
+- チャートパターン分類の中長期ウィンドウを期間スライスに変更
+  - 累積ウィンドウ（直近N日）: 20/60/120/240日（変更なし）
+  - スライスウィンドウ（期間指定）: (240,480)/(480,1200)/(1200,2400)/(2400,4800)日前
+  - 全期間ウィンドウを廃止し、各期間が独立した分析結果を返す設計に変更
+  - `WindowSpec = int | tuple[int, int]` 型定義を導入
+  - `classify_window()` メソッドを新規追加（累積/スライス両対応）
+  - `window_spec_to_db_value()` / `db_value_to_window_spec()` 変換関数を追加
+  - スライスウィンドウのDB保存値: `start * 10000 + end`（例: 2400480）
+  - 対数正規化（`np.log()` + MinMaxScaler）を導入し、急騰・急落による歪みを軽減
+  - NaN対策: dropna + 50%最低データ閾値
+  - 信頼度閾値: Pearson相関 r < 0.3 で「不明」ラベルを付与 → 後に廃止（ベストマッチを保持する設計に変更）
+  - StockScreenerのピボットカラム名をスライス対応（例: `pattern_w240_480`）
+- チャートパターン分類の長期ウィンドウを刷新
+  - 960日ウィンドウを廃止し、480日（2年）ウィンドウに置き換え
+  - 2400日（10年）・4800日（20年）ウィンドウを追加
+  - 銘柄ごとの全期間（上場来）ウィンドウを動的に追加（データ長>4800日の場合）
+  - データ読み込み範囲を1500日→6000日に拡大（20年分対応）
+  - `settings.py`の`chart_long_windows`を`[480, 1200, 2400, 4800]`に更新
+- `src/market_pipeline/jquants/data_processor.py`: J-Quantsデータ挿入時に`source='jquants'`を付与
+- ソースコードディレクトリを `backend/` から `src/` にリネーム
+  - `backend/market_pipeline/` → `src/market_pipeline/`
+  - `backend/__init__.py` → `src/__init__.py`
+  - pyproject.toml、テスト設定、mypy設定を `src/` に更新
+  - 全Claude Codeスキルファイル（9ファイル）の `backend/` パス参照を `src/` に更新
+  - コアドキュメント（CLAUDE.md, README.md, docs/core/）を `src/` パスに更新
+- Backtester.run_with_screener()、VirtualPortfolio.buy_from_screener()のカラム参照を`Code`→`code`に修正（StockScreenerのsnake_case出力に追従）
+- `.claude/skills/analyze-stock/SKILL.md`: レポートテンプレートに財務状況（2.2）・キャッシュフロー（2.3）・ネットキャッシュ分析（2.4）セクションを追加、四季報データ抽出JSを強化
+- `.claude/skills/analyze-stock/SKILL.md`: レポート構成を8セクションに拡張（事業構造・セグメント分析、四季報ライバル比較テーブル、gemini CLIプロンプト強化）
+  - 新セクション「2. 事業構造・セグメント分析」追加（セグメント別売上・利益構成、成長性・競争力、CAGR）
+  - 四季報ライバル比較セクションからデータ抽出（`browser_run_code` JavaScript拡張）
+  - gemini CLIプロンプトを5→8セクション構成に拡張（セグメント分析・プロダクト別競争力評価・セグメント別成長性追加）
+  - 投資判断サマリーにセグメント分析・成長性の判断根拠を追加
+- `/analyze-stock` チャートPNG画像生成機能
+  - `TechnicalAnalyzer.plot_chart()` + `fig.write_image()` でローソク足+SMA+RSI+MACD+GC/DCシグナルのチャートPNG画像を自動生成
+  - 保存先: `docs/reports/stocks/images/{code}-chart-YYYYMMDD-HHMM.png`（1200x800px）
+  - `kaleido>=1.0.0` をオプショナル依存（`chart-export`）として追加
+  - チャート生成失敗時はスキップしてテキストのみのレポートを生成（エラー耐性）
+  - `.gitignore` に `docs/reports/stocks/images/*.png` を追加
+- `.claude/skills/discover-stocks/SKILL.md`: 適時開示巡回ステップ追加（`--category disclosure`対応）
+- `.claude/skills/analyze-stock/SKILL.md`: `/research-stock-news`相当のニュース情報を自動統合
+- `src/market_pipeline/news/__init__.py`: `FilterKeywords`エクスポート追加
+- `scripts/run_daily_jquants.py`: JobContext統合（レコード数・銘柄数・データ期間を通知）
+- `scripts/run_daily_analysis.py`: JobContext統合（対象日・実行モジュールを通知）
+- `scripts/run_weekly_tasks.py`: JobContext統合（財務データ・統合分析の完了状況を通知）
+- `scripts/run_monthly_master.py`: JobContext統合（総銘柄数・アクティブ銘柄数を通知）
+- `src/technical_tools/__init__.py`: StrategyOptimizer, OptimizationResults, TrialResult, 最適化例外クラスをエクスポート追加
+- `src/technical_tools/__init__.py`: Backtester, BacktestResults, Trade, VirtualPortfolio, 新例外クラスをエクスポート追加
+- パッケージバージョンを0.2.0に統一（pyproject.toml, `__init__.py`）
+
 ### Fixed
 - `src/technical_tools/data_sources/jquants.py`: 株式分割を考慮した調整後価格（AdjustmentOpen/High/Low/Close/Volume）を使用するように修正
   - 以前は未調整価格（Open/High/Low/Close/Volume）を使用していたため、株式分割時にチャートにギャップが生じていた
-
-### Changed
-- `src/technical_tools/__init__.py`: StrategyOptimizer, OptimizationResults, TrialResult, 最適化例外クラスをエクスポート追加
-- `src/technical_tools/__init__.py`: Backtester, BacktestResults, Trade, VirtualPortfolio, 新例外クラスをエクスポート追加
-- パッケージバージョンは0.1.0（pyproject.toml）
 
 ### Documentation
 - `CLAUDE.md`: StrategyOptimizer使用例とAPI説明追加

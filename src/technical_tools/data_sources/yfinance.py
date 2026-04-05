@@ -20,6 +20,13 @@ class YFinanceSource(DataSource):
     # Standard columns expected in output
     STANDARD_COLUMNS = ["Open", "High", "Low", "Close", "Volume"]
 
+    def get_name(self, ticker: str) -> str | None:
+        """Get stock name from yfinance."""
+        try:
+            return yf.Ticker(ticker).info.get("shortName")
+        except Exception:
+            return None
+
     def get_prices(
         self,
         ticker: str,

@@ -57,6 +57,16 @@ python scripts/run_historical_prices.py --years 10             # 過去10年分
 
 # Migration: add source column to daily_quotes (run before historical prices)
 python scripts/migrate_add_source_column.py
+
+# Migration: yfinanceデータを削除してauto_adjust=Falseで再取得
+python scripts/migrate_refetch_yfinance.py
+python scripts/migrate_refetch_yfinance.py --dry-run
+python scripts/migrate_refetch_yfinance.py --symbols 7203 9984
+
+# Migration: yfinanceデータをJ-Quants基準にリスケール（境界比率）
+python scripts/migrate_rescale_yfinance.py
+python scripts/migrate_rescale_yfinance.py --dry-run
+python scripts/migrate_rescale_yfinance.py --symbols 7203 9984
 ```
 
 ### Chart Classification
@@ -85,7 +95,7 @@ mypy .
 
 ### Data Flow
 1. **Price Collection** (scripts/run_daily_jquants.py) -> J-Quants API -> data/jquants.db
-2. **Historical Prices** (scripts/run_historical_prices.py) -> yfinance -> data/jquants.db (daily_quotes, source='yfinance')
+2. **Historical Prices** (scripts/run_historical_prices.py) -> yfinance -> data/jquants.db (daily_quotes, source='yfinance') ⚠ 品質問題あり（後述）
 3. **Financial Data** (scripts/run_weekly_tasks.py) -> J-Quants Statements API -> data/statements.db
 4. **Analysis** (scripts/run_daily_analysis.py) -> reads jquants.db -> writes to data/analysis_results.db (includes integrated_scores daily)
 5. **Integration** (src/market_pipeline/analysis/integrated_analysis2.py) -> reads analysis_results.db + statements.db -> outputs to DB/CSV/Excel
@@ -97,7 +107,7 @@ mypy .
 - `master.db`: Stock master data
 
 ### J-Quants Modules (src/market_pipeline/jquants/)
-- `data_processor.py`: Daily price data fetcher with async processing
+- `data_processor.py`: Daily price data fetcher with async processing. `get_all_prices_for_past_5_years_to_db_optimized()` / `update_prices_to_db_optimized()` は `Dict[str, int]` を返却（total_listed, codes_to_update, codes_updated, records_inserted, codes_failed）。`get_listed_info_cached()` にMIN_EXPECTED_COMPANIES（100）検証を追加（異常に少ない結果はキャッシュしない）
 - `statements_processor.py`: Financial statements API fetcher
 - `fundamentals_calculator.py`: Calculates PER, PBR, ROE, ROA, etc. from raw statements
 
@@ -108,10 +118,11 @@ mypy .
   - Rolling update: processes N stocks/day (default 150), prioritizing stale/missing data
 - `historical_price_fetcher.py`: `HistoricalPriceFetcher` class for fetching up to 20 years of daily prices from yfinance
   - Fills historical price gaps before J-Quants data range (J-Quants Light = 5 years)
-  - Maps yfinance OHLCV to AdjustmentOpen/High/Low/Close/Volume; raw columns are NULL
+  - Uses `auto_adjust=False`: raw OHLCV in Open/High/Low/Close/Volume, Adj Close/Close比率で調整済み価格をAdjustmentOpen/High/Low/Closeに格納
   - INSERT OR IGNORE preserves existing J-Quants data (no overlap)
   - ThreadPoolExecutor + retry (max 3, 1s interval) for rate limiting
   - `--dry-run`, `--symbols`, `--years` options via run_historical_prices.py
+  - **⚠ 既知の品質問題**: 旧バージョン（auto_adjust=True）で取得済みのyfinance価格は配当+分割の遡及調整済みで、J-QuantsのAdjustmentClose（分割のみ調整）と調整基準が異なる。マイグレーションスクリプト（`migrate_refetch_yfinance.py`, `migrate_rescale_yfinance.py`）で修正可能
   - Data stored in `statements.db` → `yfinance_valuation` table
   - Integrated into `run_daily_analysis.py` as `yfinance_valuation` module
 
@@ -125,7 +136,12 @@ mypy .
 - `minervini.py`: Minervini trend screening strategy
 - `high_low_ratio.py`: 52-week high/low position ratio
 - `relative_strength.py`: RSP (relative strength percentage) and RSI calculations
-- `chart_classification.py`: ML-based chart pattern classification with adaptive window selection (20/60/120/240/960/1200 days)
+- `chart_classification.py`: ML-based chart pattern classification with adaptive window selection
+  - Cumulative windows: 20/60/120/240 days (直近N日)
+  - Slice windows: (240,480)/(480,1200)/(1200,2400)/(2400,4800) (期間スライス)
+  - Log normalization to reduce distortion from sharp price spikes
+  - NaN handling (dropna + 50% minimum data threshold)
+  - Low confidence scores (r < 0.3) still return best-match label (no "不明" override)
 - `integrated_analysis.py`: Combines analysis results for multi-factor stock screening
 - `integrated_analysis2.py`: Outputs integrated analysis to DB, with optional CSV/Excel export
 - `integrated_scores_repository.py`: Repository for integrated_scores table CRUD operations
@@ -291,9 +307,20 @@ Claude Codeスキルとして、ドキュメント作成と品質管理のため
 - `/prd-writing`: PRD（製品要件定義書）の作成
 - `/glossary-creation`: 用語集の作成
 
+**開発フロースキル:**
+- `/brainstorm`: アイデア壁打ち → docs/ideas/に保存
+- `/plan-feature`: 機能の計画ドキュメント作成
+- `/implement-feature`: 計画に基づく機能実装
+- `/initial-setup`: プロジェクト初期セットアップ
+
 **品質管理スキル:**
 - `/steering`: 作業計画・タスクリスト管理（実装フローの全体管理）
 - `/validation`: コード品質検証と受け入れテスト
+- `/validate-code`: コード品質・設計整合性検証
+- `/acceptance-test`: 受け入れ条件の検証
+- `/review-docs`: ドキュメント品質レビュー
+- `/update-docs`: 実装済みコードとドキュメントの同期
+- `/gen-all-docs`: 全ドキュメント一括生成
 
 **構成ファイル:** `.claude/skills/<skill-name>/SKILL.md`
 
@@ -374,9 +401,31 @@ results = screener.filter(composite_score_min=70.0, include=["fundamentals"])  #
 results = screener.filter(include=["fundamentals", "valuation"]) # 複数グループ
 results = screener.filter(include="all")                         # 全22カラム
 
-# チャートパターンでフィルタリング
+# チャートパターンでフィルタリング（単一ウィンドウ）
 results = screener.filter(
     pattern_window=60,
+    pattern_labels=["上昇", "急上昇"]
+)
+
+# スライスウィンドウ（tuple, str等も対応）
+results = screener.filter(
+    pattern_window=(240, 480),           # tuple形式
+    pattern_labels=["上昇"]
+)
+results = screener.filter(
+    pattern_window="240-480",            # str形式（"240_480", "w240_480"も可）
+    pattern_labels=["上昇"]
+)
+
+# 全ウィンドウANDフィルタ（存在する全ウィンドウが条件を満たす銘柄のみ、NaN無視）
+results = screener.filter(
+    pattern_window="all",
+    pattern_labels=["上昇", "急上昇"]
+)
+
+# 複数ウィンドウ指定（指定した全ウィンドウでAND条件）
+results = screener.filter(
+    pattern_window=[60, 120, (240, 480)],
     pattern_labels=["上昇", "急上昇"]
 )
 
@@ -396,7 +445,9 @@ history = screener.history("7203", days=30)
 - デフォルトでフィルタ使用項目のみ返却（常時5カラム: date, code, long_name, sector, market_cap）
 - 出力カラム名は全てsnake_case（例: trailing_pe, return_on_equity, hl_ratio, rsp, rsi）
 - market_capはyfinance_valuation優先のCOALESCE（フォールバック: calculated_fundamentals）
-- チャートパターン（60日/120日など）でのフィルタリング
+- チャートパターン（累積: 60日/120日等、スライス: 2400480/4801200等）でのフィルタリング
+- `STANDARD_CHART_WINDOWS`（`screener.py`内定義）: [20, 60, 120, 240, 2400480, 4801200, 12002400, 24004800]
+- `PATTERN_LABELS`（パッケージエクスポート済み）: 上昇ストップ, 上昇, 急上昇, 調整, もみ合い, リバウンド, 急落, 下落, 下げとまった, 不明
 - 順位変動分析（rank_changes）：metricバリデーション対応
 - 銘柄別時系列データ取得（history）
 - ScreenerFilterクラスによる構造化されたパラメータ指定（`available_filters()`, `available_categories()`, `filters_by_category()` classmethodで利用可能フィルタを確認可能）

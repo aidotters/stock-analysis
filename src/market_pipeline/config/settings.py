@@ -144,7 +144,7 @@ class AnalysisSettings(BaseSettings):
 
     # Chart classification windows
     chart_windows: list[int] = Field(default=[20, 60, 120, 240])
-    chart_long_windows: list[int] = Field(default=[960, 1200])
+    chart_long_windows: list[int] = Field(default=[480, 1200, 2400, 4800])
 
 
 class DatabaseSettings(BaseSettings):

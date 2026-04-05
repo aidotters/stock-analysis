@@ -89,8 +89,15 @@ class HistoricalPriceFetcher:
     def map_columns(self, df: pd.DataFrame, code: str) -> pd.DataFrame:
         """yfinance DataFrame → daily_quotesカラム形式に変換。
 
+        auto_adjust=False で取得したDataFrameを前提とする。
+        - Open/High/Low/Close: 生値（未調整）
+        - Adj Close: 配当+分割調整済み終値
+        - AdjustmentOpen/High/Low: 生値 × (Adj Close / Close) で算出
+        - AdjustmentClose: Adj Close
+        - AdjustmentVolume: 生Volume
+
         Args:
-            df: yfinance history DataFrame (Date index, Open/High/Low/Close/Volume columns)
+            df: yfinance history DataFrame (auto_adjust=False, Date index)
             code: 4桁銘柄コード
 
         Returns:
@@ -108,22 +115,46 @@ class HistoricalPriceFetcher:
         result = pd.DataFrame()
         result["Date"] = pd.to_datetime(df.index).strftime("%Y-%m-%d")
         result["Code"] = code_5digit
-        result["Open"] = None
-        result["High"] = None
-        result["Low"] = None
-        result["Close"] = None
-        result["Volume"] = None
-        result["TurnoverValue"] = None
-        result["AdjustmentFactor"] = None
-        result["AdjustmentOpen"] = df["Open"].values if "Open" in df.columns else None
-        result["AdjustmentHigh"] = df["High"].values if "High" in df.columns else None
-        result["AdjustmentLow"] = df["Low"].values if "Low" in df.columns else None
-        result["AdjustmentClose"] = (
-            df["Close"].values if "Close" in df.columns else None
-        )
+
+        # 生OHLCV
+        result["Open"] = df["Open"].values if "Open" in df.columns else None
+        result["High"] = df["High"].values if "High" in df.columns else None
+        result["Low"] = df["Low"].values if "Low" in df.columns else None
+        result["Close"] = df["Close"].values if "Close" in df.columns else None
         if "Volume" in df.columns:
             vol = df["Volume"].copy()
             vol = vol.fillna(0).astype(int)
+            result["Volume"] = vol.values
+        else:
+            result["Volume"] = None
+        result["TurnoverValue"] = None
+        result["AdjustmentFactor"] = None
+
+        # 調整済み価格: Adj Close / Close の比率をOHLに適用
+        import numpy as np
+
+        adj_close = np.asarray(df["Adj Close"]) if "Adj Close" in df.columns else None
+        close = np.asarray(df["Close"]) if "Close" in df.columns else None
+
+        if adj_close is not None and close is not None:
+            adj_ratio = np.where(close != 0, adj_close / close, 1.0)
+            result["AdjustmentOpen"] = (
+                df["Open"].values * adj_ratio if "Open" in df.columns else None
+            )
+            result["AdjustmentHigh"] = (
+                df["High"].values * adj_ratio if "High" in df.columns else None
+            )
+            result["AdjustmentLow"] = (
+                df["Low"].values * adj_ratio if "Low" in df.columns else None
+            )
+            result["AdjustmentClose"] = adj_close
+        else:
+            result["AdjustmentOpen"] = None
+            result["AdjustmentHigh"] = None
+            result["AdjustmentLow"] = None
+            result["AdjustmentClose"] = None
+
+        if "Volume" in df.columns:
             result["AdjustmentVolume"] = vol.values
         else:
             result["AdjustmentVolume"] = None
@@ -167,7 +198,7 @@ class HistoricalPriceFetcher:
                     start=start_date,
                     end=end_date,
                     progress=False,
-                    auto_adjust=True,
+                    auto_adjust=False,
                 )
                 if df.empty:
                     logger.debug(f"{code}: yfinanceデータなし")

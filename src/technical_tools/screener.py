@@ -8,16 +8,21 @@ Provides a Jupyter Notebook-friendly interface for:
 """
 
 import logging
+import re
 import sqlite3
 from dataclasses import dataclass, field, fields
 from pathlib import Path
-from typing import ClassVar, Optional
+from typing import ClassVar, Optional, Union
 
+import numpy as np
 import pandas as pd
 
 from market_pipeline.config import get_settings
 
 logger = logging.getLogger(__name__)
+
+# Type for user-facing window specification
+WindowInput = Union[int, str, tuple[int, int]]
 
 # Filter parameter -> result column mapping
 FILTER_TO_COLUMN = {
@@ -75,8 +80,134 @@ INCLUDE_GROUPS = {
 # Columns always returned
 ALWAYS_COLUMNS = ["date", "code", "long_name", "sector", "market_cap"]
 
+# Standard chart classification windows
+# Cumulative: 20, 60, 120, 240
+# Slice: 2400480=(240,480), 4801200=(480,1200), 12002400=(1200,2400), 24004800=(2400,4800)
+STANDARD_CUMULATIVE_WINDOWS = [20, 60, 120, 240]
+STANDARD_SLICE_WINDOWS = [2400480, 4801200, 12002400, 24004800]
+STANDARD_CHART_WINDOWS = STANDARD_CUMULATIVE_WINDOWS + STANDARD_SLICE_WINDOWS
+
+# Available chart pattern labels from chart_classification templates
+PATTERN_LABELS = [
+    "上昇ストップ",
+    "上昇",
+    "急上昇",
+    "調整",
+    "もみ合い",
+    "リバウンド",
+    "急落",
+    "下落",
+    "下げとまった",
+    "不明",
+]
+
 # Scores-group columns (used to determine if scores tables need JOIN)
 _SCORES_COLUMNS = set(INCLUDE_GROUPS["scores"])
+
+
+def _format_pattern_column(db_window: int) -> str:
+    """Convert DB window integer to display column name.
+
+    Cumulative (<=10000): pattern_w20, pattern_w60, etc.
+    Slice (>10000): pattern_w240_480, pattern_w480_1200, etc.
+    """
+    if db_window > 10000:
+        start = db_window // 10000
+        end = db_window % 10000
+        return f"pattern_w{start}_{end}"
+    return f"pattern_w{db_window}"
+
+
+def _format_score_column(db_window: int) -> str:
+    """Convert DB window integer to score column name."""
+    if db_window > 10000:
+        start = db_window // 10000
+        end = db_window % 10000
+        return f"score_w{start}_{end}"
+    return f"score_w{db_window}"
+
+
+def _normalize_window_value(value: WindowInput) -> int:
+    """Convert a user-facing window specification to the DB integer encoding.
+
+    Accepted formats:
+        int: 20, 60, 120, 240 (cumulative) or 2400480 (legacy slice encoding)
+        tuple: (240, 480) -> 2400480
+        str: "240-480", "240_480", "w240_480", "pattern_w240_480",
+             "score_w240_480", "20"
+
+    Raises:
+        ValueError: If the value cannot be parsed.
+        TypeError: If the type is not supported.
+    """
+    if isinstance(value, int):
+        return value
+
+    if isinstance(value, tuple):
+        if len(value) != 2:
+            raise ValueError(f"Tuple must have exactly 2 elements, got {len(value)}")
+        start, end = value
+        if not (isinstance(start, int) and isinstance(end, int)):
+            raise ValueError(
+                f"Tuple elements must be int, got ({type(start).__name__}, {type(end).__name__})"
+            )
+        if start <= 0 or end <= 0:
+            raise ValueError(f"Tuple elements must be positive, got ({start}, {end})")
+        if end <= start:
+            raise ValueError(
+                f"Slice end must be greater than start, got ({start}, {end})"
+            )
+        return start * 10000 + end
+
+    if isinstance(value, str):
+        s = value.strip()
+        # Strip known prefixes: "pattern_w", "score_w", "w"
+        s = re.sub(r"^(?:pattern_|score_)?w", "", s)
+        # Try to parse as range (contains - or _)
+        m = re.match(r"^(\d+)[-_](\d+)$", s)
+        if m:
+            start_val, end_val = int(m.group(1)), int(m.group(2))
+            if end_val <= start_val:
+                raise ValueError(f"Slice end must be greater than start: '{value}'")
+            return start_val * 10000 + end_val
+        # Try as plain integer
+        if re.match(r"^\d+$", s):
+            return int(s)
+        raise ValueError(
+            f"Cannot parse window value: '{value}'. "
+            f"Accepted formats: int, (start, end), "
+            f"'240-480', 'w240_480', 'pattern_w240_480'"
+        )
+
+    raise TypeError(
+        f"Unsupported window type: {type(value).__name__}. "
+        f"Expected int, str, or tuple[int, int]."
+    )
+
+
+def _normalize_pattern_window(
+    pattern_window: WindowInput | list[WindowInput],
+) -> list[int] | None:
+    """Normalize pattern_window parameter to list[int] for DB query.
+
+    Returns:
+        list[int] of DB-encoded window values, or None if "all".
+
+    Raises:
+        ValueError: If any window value is invalid.
+    """
+    if isinstance(pattern_window, str) and pattern_window.strip().lower() == "all":
+        return None
+
+    if isinstance(pattern_window, list):
+        result = []
+        for v in pattern_window:
+            if isinstance(v, str) and v.strip().lower() == "all":
+                raise ValueError("'all' cannot be used inside a list")
+            result.append(_normalize_window_value(v))
+        return result
+
+    return [_normalize_window_value(pattern_window)]
 
 
 @dataclass
@@ -128,7 +259,7 @@ class ScreenerFilter:
     cash_neutral_per_max: Optional[float] = None
 
     # Chart pattern
-    pattern_window: Optional[int] = None
+    pattern_window: Optional[WindowInput | list[WindowInput]] = None
     pattern_labels: Optional[list[str]] = field(default=None)
 
     # Other
@@ -294,7 +425,7 @@ class StockScreener:
         cash_neutral_per_min: Optional[float] = None,
         cash_neutral_per_max: Optional[float] = None,
         # Chart pattern (classification_results JOIN)
-        pattern_window: Optional[int] = None,
+        pattern_window: Optional[WindowInput | list[WindowInput]] = None,
         pattern_labels: Optional[list[str]] = None,
         # Other
         sector: Optional[str] = None,
@@ -333,7 +464,12 @@ class StockScreener:
             net_cash_ratio_max: Maximum net cash ratio.
             cash_neutral_per_min: Minimum cash neutral PER.
             cash_neutral_per_max: Maximum cash neutral PER.
-            pattern_window: Chart pattern window (20, 60, 120, 240, 960, 1200).
+            pattern_window: Chart pattern window. Accepts:
+                - int: 20, 60, 120, 240 (cumulative)
+                - tuple: (240, 480) for slice windows
+                - str: "240-480", "240_480", "w240_480", "pattern_w240_480"
+                - "all": all standard windows
+                - list of the above for multi-window AND filtering
             pattern_labels: List of pattern labels to include.
             sector: Sector filter (from calculated_fundamentals).
             include: Column groups to include. List of group names
@@ -609,23 +745,133 @@ class StockScreener:
                 df = df[df["rsi"] <= rsi_max]
 
         # --- JOIN with pattern data if needed ---
+        resolved_windows: list[int] | None = None
         if pattern_window is not None and not df.empty:
+            # Normalize before try/except so validation errors propagate
+            windows_list = _normalize_pattern_window(pattern_window)
+            is_multi = windows_list is None or len(windows_list) > 1
             try:
                 with self._get_analysis_connection() as conn:
-                    pattern_query = """
-                        SELECT ticker as code, pattern_label, score
-                        FROM classification_results
-                        WHERE date = ? AND window = ?
-                    """
-                    pattern_df = pd.read_sql(
-                        pattern_query, conn, params=[date, pattern_window]
-                    )
+                    if windows_list is None:
+                        # "all": fetch standard windows only
+                        placeholders = ",".join("?" * len(STANDARD_CHART_WINDOWS))
+                        pattern_query = f"""
+                            SELECT ticker AS code, window, pattern_label, score
+                            FROM classification_results
+                            WHERE date = ? AND window IN ({placeholders})
+                        """
+                        pattern_params: list[str | int] = [
+                            date
+                        ] + STANDARD_CHART_WINDOWS
+                        pattern_df = pd.read_sql(
+                            pattern_query,
+                            conn,
+                            params=pattern_params,
+                        )
+                    else:
+                        placeholders = ",".join("?" * len(windows_list))
+                        pattern_query = f"""
+                            SELECT ticker AS code, window, pattern_label, score
+                            FROM classification_results
+                            WHERE date = ? AND window IN ({placeholders})
+                        """
+                        window_params: list[str | int] = [date] + windows_list
+                        pattern_df = pd.read_sql(
+                            pattern_query,
+                            conn,
+                            params=window_params,
+                        )
 
                 if not pattern_df.empty:
-                    df = df.merge(pattern_df, on="code", how="inner")
+                    if not is_multi:
+                        # Single window: cell-level filter (inner join)
+                        if pattern_labels is not None:
+                            pattern_df = pattern_df[
+                                pattern_df["pattern_label"].isin(pattern_labels)
+                            ]
+                        single_df = pattern_df.drop(columns=["window"])
+                        df = df.merge(single_df, on="code", how="inner")
+                    else:
+                        # Multi-window mode
+                        if windows_list is not None:
+                            # Explicit list: AND logic — require matching
+                            # labels in ALL specified windows
+                            if pattern_labels is not None:
+                                filtered = pattern_df[
+                                    pattern_df["pattern_label"].isin(pattern_labels)
+                                ]
+                                required = len(windows_list)
+                                counts = filtered.groupby("code")["window"].nunique()
+                                valid_codes = counts[counts == required].index.tolist()
+                            else:
+                                required = len(windows_list)
+                                counts = pattern_df.groupby("code")["window"].nunique()
+                                valid_codes = counts[counts == required].index.tolist()
+                        else:
+                            # "all": AND logic — all existing windows must
+                            # match pattern_labels (NaN windows ignored)
+                            if pattern_labels is not None:
+                                filtered = pattern_df[
+                                    pattern_df["pattern_label"].isin(pattern_labels)
+                                ]
+                                # Count existing windows vs matching windows
+                                total_per_code = pattern_df.groupby("code")[
+                                    "window"
+                                ].nunique()
+                                match_per_code = filtered.groupby("code")[
+                                    "window"
+                                ].nunique()
+                                # Stock passes if all its windows match
+                                valid_codes = [
+                                    code
+                                    for code in total_per_code.index
+                                    if match_per_code.get(code, 0)
+                                    == total_per_code[code]
+                                ]
+                            else:
+                                valid_codes = pattern_df["code"].unique().tolist()
 
-                    if pattern_labels is not None:
-                        df = df[df["pattern_label"].isin(pattern_labels)]
+                        pattern_df = pattern_df[pattern_df["code"].isin(valid_codes)]
+                        if windows_list is None:
+                            resolved_windows = STANDARD_CHART_WINDOWS
+                        else:
+                            resolved_windows = sorted(
+                                pattern_df["window"].unique().tolist()
+                            )
+
+                        # Pivot to wide format
+                        label_pivot = pattern_df.pivot(
+                            index="code",
+                            columns="window",
+                            values="pattern_label",
+                        )
+                        score_pivot = pattern_df.pivot(
+                            index="code",
+                            columns="window",
+                            values="score",
+                        )
+
+                        # For "all" mode, ensure all standard windows
+                        # have columns (NaN for missing)
+                        if windows_list is None:
+                            for w in STANDARD_CHART_WINDOWS:
+                                if w not in label_pivot.columns:
+                                    label_pivot[w] = np.nan
+                                if w not in score_pivot.columns:
+                                    score_pivot[w] = np.nan
+                            label_pivot = label_pivot[STANDARD_CHART_WINDOWS]
+                            score_pivot = score_pivot[STANDARD_CHART_WINDOWS]
+
+                        label_pivot.columns = [
+                            _format_pattern_column(int(w)) for w in label_pivot.columns
+                        ]
+                        score_pivot.columns = [
+                            _format_score_column(int(w)) for w in score_pivot.columns
+                        ]
+                        pivot_df = pd.concat(
+                            [label_pivot, score_pivot], axis=1
+                        ).reset_index()
+                        df = df.merge(pivot_df, on="code", how="inner")
             except Exception as e:
                 logger.warning(f"Could not load pattern data: {e}")
 
@@ -670,7 +916,13 @@ class StockScreener:
         allowed = set(ALWAYS_COLUMNS) | requested_columns
         # Pattern columns are always included when pattern_window is used
         if pattern_window is not None:
-            allowed.update(["pattern_label", "score"])
+            if resolved_windows is not None:
+                # Multi-window: pivoted columns
+                for w in resolved_windows:
+                    allowed.update([_format_pattern_column(w), _format_score_column(w)])
+            else:
+                # Single window: legacy columns
+                allowed.update(["pattern_label", "score"])
 
         for col in preferred_order:
             if col in allowed and col in df.columns:

@@ -17,10 +17,15 @@ from market_pipeline.analysis.chart_classification import (
     DatabaseManager,
     get_all_tickers,
     get_adaptive_windows,
+    map_to_standard_window,
+    map_slice_to_standard,
+    window_spec_to_db_value,
+    db_value_to_window_spec,
     init_results_db,
     save_result_to_db,
     main_sample,
     main,
+    MIN_CORRELATION_THRESHOLD,
 )
 
 # --- Fixtures ---
@@ -100,12 +105,23 @@ def test_initialization_not_enough_data(mock_db_connections):
 
 
 def test_normalize():
-    """Test the static _normalize method."""
+    """Test the static _normalize method with log transform."""
     arr = np.array([10, 20, 30, 40, 50])
     normalized = ChartClassifier._normalize(arr)
     assert np.isclose(normalized.min(), 0.0)
     assert np.isclose(normalized.max(), 1.0)
-    assert np.allclose(normalized, np.array([0.0, 0.25, 0.5, 0.75, 1.0]))
+    # Log transform: values should be monotonically increasing
+    assert all(normalized[i] < normalized[i + 1] for i in range(len(normalized) - 1))
+
+
+def test_normalize_log_reduces_skew():
+    """Test that log normalization reduces distortion from extreme spikes."""
+    # Simulate sharp spike: 100→10000→100000
+    arr = np.array([100, 200, 300, 400, 500, 10000, 100000])
+    normalized = ChartClassifier._normalize(arr)
+    # With log transform, mid-range values should NOT be compressed near 0
+    # (without log, values 100-500 would all map to ~0.0-0.004)
+    assert normalized[2] > 0.1, "Mid-range values should not be compressed near 0"
 
 
 def test_classify_latest(classifier_instance):
@@ -118,7 +134,7 @@ def test_classify_latest(classifier_instance):
     label, score, latest_date = classifier_instance.classify_latest()
 
     assert label == "上昇"
-    assert np.isclose(score, 1.0)
+    assert score > 0.7  # Log transform changes exact correlation
     assert latest_date == "2024-01-30"
 
 
@@ -240,39 +256,170 @@ def test_main_argparse_dispatch(mocker, mode, expected_func):
 
 
 class TestGetAdaptiveWindows:
-    """Tests for the get_adaptive_windows utility function."""
+    """Tests for the get_adaptive_windows utility function with slice windows."""
 
-    def test_short_data_returns_base_windows(self):
-        """Data less than 960 days should return only base windows."""
-        windows = get_adaptive_windows(500)
+    def test_short_data_returns_filtered_base_with_full_period(self):
+        """Data less than 240 days should return filtered base windows plus full-period."""
+        windows = get_adaptive_windows(200)
+        assert windows == [20, 60, 120, 200]
+
+    def test_base_only_no_slices(self):
+        """Data length 240 should return base windows only (no slices)."""
+        windows = get_adaptive_windows(240)
         assert windows == [20, 60, 120, 240]
 
-    def test_medium_data_includes_960(self):
-        """Data between 960 and 1200 days should include 960-day window."""
-        windows = get_adaptive_windows(1000)
-        assert windows == [20, 60, 120, 240, 960]
+    def test_medium_data_includes_first_slice_and_partial_second(self):
+        """Data length 500 should include (240, 480) + partial (480, 500)."""
+        windows = get_adaptive_windows(500)
+        assert windows == [20, 60, 120, 240, (240, 480), (480, 500)]
 
-    def test_long_data_includes_1200(self):
-        """Data >= 1200 days should include 1200-day window."""
+    def test_long_data_includes_two_slices(self):
+        """Data >= 1200 days should include first two slice windows."""
         windows = get_adaptive_windows(1200)
-        assert windows == [20, 60, 120, 240, 1200]
+        assert windows == [20, 60, 120, 240, (240, 480), (480, 1200)]
 
-    def test_very_long_data(self):
-        """Data > 1200 days should still use 1200-day window."""
-        windows = get_adaptive_windows(2000)
-        assert windows == [20, 60, 120, 240, 1200]
+    def test_very_long_data_includes_three_slices(self):
+        """Data >= 2400 days should include three slice windows."""
+        windows = get_adaptive_windows(2400)
+        assert windows == [20, 60, 120, 240, (240, 480), (480, 1200), (1200, 2400)]
 
-    def test_boundary_960(self):
-        """Test exact boundary at 960 days."""
-        windows = get_adaptive_windows(960)
-        assert 960 in windows
-        assert 1200 not in windows
+    def test_max_data_includes_all_slices(self):
+        """Data >= 4800 days should include all slice windows."""
+        windows = get_adaptive_windows(4800)
+        assert windows == [
+            20,
+            60,
+            120,
+            240,
+            (240, 480),
+            (480, 1200),
+            (1200, 2400),
+            (2400, 4800),
+        ]
 
-    def test_boundary_1199(self):
-        """Test just below 1200 boundary."""
+    def test_boundary_480(self):
+        """Test exact boundary at 480 days — first slice should appear."""
+        windows = get_adaptive_windows(480)
+        assert (240, 480) in windows
+
+    def test_boundary_479_partial_slice(self):
+        """Test just below 480 boundary — partial slice (240, 479) should appear."""
+        windows = get_adaptive_windows(479)
+        assert (240, 479) in windows
+        assert (240, 480) not in windows
+
+    def test_boundary_241_partial_slice(self):
+        """Data length 241 — partial slice (240, 241) should appear."""
+        windows = get_adaptive_windows(241)
+        assert (240, 241) in windows
+
+    def test_boundary_240_no_slice(self):
+        """Data length 240 — no slice (start must be strictly less than data length)."""
+        windows = get_adaptive_windows(240)
+        assert all(not isinstance(w, tuple) for w in windows)
+
+    def test_partial_slice_1199(self):
+        """Data 1199: full (240,480) + partial (480,1199)."""
         windows = get_adaptive_windows(1199)
-        assert 960 in windows
-        assert 1200 not in windows
+        assert (240, 480) in windows
+        assert (480, 1199) in windows
+        assert (480, 1200) not in windows
+
+    def test_partial_slice_3600(self):
+        """Data 3600: three full slices + partial (2400, 3600)."""
+        windows = get_adaptive_windows(3600)
+        assert (240, 480) in windows
+        assert (480, 1200) in windows
+        assert (1200, 2400) in windows
+        assert (2400, 3600) in windows
+        assert (2400, 4800) not in windows
+
+
+# --- Test map_to_standard_window function ---
+
+
+class TestMapToStandardWindow:
+    """Tests for the map_to_standard_window utility function (cumulative only)."""
+
+    def test_exact_standard_window(self):
+        assert map_to_standard_window(20) == 20
+        assert map_to_standard_window(60) == 60
+        assert map_to_standard_window(240) == 240
+
+    def test_custom_window_maps_to_next_larger(self):
+        assert map_to_standard_window(200) == 240
+        assert map_to_standard_window(25) == 60
+        assert map_to_standard_window(156) == 240
+
+    def test_exceeding_cumulative_max_returns_none(self):
+        """Values beyond cumulative range return None (use window_spec_to_db_value for slices)."""
+        assert map_to_standard_window(300) is None
+        assert map_to_standard_window(5000) is None
+
+    def test_smallest_possible(self):
+        assert map_to_standard_window(1) == 20
+
+
+class TestWindowSpecDbConversion:
+    """Tests for window_spec_to_db_value and db_value_to_window_spec."""
+
+    def test_cumulative_to_db(self):
+        assert window_spec_to_db_value(20) == 20
+        assert window_spec_to_db_value(240) == 240
+
+    def test_slice_to_db(self):
+        assert window_spec_to_db_value((240, 480)) == 2400480
+        assert window_spec_to_db_value((480, 1200)) == 4801200
+        assert window_spec_to_db_value((1200, 2400)) == 12002400
+        assert window_spec_to_db_value((2400, 4800)) == 24004800
+
+    def test_partial_slice_maps_to_standard_db_value(self):
+        """Non-standard slice windows should map to their standard DB value."""
+        assert window_spec_to_db_value((240, 479)) == 2400480
+        assert window_spec_to_db_value((480, 1199)) == 4801200
+        assert window_spec_to_db_value((1200, 2000)) == 12002400
+        assert window_spec_to_db_value((2400, 3600)) == 24004800
+
+    def test_db_to_cumulative(self):
+        assert db_value_to_window_spec(20) == 20
+        assert db_value_to_window_spec(240) == 240
+
+    def test_db_to_slice(self):
+        assert db_value_to_window_spec(2400480) == (240, 480)
+        assert db_value_to_window_spec(4801200) == (480, 1200)
+        assert db_value_to_window_spec(12002400) == (1200, 2400)
+        assert db_value_to_window_spec(24004800) == (2400, 4800)
+
+    def test_roundtrip_standard(self):
+        """Verify roundtrip conversion for standard window specs."""
+        specs = [20, 60, 120, 240, (240, 480), (480, 1200), (1200, 2400), (2400, 4800)]
+        for spec in specs:
+            assert db_value_to_window_spec(window_spec_to_db_value(spec)) == spec
+
+    def test_roundtrip_partial_maps_to_standard(self):
+        """Partial slice windows roundtrip to standard slice windows."""
+        assert db_value_to_window_spec(window_spec_to_db_value((2400, 3600))) == (
+            2400,
+            4800,
+        )
+        assert db_value_to_window_spec(window_spec_to_db_value((480, 999))) == (
+            480,
+            1200,
+        )
+
+
+class TestMapSliceToStandard:
+    """Tests for map_slice_to_standard function."""
+
+    def test_standard_slices_unchanged(self):
+        for s, e in [(240, 480), (480, 1200), (1200, 2400), (2400, 4800)]:
+            assert map_slice_to_standard((s, e)) == (s, e)
+
+    def test_partial_slices_map_to_standard(self):
+        assert map_slice_to_standard((240, 300)) == (240, 480)
+        assert map_slice_to_standard((480, 800)) == (480, 1200)
+        assert map_slice_to_standard((1200, 1800)) == (1200, 2400)
+        assert map_slice_to_standard((2400, 3600)) == (2400, 4800)
 
 
 # --- Test normalize edge cases ---
@@ -329,7 +476,7 @@ class TestBatchDataLoader:
 
         logger = mocker.MagicMock()
         loader = BatchDataLoader(str(db_path), logger)
-        result = loader.load_all_ticker_data(["1001", "1002"], days=150)
+        result = loader.load_all_ticker_data(["1001", "1002"], trading_days=150)
 
         assert "1001" in result
         assert "1002" in result
@@ -353,7 +500,7 @@ class TestBatchDataLoader:
 
         logger = mocker.MagicMock()
         loader = BatchDataLoader(str(db_path), logger)
-        result = loader.load_all_ticker_data([], days=100)
+        result = loader.load_all_ticker_data([], trading_days=100)
 
         assert result == {}
 
@@ -374,7 +521,7 @@ class TestBatchDataLoader:
 
         logger = mocker.MagicMock()
         loader = BatchDataLoader(str(db_path), logger)
-        result = loader.load_all_ticker_data(["9999"], days=100)
+        result = loader.load_all_ticker_data(["9999"], trading_days=100)
 
         assert "9999" in result
         assert result["9999"].empty
@@ -401,12 +548,12 @@ class TestBatchDataLoader:
         logger = mocker.MagicMock()
         loader = BatchDataLoader(str(db_path), logger)
         loader.load_all_ticker_data(
-            ["1001"], days=1500
+            ["1001"], trading_days=1500
         )  # Result not needed, testing logging
 
-        # Should log "Loading ALL available data" message
+        # Should log with trading days info
         assert any(
-            "ALL available data" in str(call) for call in logger.info.call_args_list
+            "1500 trading days" in str(call) for call in logger.info.call_args_list
         )
 
 
@@ -712,3 +859,76 @@ class TestOptimizedChartClassifierAdditional:
         label, score, _ = classifier.classify_latest()
         assert label is not None
         assert not np.isnan(score)
+
+
+# --- Test classify_window ---
+
+
+class TestClassifyWindow:
+    """Tests for the classify_window method."""
+
+    def _make_classifier(self, prices, window=60):
+        date_index = pd.date_range(start="2024-01-01", periods=len(prices))
+        price_data = pd.Series(prices, index=date_index)
+        return OptimizedChartClassifier(
+            ticker="9999", window=window, price_data=price_data
+        )
+
+    def test_cumulative_window(self):
+        """classify_window with int uses last N days."""
+        prices = np.linspace(100, 200, 100)
+        classifier = self._make_classifier(prices, window=60)
+        label, score, date = classifier.classify_window(60)
+        assert label == "上昇"
+        assert score > 0.7
+
+    def test_slice_window(self):
+        """classify_window with tuple slices the correct range."""
+        # 500 data points: rising first half, flat second half
+        rising = np.linspace(100, 300, 300)
+        flat = np.full(200, 300.0)
+        prices = np.concatenate([rising, flat])
+        classifier = self._make_classifier(prices, window=20)
+
+        # Slice (200, 500) should capture the rising portion
+        label, score, _ = classifier.classify_window((200, 500))
+        assert label == "上昇"
+        assert score > 0.8
+
+    def test_nan_handling(self):
+        """classify_window with NaN values should not crash."""
+        prices = np.linspace(100, 200, 100).copy()
+        # Insert some NaNs (< 50% of 60)
+        prices[10] = np.nan
+        prices[20] = np.nan
+        prices[30] = np.nan
+        classifier = self._make_classifier(prices, window=60)
+        label, score, _ = classifier.classify_window(60)
+        assert label is not None
+
+    def test_nan_too_many_raises(self):
+        """classify_window with > 50% NaN should raise ValueError."""
+        prices = np.full(100, np.nan)
+        prices[:20] = np.linspace(100, 200, 20)  # Only 20 valid out of 60
+        classifier = self._make_classifier(prices, window=60)
+        with pytest.raises(ValueError, match="Insufficient non-NaN data"):
+            classifier.classify_window(60)
+
+    def test_low_correlation_returns_best_match(self):
+        """classify_window should return best match label even for low correlation."""
+        # Random noise has low correlation with any template
+        np.random.seed(42)
+        prices = np.random.uniform(100, 200, 100)
+        classifier = self._make_classifier(prices, window=60)
+        label, score, _ = classifier.classify_window(60)
+        # Label is best match (not "不明"), score reflects low confidence
+        assert label != "不明"
+        assert isinstance(label, str)
+
+    def test_constant_data_returns_best_match(self):
+        """Constant data produces NaN correlation → score 0, but still returns best match."""
+        prices = np.full(100, 150.0)
+        classifier = self._make_classifier(prices, window=60)
+        label, score, _ = classifier.classify_window(60)
+        assert label != "不明"
+        assert score < MIN_CORRELATION_THRESHOLD

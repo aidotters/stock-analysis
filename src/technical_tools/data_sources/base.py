@@ -18,6 +18,17 @@ class DataSource(ABC):
     DataFrame should have DatetimeIndex.
     """
 
+    def get_name(self, ticker: str) -> str | None:
+        """Get stock name for the given ticker.
+
+        Args:
+            ticker: Stock ticker symbol
+
+        Returns:
+            Stock name string, or None if not available
+        """
+        return None
+
     @abstractmethod
     def get_prices(
         self,

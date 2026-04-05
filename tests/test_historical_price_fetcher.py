@@ -166,13 +166,14 @@ class TestHistoricalPriceFetcher:
         )
 
     def test_map_columns(self, fetcher):
-        """全カラムの変換を検証（AdjustmentOpen/High/Low/Close/Volume に値、他はNULL）"""
+        """全カラムの変換を検証（auto_adjust=False: 生OHLCV + 調整済み価格）"""
         yf_df = pd.DataFrame(
             {
                 "Open": [100.0, 102.0],
                 "High": [105.0, 108.0],
                 "Low": [99.0, 101.0],
                 "Close": [104.0, 107.0],
+                "Adj Close": [98.0, 101.0],
                 "Volume": [1000000, 1200000],
             },
             index=pd.DatetimeIndex(["2020-01-06", "2020-01-07"]),
@@ -187,19 +188,21 @@ class TestHistoricalPriceFetcher:
         assert row["Code"] == "72030"
         assert row["Date"] == "2020-01-06"
 
-        # Adjustment columns have values
-        assert row["AdjustmentOpen"] == 100.0
-        assert row["AdjustmentHigh"] == 105.0
-        assert row["AdjustmentLow"] == 99.0
-        assert row["AdjustmentClose"] == 104.0
+        # Raw OHLCV columns have values
+        assert row["Open"] == 100.0
+        assert row["High"] == 105.0
+        assert row["Low"] == 99.0
+        assert row["Close"] == 104.0
+        assert row["Volume"] == 1000000
+
+        # Adjustment columns: ratio = Adj Close / Close = 98/104
+        adj_ratio = 98.0 / 104.0
+        assert abs(row["AdjustmentOpen"] - 100.0 * adj_ratio) < 0.01
+        assert abs(row["AdjustmentHigh"] - 105.0 * adj_ratio) < 0.01
+        assert abs(row["AdjustmentLow"] - 99.0 * adj_ratio) < 0.01
+        assert row["AdjustmentClose"] == 98.0
         assert row["AdjustmentVolume"] == 1000000
 
-        # Raw columns are NULL
-        assert row["Open"] is None
-        assert row["High"] is None
-        assert row["Low"] is None
-        assert row["Close"] is None
-        assert row["Volume"] is None
         assert row["TurnoverValue"] is None
         assert row["AdjustmentFactor"] is None
 
@@ -255,6 +258,7 @@ class TestHistoricalPriceFetcher:
                 "High": [105.0],
                 "Low": [99.0],
                 "Close": [104.0],
+                "Adj Close": [98.0],
                 "Volume": [1000000],
             },
             index=pd.DatetimeIndex(["2020-06-01"]),
@@ -280,17 +284,17 @@ class TestHistoricalPriceFetcher:
             {
                 "Code": "72030",
                 "Date": "2020-01-06",
-                "Open": None,
-                "High": None,
-                "Low": None,
-                "Close": None,
-                "Volume": None,
+                "Open": 100.0,
+                "High": 105.0,
+                "Low": 99.0,
+                "Close": 104.0,
+                "Volume": 1000000,
                 "TurnoverValue": None,
                 "AdjustmentFactor": None,
-                "AdjustmentOpen": 100.0,
-                "AdjustmentHigh": 105.0,
-                "AdjustmentLow": 99.0,
-                "AdjustmentClose": 104.0,
+                "AdjustmentOpen": 94.23,
+                "AdjustmentHigh": 98.94,
+                "AdjustmentLow": 93.29,
+                "AdjustmentClose": 98.0,
                 "AdjustmentVolume": 1000000,
                 "source": "yfinance",
             }
@@ -302,10 +306,13 @@ class TestHistoricalPriceFetcher:
         # Verify in DB
         with sqlite3.connect(temp_dbs["jquants"]) as conn:
             row = conn.execute(
-                "SELECT source, AdjustmentOpen FROM daily_quotes WHERE Code = '72030' AND Date = '2020-01-06'"
+                "SELECT source, Open, Close, AdjustmentOpen, AdjustmentClose FROM daily_quotes WHERE Code = '72030' AND Date = '2020-01-06'"
             ).fetchone()
         assert row[0] == "yfinance"
-        assert row[1] == 100.0
+        assert row[1] == 100.0  # Raw Open
+        assert row[2] == 104.0  # Raw Close
+        assert abs(row[3] - 94.23) < 0.01  # AdjustmentOpen
+        assert row[4] == 98.0  # AdjustmentClose
 
     def test_save_batch_ignore_duplicates(self, fetcher, temp_dbs):
         """INSERT OR IGNOREで重複をスキップすることを検証"""
@@ -314,11 +321,11 @@ class TestHistoricalPriceFetcher:
             {
                 "Code": "72030",
                 "Date": "2021-06-01",  # Already exists as jquants
-                "Open": None,
-                "High": None,
-                "Low": None,
-                "Close": None,
-                "Volume": None,
+                "Open": 999.0,
+                "High": 999.0,
+                "Low": 999.0,
+                "Close": 999.0,
+                "Volume": 999,
                 "TurnoverValue": None,
                 "AdjustmentFactor": None,
                 "AdjustmentOpen": 999.0,
@@ -350,6 +357,7 @@ class TestHistoricalPriceFetcher:
                 "High": [105.0],
                 "Low": [99.0],
                 "Close": [104.0],
+                "Adj Close": [98.0],
                 "Volume": [1000000],
             },
             index=pd.DatetimeIndex(["2020-01-06"]),
@@ -433,6 +441,7 @@ class TestHistoricalPriceFetcher:
                 "High": [105.0],
                 "Low": [99.0],
                 "Close": [104.0],
+                "Adj Close": [98.0],
                 "Volume": [1000000],
             },
             index=pd.DatetimeIndex(["2020-06-01"]),
@@ -493,6 +502,7 @@ class TestHistoricalPriceFetcher:
                 "High": [105.0, 108.0],
                 "Low": [99.0, 101.0],
                 "Close": [104.0, 107.0],
+                "Adj Close": [98.0, 101.0],
                 "Volume": [1000000, 1200000],
             },
             index=pd.DatetimeIndex(["2020-01-06", "2020-01-07"]),
@@ -522,6 +532,7 @@ class TestHistoricalPriceFetcher:
                 "High": [105.0] * len(dates),
                 "Low": [99.0] * len(dates),
                 "Close": [104.0] * len(dates),
+                "Adj Close": [98.0] * len(dates),
                 "Volume": [1000000] * len(dates),
             },
             index=dates,
@@ -551,16 +562,18 @@ class TestHistoricalPriceFetcher:
         mock_download.assert_not_called()
 
     def test_data_reader_compatibility(self, temp_dbs):
-        """DataReaderがsourceカラム追加後も正常に動作することを検証"""
+        """DataReaderがyfinanceデータ（生OHLCV付き）を正常に取得できることを検証"""
         from market_reader import DataReader
 
-        # Add a yfinance record
+        # Add a yfinance record with raw OHLCV
         with sqlite3.connect(temp_dbs["jquants"]) as conn:
             conn.execute(
                 """
                 INSERT INTO daily_quotes
-                (Code, Date, AdjustmentOpen, AdjustmentHigh, AdjustmentLow, AdjustmentClose, AdjustmentVolume, source)
-                VALUES ('72030', '2020-01-06', 100, 105, 99, 104, 1000000, 'yfinance')
+                (Code, Date, Open, High, Low, Close, Volume,
+                 AdjustmentOpen, AdjustmentHigh, AdjustmentLow, AdjustmentClose, AdjustmentVolume, source)
+                VALUES ('72030', '2020-01-06', 100, 105, 99, 104, 1000000,
+                        94.23, 98.94, 93.29, 98.0, 1000000, 'yfinance')
                 """
             )
             conn.commit()
@@ -572,3 +585,8 @@ class TestHistoricalPriceFetcher:
         assert len(df) >= 2  # At least yfinance + jquants records
         assert "2020-01-06" in df.index.strftime("%Y-%m-%d").tolist()
         assert "2021-06-01" in df.index.strftime("%Y-%m-%d").tolist()
+
+        # yfinance data should have non-null OHLC
+        yf_row = df.loc["2020-01-06"]
+        assert yf_row["Open"] == 100.0
+        assert yf_row["Close"] == 104.0

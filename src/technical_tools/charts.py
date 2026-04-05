@@ -48,6 +48,7 @@ def create_chart(
     show_rsi: bool = False,
     show_macd: bool = False,
     signals: list[Signal] | None = None,
+    title: str | None = None,
 ) -> go.Figure:
     """Create interactive candlestick chart with indicators.
 
@@ -232,7 +233,7 @@ def create_chart(
 
     # Update layout
     fig.update_layout(
-        title=f"{ticker} Technical Analysis",
+        title=title or f"{ticker} Technical Analysis",
         xaxis_rangeslider_visible=False,
         height=600 if rows == 1 else 800,
         showlegend=True,

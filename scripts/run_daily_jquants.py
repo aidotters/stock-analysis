@@ -63,20 +63,39 @@ def main():
 
             if not db_exists:
                 logger.info("初回実行: 過去5年分のデータを取得します")
-                processor.get_all_prices_for_past_5_years_to_db_optimized(str(db_path))
+                result = processor.get_all_prices_for_past_5_years_to_db_optimized(
+                    str(db_path)
+                )
             else:
                 logger.info("差分更新を実行します")
-                processor.update_prices_to_db_optimized(str(db_path))
+                result = processor.update_prices_to_db_optimized(str(db_path))
 
-            # 統計情報を表示・通知に追加
+            # ジョブ実績メトリクスを通知に追加
+            if result:
+                job.add_metric(
+                    "対象銘柄数",
+                    f"{result['codes_to_update']}/{result['total_listed']}",
+                )
+                job.add_metric("更新銘柄数", str(result["codes_updated"]))
+                job.add_metric("新規レコード数", str(result["records_inserted"]))
+                if result["codes_failed"] > 0:
+                    job.add_metric("失敗銘柄数", str(result["codes_failed"]))
+                    job.add_warning(f"{result['codes_failed']}銘柄の取得に失敗しました")
+                if result["total_listed"] < 100:
+                    job.add_warning(
+                        f"上場銘柄数が異常に少ないです: "
+                        f"{result['total_listed']}（通常4000+）"
+                    )
+
+            # DB統計情報を表示・通知に追加
             stats = processor.get_database_stats(str(db_path))
             if stats:
                 logger.info("データベース統計:")
                 logger.info(f"  レコード数: {stats.get('record_count', 'N/A')}")
                 logger.info(f"  銘柄数: {stats.get('code_count', 'N/A')}")
                 logger.info(f"  データ期間: {stats.get('date_range', 'N/A')}")
-                job.add_metric("レコード数", str(stats.get("record_count", "N/A")))
-                job.add_metric("銘柄数", str(stats.get("code_count", "N/A")))
+                job.add_metric("DBレコード数", str(stats.get("record_count", "N/A")))
+                job.add_metric("DB銘柄数", str(stats.get("code_count", "N/A")))
                 job.add_metric("データ期間", str(stats.get("date_range", "N/A")))
 
         logger.info("=== J-Quants日次データ取得完了 ===")

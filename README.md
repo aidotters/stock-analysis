@@ -17,7 +17,7 @@
     - **ミネルヴィニ戦略:** マーク・ミネルヴィニの投資基準に基づき、銘柄のトレンドと強さを評価します。
     - **高値・安値比率 (HL Ratio):** 過去一定期間の高値と安値に対する現在の株価の位置を評価し、買われすぎ・売られすぎを判断します。
     - **相対力 (Relative Strength):** 市場全体や他の銘柄と比較した株価の相対的な強さを評価します。
-    - **チャートパターン分類:** 機械学習を用いて、株価チャートの形状を自動的に分類し、特定のパターン（上昇、下落、もみ合いなど）を識別します。データの可用性に基づいて動的にウィンドウサイズを選択（1200日または960日の長期パターン分析を含む）し、高性能なバッチ処理により効率的に実行されます。
+    - **チャートパターン分類:** 機械学習を用いて、株価チャートの形状を自動的に分類し、特定のパターン（上昇、下落、もみ合いなど）を識別します。短期は累積ウィンドウ（直近20/60/120/240日）、中長期は期間スライスウィンドウ（240-480/480-1200/1200-2400/2400-4800日前）でデータの可用性に応じて動的に選択します。対数正規化により急騰・急落の歪み��軽減します。相関スコア（r値）で分類の信頼度を���認できます。
     - **統合分析:** 上記の各分析結果を組み合わせ、複合的なスコアや条件フィルタリングにより、多角的な視点から銘柄を評価します。
 
 - **ニュース駆動型銘柄発見 (`/discover-stocks`):**
@@ -44,7 +44,7 @@
 - **`minervini.py`**: マーク・ミネルヴィニの株式スクリーニング戦略を実装しています。株価と移動平均線の関係、52週高値・安値からの乖離率などを基に、銘柄のトレンドと強さを評価します。計算結果は `data/analysis_results.db` の `minervini` テーブルに保存されます。
 - **`high_low_ratio.py`**: 銘柄の高値・安値比率を計算するロジックです。過去52週間の高値と安値の範囲内で、現在の株価がどの位置にあるかを示します。結果は `data/analysis_results.db` の `hl_ratio` テーブルに保存されます。
 - **`relative_strength.py`**: 相対力（Relative Strength Percentage: RSP）および相対力指数（Relative Strength Index: RSI）を計算するロジックです。銘柄の市場に対する相対的なパフォーマンスを評価します。結果は `data/analysis_results.db` の `relative_strength` テーブルに保存されます。
-- **`chart_classification.py`**: 株価チャートのパターンを分類するロジックです。過去の株価データから特定の期間（20日、60日、120日、240日、および動的選択される960日または1200日）のチャート形状を抽出し、「上昇」「下落」「もみ合い」などのパターンに分類します。データの可用性に基づいて自動的に長期ウィンドウ（1200日 ≥ 960日）を選択し、バッチ処理による高性能な分析を提供します。結果は `data/analysis_results.db` の `classification_results` テーブルに保存されます。
+- **`chart_classification.py`**: 株価チャートのパターンを分類するロジックです。短期は累積ウィンドウ（直近20/60/120/240日）、中長期は期間スライスウィンドウ（240-480/480-1200/1200-2400/2400-4800日前）でチャート形状を抽出し、「上昇」「下落」「もみ合い」などのパターンに分類します。対数正規化により急騰・急落による歪みを軽減し、NaN値はdropna+50%最低データ閾値で対処します。相関スコアが低い場合（r < 0.3）でもベストマッチのラベルを返し、スコアで信頼度を判断できます。バッチ処理による高性能な分析を提供します。結果は `data/analysis_results.db` の `classification_results` テーブルに保存されます。
 - **`integrated_analysis.py`**: 上記の各分析プログラムによって生成された結果（`hl_ratio`, `minervini`, `relative_strength`, `classification_results`）を `data/analysis_results.db` から読み込み、それらを統合して複合的な評価を行うためのユーティリティ関数を提供します。これにより、複数の指標を横断的に評価し、より精度の高い銘柄選定を支援します。このスクリプト自体はデータを生成せず、既存のデータをクエリ・集計します。
 - **`integrated_analysis2.py`**: `integrated_analysis.py` の機能を利用し、各分析結果と財務指標データを統合して、最終的な分析結果をExcelファイルとして `output` フォルダに出力します。
 
@@ -188,7 +188,7 @@
     # サンプル実行（基本的なパターン分析）
     python src/market_pipeline/analysis/chart_classification.py --mode sample
 
-    # アダプティブウィンドウのサンプル実行（1200/960日の動的選択をテスト）
+    # アダプティブウィンドウのサンプル実行（累積+スライスウィンドウの動的選択をテスト）
     python src/market_pipeline/analysis/chart_classification.py --mode sample-adaptive
 
     # 全銘柄での高性能分析（アダプティブウィンドウ付き）
@@ -215,6 +215,14 @@
 
     # 過去10年分のみ
     python scripts/run_historical_prices.py --years 10
+
+    # yfinanceデータをauto_adjust=Falseで再取得（既存データの修正）
+    python scripts/migrate_refetch_yfinance.py
+    python scripts/migrate_refetch_yfinance.py --dry-run
+
+    # yfinanceデータをJ-Quants基準にリスケール（境界比率による修正）
+    python scripts/migrate_rescale_yfinance.py
+    python scripts/migrate_rescale_yfinance.py --dry-run
     ```
 
 ### launchdによる自動実行
@@ -673,9 +681,21 @@ results = screener.filter(composite_score_min=70.0, include=["fundamentals"])  #
 results = screener.filter(include=["fundamentals", "valuation"]) # 複数グループ
 results = screener.filter(include="all")                         # 全22カラム
 
-# チャートパターンでフィルタリング
+# チャートパターンでフィルタリング（単一ウィンドウ）
 results = screener.filter(
     pattern_window=60,
+    pattern_labels=["上昇", "急上昇"]
+)
+
+# 全ウィンドウANDフィルタ（存在する全ウィンドウが条件を満たす銘柄のみ、NaN無視）
+results = screener.filter(
+    pattern_window="all",
+    pattern_labels=["上昇", "急上昇"]
+)
+
+# 複数ウィンドウ指定（指定した全ウィンドウでAND条件）
+results = screener.filter(
+    pattern_window=[60, 120, 240],
     pattern_labels=["上昇", "急上昇"]
 )
 

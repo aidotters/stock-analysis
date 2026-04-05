@@ -97,6 +97,8 @@ Stock-Analysis/
 │   ├── create_database_indexes.py    # DBインデックス作成
 │   ├── run_historical_prices.py      # yfinance過去データ一括取得（手動、初回）
 │   ├── migrate_add_source_column.py  # daily_quotesにsourceカラム追加マイグレーション
+│   ├── migrate_refetch_yfinance.py  # yfinanceデータ削除→auto_adjust=Falseで再取得
+│   ├── migrate_rescale_yfinance.py  # yfinanceデータをJ-Quants境界比率でリスケール
 │   └── _old/
 │       ├── run_daily_jquants.py
 │       └── run_daily_analysis.py
@@ -186,9 +188,13 @@ Stock-Analysis/
 │   └── news_sources.yaml            # ニュース巡回先設定
 │
 ├── .claude/skills/                  # Claude Codeスキル定義
+│   ├── acceptance-test/             # 受け入れテストスキル
+│   │   └── SKILL.md
 │   ├── analyze-stock/               # 銘柄詳細分析スキル
 │   │   └── SKILL.md
 │   ├── architecture-design/         # アーキテクチャ設計書作成スキル
+│   │   └── SKILL.md
+│   ├── brainstorm/                  # アイデア壁打ちスキル
 │   │   └── SKILL.md
 │   ├── development-guidelines/      # 開発ガイドライン作成スキル
 │   │   └── SKILL.md
@@ -196,7 +202,15 @@ Stock-Analysis/
 │   │   └── SKILL.md
 │   ├── functional-design/           # 機能設計書作成スキル
 │   │   └── SKILL.md
+│   ├── gen-all-docs/                # 全ドキュメント一括生成スキル
+│   │   └── SKILL.md
 │   ├── glossary-creation/           # 用語集作成スキル
+│   │   └── SKILL.md
+│   ├── implement-feature/           # 機能実装スキル
+│   │   └── SKILL.md
+│   ├── initial-setup/               # プロジェクト初期セットアップスキル
+│   │   └── SKILL.md
+│   ├── plan-feature/                # 機能計画スキル
 │   │   └── SKILL.md
 │   ├── prd-writing/                 # PRD作成スキル
 │   │   └── SKILL.md
@@ -204,9 +218,15 @@ Stock-Analysis/
 │   │   └── SKILL.md
 │   ├── research-stock-news/         # 銘柄ニュース調査スキル
 │   │   └── SKILL.md
+│   ├── review-docs/                 # ドキュメントレビュースキル
+│   │   └── SKILL.md
 │   ├── steering/                    # 作業計画・タスクリスト管理スキル
 │   │   └── SKILL.md
-│   └── validation/                  # コード品質検証スキル
+│   ├── update-docs/                 # ドキュメント更新スキル
+│   │   └── SKILL.md
+│   ├── validate-code/               # コード品質検証スキル
+│   │   └── SKILL.md
+│   └── validation/                  # コード品質検証共通ロジック
 │       └── SKILL.md
 │
 ├── .env                              # 環境変数（gitignore）
@@ -274,6 +294,8 @@ Stock-Analysis/
 | `scripts/create_database_indexes.py` | 初回のみ | DBインデックス作成 |
 | `scripts/run_historical_prices.py` | 手動（初回） | yfinanceから過去20年分の日足データ取得 |
 | `scripts/migrate_add_source_column.py` | 手動（初回） | daily_quotesにsourceカラム追加マイグレーション |
+| `scripts/migrate_refetch_yfinance.py` | 手動（必要時） | yfinanceデータを削除してauto_adjust=Falseで再取得 |
+| `scripts/migrate_rescale_yfinance.py` | 手動（必要時） | yfinanceデータをJ-Quants境界比率でリスケール |
 
 ### データベース
 

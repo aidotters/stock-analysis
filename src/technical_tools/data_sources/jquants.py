@@ -1,11 +1,13 @@
 """JQuants data source using market_reader package."""
 
+import sqlite3
 from datetime import datetime, timedelta
 
 import pandas as pd
 
 from market_reader import DataReader
 from market_reader.exceptions import StockNotFoundError as MarketReaderNotFoundError
+from market_pipeline.config import get_settings
 
 from ..exceptions import TickerNotFoundError
 from .base import DataSource
@@ -60,6 +62,19 @@ class JQuantsSource(DataSource):
     def __init__(self) -> None:
         """Initialize JQuantsSource."""
         self._reader = DataReader()
+
+    def get_name(self, ticker: str) -> str | None:
+        """Get stock name from master.db."""
+        try:
+            settings = get_settings()
+            db_path = settings.paths.master_db
+            with sqlite3.connect(db_path) as conn:
+                row = conn.execute(
+                    "SELECT name FROM stocks_master WHERE code = ?", (ticker,)
+                ).fetchone()
+                return row[0] if row else None
+        except Exception:
+            return None
 
     def get_prices(
         self,

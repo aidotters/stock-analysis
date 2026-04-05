@@ -72,7 +72,7 @@ settings = get_settings()
 | `high_rsi_threshold` | `float` | 70.0 | 高RSI閾値 |
 | `strong_composite_threshold` | `float` | 70.0 | 強い複合スコア閾値 |
 | `chart_windows` | `list` | [20, 60, 120, 240] | 短期チャートウィンドウ |
-| `chart_long_windows` | `list` | [960, 1200] | 長期チャートウィンドウ |
+| `chart_long_windows` | `list` | [480, 1200, 2400, 4800] | 長期チャートウィンドウ |
 
 #### settings.database
 
@@ -243,9 +243,11 @@ HistoricalPriceFetcher(
 
 yfinance DataFrame → daily_quotesカラム形式に変換。
 
-**カラムマッピング**:
-- yfinance Open/High/Low/Close/Volume → AdjustmentOpen/High/Low/Close/Volume
-- 未調整カラム（Open, High, Low, Close, Volume）→ NULL
+**カラムマッピング（`auto_adjust=False`前提）**:
+- yfinance Open/High/Low/Close/Volume → 生OHLCV（Open, High, Low, Close, Volume）
+- AdjustmentOpen/High/Low = 生値 × (Adj Close / Close)
+- AdjustmentClose = Adj Close
+- AdjustmentVolume = 生Volume
 - AdjustmentFactor, TurnoverValue → NULL
 - source → 'yfinance'
 - Code → 5桁形式
@@ -707,8 +709,8 @@ StockScreener(
 - `net_cash_ratio_max` (`float | None`): 最大純ネットキャッシュ比率
 - `cash_neutral_per_min` (`float | None`): 最小キャッシュニュートラルPER
 - `cash_neutral_per_max` (`float | None`): 最大キャッシュニュートラルPER
-- `pattern_window` (`int | None`): チャートパターンウィンドウ（20, 60, 120, 240, 960, 1200）
-- `pattern_labels` (`list[str] | None`): パターンラベルリスト（例: ["上昇", "急上昇"]）
+- `pattern_window` (`WindowInput | list[WindowInput] | None`): チャートパターンウィンドウ。int（20, 60等）、tuple（(240,480)）、str（"240-480", "w240_480"）、`"all"`で全ウィンドウ。listで複数指定時はAND条件。
+- `pattern_labels` (`list[str] | None`): パターンラベルリスト（例: ["上昇", "急上昇"]）。単一ウィンドウ: セル単位フィルタ（inner join）。複数/"all": 存在する全ウィンドウがマッチする銘柄のみ（AND、NaN無視）
 - `sector` (`str | None`): セクターフィルター
 - `include` (`list[str] | str | None`): 結果に含めるカラムグループ。"scores", "fundamentals", "valuation"のリスト、または"all"。フィルタ未使用でもグループ全カラムを返却。
 - `limit` (`int`): 最大結果数（デフォルト: 100）
@@ -791,7 +793,7 @@ results = screener.filter(config)
 | バリュエーション | `net_cash_ratio_max` | `float \| None` | None |
 | バリュエーション | `cash_neutral_per_min` | `float \| None` | None |
 | バリュエーション | `cash_neutral_per_max` | `float \| None` | None |
-| パターン | `pattern_window` | `int \| None` | None |
+| パターン | `pattern_window` | `WindowInput \| list[WindowInput] \| None` | None |
 | パターン | `pattern_labels` | `list[str] \| None` | None |
 | その他 | `sector` | `str \| None` | None |
 | その他 | `include` | `list[str] \| str \| None` | None |
@@ -2028,7 +2030,7 @@ OptimizedChartClassifier(
 
 **パラメータ**:
 - `ticker`: 銘柄コード
-- `window`: 分析ウィンドウサイズ（20, 60, 120, 240, 960, 1200）
+- `window`: 初期ウィンドウサイズ（累積ウィンドウ用: 20, 60, 120, 240）
 - `price_data`: 事前ロード済みの価格データ（省略時はDBから取得）
 - `logger`: ロガーインスタンス
 
@@ -2047,16 +2049,24 @@ ChartClassifier(ticker: str, window: int, db_path: str = JQUANTS_DB_PATH)
 
 ##### `classify_latest() -> Tuple[str, float, str]`
 
-最新の価格データでチャートパターンを分類。
+最新の価格データで累積ウィンドウのチャートパターンを分類（後方互換）。
 
 **戻り値**: `Tuple[str, float, str]` - (パターンラベル, 相関スコア, データ日付)
 
+##### `classify_window(window_spec: WindowSpec) -> Tuple[str, float, str]`
+
+累積またはスライスウィンドウでチャートパターンを分類。
+
+**パラメータ**:
+- `window_spec`: `int`（累積: 直近N日）または `tuple[int, int]`（スライス: start日前〜end日前）
+
+**戻り値**: `Tuple[str, float, str]` - (パターンラベル, 相関スコア, データ日付)
+
+- NaN値はdropnaで除去、除去後のデータ長が期待値の50%未満の場合はValueError
+- Pearson相関係数が低い場合（r < 0.3）でもベストマッチのラベルを返す（スコアで信頼度を判断可能）
+
 **パターンラベル**:
-- `uptrend`: 上昇トレンド
-- `downtrend`: 下降トレンド
-- `double_bottom`: ダブルボトム
-- `head_and_shoulders`: ヘッドアンドショルダーズ
-- `その他のパターン`
+- 上昇ストップ, 上昇, 急上昇, 調整, もみ合い, リバウンド, 急落, 下落, 下げとまった
 
 ##### `save_classification_plot(label, score, output_dir)`
 
@@ -2067,11 +2077,30 @@ ChartClassifier(ticker: str, window: int, db_path: str = JQUANTS_DB_PATH)
 - `score`: 相関スコア
 - `output_dir`: 出力ディレクトリ
 
+#### 型定義・定数
+
+```python
+WindowSpec = Union[int, Tuple[int, int]]
+CUMULATIVE_WINDOWS = [20, 60, 120, 240]
+SLICE_WINDOWS = [(240, 480), (480, 1200), (1200, 2400), (2400, 4800)]
+```
+
 #### ヘルパー関数
 
-##### `get_adaptive_windows(data_length: int) -> List[int]`
+##### `get_adaptive_windows(ticker_data_length: int) -> List[WindowSpec]`
 
-データ長に応じた適切なウィンドウサイズリストを返す。
+データ長に応じた適切なウィンドウリストを返す。
+
+- 累積ウィンドウ: `[20, 60, 120, 240]`（データ長以下のもの）
+- スライスウィンドウ: `[(240, 480), (480, 1200), (1200, 2400), (2400, 4800)]`（`end`以下のデータ長を持つもの）
+
+##### `window_spec_to_db_value(window_spec: WindowSpec) -> int`
+
+WindowSpecをDB保存用整数に変換。累積はそのまま、スライスは `start * 10000 + end`（例: (240, 480) → 2400480）。
+
+##### `db_value_to_window_spec(db_value: int) -> WindowSpec`
+
+DB整数値をWindowSpecに逆変換。10000超はスライスウィンドウとして分解。
 
 ##### `main_full_run_optimized()`
 

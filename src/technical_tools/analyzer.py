@@ -316,6 +316,13 @@ class TechnicalAnalyzer:
 
             signals = detect_crosses_multiple(df, signal_patterns)
 
+        # Build chart title with stock name
+        name = self._data_source.get_name(ticker)
+        if name:
+            chart_title = f"{name}（{ticker}）株価チャート"
+        else:
+            chart_title = None
+
         return create_chart(
             df,
             ticker=ticker,
@@ -324,6 +331,7 @@ class TechnicalAnalyzer:
             show_rsi=show_rsi,
             show_macd=show_macd,
             signals=signals,
+            title=chart_title,
         )
 
     def load_existing_analysis(self, ticker: str) -> dict[str, Any]:

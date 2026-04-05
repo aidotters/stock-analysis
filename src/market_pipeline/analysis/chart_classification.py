@@ -34,7 +34,7 @@ import logging
 import os
 import sqlite3
 from datetime import datetime, timedelta
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Union
 import time
 
 import matplotlib.pyplot as plt
@@ -42,6 +42,25 @@ import numpy as np
 import pandas as pd
 from scipy.stats import pearsonr
 from sklearn.preprocessing import MinMaxScaler
+
+# Window specification: int for cumulative (last N trading days), tuple for slice (start, end) trading days ago
+WindowSpec = Union[int, Tuple[int, int]]
+
+MIN_CORRELATION_THRESHOLD = 0.3
+
+# --- Calendar/Trading Day Conversion ---
+# Japanese market: ~245 trading days/year
+_TRADING_DAYS_PER_YEAR = 245
+_CALENDAR_DAYS_PER_YEAR = 365
+
+
+def trading_to_calendar_days(trading_days: int) -> int:
+    """Convert trading days to calendar days with safety margin."""
+    return int(trading_days * _CALENDAR_DAYS_PER_YEAR / _TRADING_DAYS_PER_YEAR) + 100
+
+
+# Maximum slice window end (trading days)
+_MAX_SLICE_END = 4800
 
 # --- Constants ---
 JQUANTS_DB_PATH = "/Users/tak/Markets/Stocks/Stock-Analysis/data/jquants.db"
@@ -104,21 +123,22 @@ class BatchDataLoader:
         self._data_cache: Dict[str, pd.Series] = {}
 
     def load_all_ticker_data(
-        self, tickers: List[str], days: int = 500
+        self, tickers: List[str], trading_days: int = 500
     ) -> Dict[str, pd.Series]:
-        """Load data for all tickers in a single optimized query"""
-        end_date = datetime.today()
+        """Load data for all tickers in a single optimized query.
 
-        # For long-term analysis (> 1000 days), load all available data
-        if days > 1000:
-            self.logger.info(
-                f"Loading ALL available data for {len(tickers)} tickers (long-term analysis)..."
-            )
-            start_date_str = "2020-01-01"  # Use earliest possible date to get all data
-        else:
-            start_date = end_date - timedelta(days=days)
-            start_date_str = start_date.strftime("%Y-%m-%d")
-            self.logger.info(f"Loading data for {len(tickers)} tickers in batch...")
+        Args:
+            tickers: List of ticker codes
+            trading_days: Number of trading days to load (converted to calendar days internally)
+        """
+        end_date = datetime.today()
+        calendar_days = trading_to_calendar_days(trading_days)
+        start_date = end_date - timedelta(days=calendar_days)
+        start_date_str = start_date.strftime("%Y-%m-%d")
+        self.logger.info(
+            f"Loading data for {len(tickers)} tickers "
+            f"({trading_days} trading days / {calendar_days} calendar days)..."
+        )
 
         start_time = time.time()
 
@@ -155,9 +175,9 @@ class BatchDataLoader:
         return ticker_data
 
     def check_ticker_data_length(self, ticker: str) -> int:
-        """Check the number of available data days for a specific ticker"""
+        """Check the number of available trading days for a specific ticker."""
         end_date = datetime.today()
-        start_date = end_date - timedelta(days=1500)  # Check up to 1500 days
+        start_date = end_date - timedelta(days=trading_to_calendar_days(_MAX_SLICE_END))
 
         with DatabaseManager(self.db_path) as conn:
             query = """
@@ -258,9 +278,13 @@ class OptimizedChartClassifier:
         self.templates_manual = self._template_cache[window]
 
     def _get_stock_data(self, days: int = 500) -> pd.Series:
-        """Fallback method for single ticker data loading (less efficient than batch)"""
+        """Fallback method for single ticker data loading (less efficient than batch).
+
+        Args:
+            days: Number of trading days to load
+        """
         end_date = datetime.today()
-        start_date = end_date - timedelta(days=days)
+        start_date = end_date - timedelta(days=trading_to_calendar_days(days))
 
         try:
             with DatabaseManager(JQUANTS_DB_PATH) as conn:
@@ -297,27 +321,36 @@ class OptimizedChartClassifier:
         if len(arr) == 1:
             return np.array([0.5])  # Single value normalized to middle
 
+        # Log transform to reduce skew from sharp price spikes
+        # np.where evaluates both branches before selecting, so suppress
+        # expected warnings from log(0) and log(NaN)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            arr = np.where(arr > 0, np.log(arr), 0.0)
+
         scaler = MinMaxScaler()
         return scaler.fit_transform(arr.reshape(-1, 1)).flatten()
 
-    def _create_manual_templates(self) -> Dict[str, np.ndarray]:
-        half1 = self.window // 2
-        half2 = self.window - half1
+    def _create_manual_templates(
+        self, length: int | None = None
+    ) -> Dict[str, np.ndarray]:
+        n = length if length is not None else self.window
+        half1 = n // 2
+        half2 = n - half1
         templates = {
             "上昇ストップ": np.concatenate(
                 [np.linspace(0, 1, half1), np.full(half2, 1)]
             ),
-            "上昇": np.linspace(0, 1, self.window),
+            "上昇": np.linspace(0, 1, n),
             "急上昇": np.concatenate([np.full(half1, 0), np.linspace(0, 1, half2)]),
             "調整": np.concatenate(
                 [np.linspace(0, 1, half1), np.linspace(1, 0, half2)]
             ),
-            "もみ合い": np.sin(np.linspace(0, 4 * np.pi, self.window)),
+            "もみ合い": np.sin(np.linspace(0, 4 * np.pi, n)),
             "リバウンド": np.concatenate(
                 [np.linspace(1, 0, half1), np.linspace(0, 1, half2)]
             ),
             "急落": np.concatenate([np.full(half1, 1), np.linspace(1, 0, half2)]),
-            "下落": np.linspace(1, 0, self.window),
+            "下落": np.linspace(1, 0, n),
             "下げとまった": np.concatenate(
                 [np.linspace(1, 0, half1), np.full(half2, 0)]
             ),
@@ -362,6 +395,60 @@ class OptimizedChartClassifier:
         latest_date = self.price_data.index[-1].strftime("%Y-%m-%d")
 
         label, score = self._find_best_match(latest_data, self.templates_manual)
+        return label, score, latest_date
+
+    def classify_window(self, window_spec: "WindowSpec") -> Tuple[str, float, str]:
+        """Classify using cumulative or slice window.
+
+        Args:
+            window_spec: int for cumulative (last N days), tuple (start, end) for slice
+
+        Returns:
+            (label, score, latest_date)
+
+        Raises:
+            ValueError: If insufficient non-NaN data
+        """
+        if isinstance(window_spec, tuple):
+            start, end = window_spec
+            data = self.price_data.iloc[-end:-start].values
+            expected_len = end - start
+            template_len = expected_len
+        else:
+            data = self.price_data.iloc[-window_spec:].values
+            expected_len = window_spec
+            template_len = window_spec
+
+        if len(data) == 0:
+            raise ValueError(
+                f"No price data available for classification (ticker: {self.ticker})"
+            )
+
+        # NaN removal
+        data = data[~np.isnan(data)]
+
+        # Data length check (require >= 50% of expected)
+        if len(data) < expected_len * 0.5:
+            raise ValueError(
+                f"Insufficient non-NaN data: {len(data)} < {expected_len * 0.5}"
+            )
+
+        # Resample to template length if needed
+        if len(data) != template_len:
+            x_old = np.linspace(0, 1, len(data))
+            x_new = np.linspace(0, 1, template_len)
+            data = np.interp(x_new, x_old, data)
+
+        # Get or create templates for this length
+        if template_len not in self._template_cache:
+            self._template_cache[template_len] = self._create_manual_templates(
+                length=template_len
+            )
+
+        templates = self._template_cache[template_len]
+        label, score = self._find_best_match(data, templates)
+
+        latest_date = self.price_data.index[-1].strftime("%Y-%m-%d")
         return label, score, latest_date
 
     def save_classification_plot(self, label: str, score: float, output_dir: str):
@@ -438,45 +525,114 @@ def save_result_to_db(
         conn.commit()
 
 
-def get_adaptive_windows(ticker_data_length: int) -> List[int]:
+CUMULATIVE_WINDOWS = [20, 60, 120, 240]
+SLICE_WINDOWS: List[Tuple[int, int]] = [
+    (240, 480),
+    (480, 1200),
+    (1200, 2400),
+    (2400, 4800),
+]
+
+
+def get_adaptive_windows(ticker_data_length: int) -> List[WindowSpec]:
     """
-    Get adaptive windows based on available data length
+    Get adaptive windows based on available data length.
+
+    Short-term windows (20-240) are cumulative (last N days).
+    Long-term windows are period slices (start to end days ago).
 
     Args:
         ticker_data_length: Number of available data days for the ticker
 
     Returns:
-        List of window sizes to use for classification
+        List of WindowSpec: int for cumulative, tuple(start, end) for slice
     """
-    base_windows = [20, 60, 120, 240]
+    windows: List[WindowSpec] = [
+        w for w in CUMULATIVE_WINDOWS if ticker_data_length >= w
+    ]
 
-    # Add adaptive long-term window based on data availability
-    if ticker_data_length >= 1200:
-        adaptive_windows = base_windows + [1200]
-    elif ticker_data_length >= 960:
-        adaptive_windows = base_windows + [960]
-    else:
-        adaptive_windows = base_windows
+    # Add data_length as max cumulative window when shorter than 240
+    if (
+        ticker_data_length < CUMULATIVE_WINDOWS[-1]
+        and ticker_data_length not in windows
+    ):
+        windows.append(ticker_data_length)
 
-    return adaptive_windows
+    # Slice windows: use actual data length when shorter than standard end
+    for start, end in SLICE_WINDOWS:
+        if ticker_data_length >= end:
+            windows.append((start, end))
+        elif ticker_data_length > start:
+            # Data extends into this slice range but doesn't reach standard end
+            # Use actual data length as end, will be mapped to standard window on save
+            windows.append((start, ticker_data_length))
+
+    return windows
+
+
+STANDARD_WINDOWS = [20, 60, 120, 240, 2400480, 4801200, 12002400, 24004800]
+
+
+def map_to_standard_window(actual_window: int) -> int | None:
+    """Map an actual cumulative window size to the next larger standard window.
+
+    Only applies to cumulative windows. For slice windows, use window_spec_to_db_value().
+    Returns None if larger than all standards (skip saving).
+    """
+    cumulative_standards = [20, 60, 120, 240]
+    for std in cumulative_standards:
+        if actual_window <= std:
+            return std
+    return None
+
+
+def map_slice_to_standard(window_spec: Tuple[int, int]) -> Tuple[int, int]:
+    """Map a non-standard slice window to its standard slice window.
+
+    E.g., (2400, 3600) -> (2400, 4800) because data falls in the 2400-4800 range.
+    """
+    start = window_spec[0]
+    for s, e in SLICE_WINDOWS:
+        if s == start:
+            return (s, e)
+    return window_spec
+
+
+def window_spec_to_db_value(window_spec: WindowSpec) -> int:
+    """Convert WindowSpec to integer for DB storage.
+
+    Cumulative: stored as-is (e.g., 20, 60, 240)
+    Slice: mapped to standard window, then start * 10000 + end (e.g., (2400, 3600) -> 24004800)
+    """
+    if isinstance(window_spec, tuple):
+        standard = map_slice_to_standard(window_spec)
+        return standard[0] * 10000 + standard[1]
+    return window_spec
+
+
+def db_value_to_window_spec(db_value: int) -> WindowSpec:
+    """Convert DB integer back to WindowSpec.
+
+    Values > 10000 are treated as slice windows.
+    """
+    if db_value > 10000:
+        start = db_value // 10000
+        end = db_value % 10000
+        return (start, end)
+    return db_value
 
 
 def check_all_tickers_data_length(
     db_path: str, tickers: List[str], logger: logging.Logger
 ) -> Dict[str, int]:
     """
-    Check data length for all tickers in batch for efficiency
-
-    Args:
-        db_path: Path to the database
-        tickers: List of ticker codes
-        logger: Logger instance
+    Check available trading days for all tickers in batch.
 
     Returns:
-        Dictionary mapping ticker to data length
+        Dictionary mapping ticker to number of trading days
     """
     end_date = datetime.today()
-    start_date = end_date - timedelta(days=1500)  # Check up to 1500 days
+    start_date = end_date - timedelta(days=trading_to_calendar_days(_MAX_SLICE_END))
 
     logger.info(f"Checking data length for {len(tickers)} tickers...")
     start_time = time.time()
@@ -544,30 +700,17 @@ def main_sample():
 
 
 def main_sample_adaptive():
-    """Test sample run with adaptive windows (1200/960 days) to demonstrate dynamic window selection."""
+    """Test sample run with adaptive windows (480/1200/2400/4800 days) to demonstrate dynamic window selection."""
     logger = setup_logging()
     TICKERS = ["13010", "13050", "13060"]  # Use tickers with longer data history
 
     logger.info("Starting ADAPTIVE WINDOWS sample chart classification run...")
 
-    # Check data lengths for sample tickers
-    ticker_data_lengths = check_all_tickers_data_length(
-        JQUANTS_DB_PATH, TICKERS, logger
-    )
-
-    # Load data with 1300 days to support long-term patterns
     data_loader = BatchDataLoader(JQUANTS_DB_PATH, logger)
-    ticker_data = data_loader.load_all_ticker_data(TICKERS, days=1300)
+    ticker_data = data_loader.load_all_ticker_data(TICKERS, trading_days=_MAX_SLICE_END)
 
     for ticker in TICKERS:
         logger.info(f"\n--- Processing Ticker: {ticker} ---")
-
-        # Get data length and adaptive windows
-        data_length = ticker_data_lengths.get(ticker, 0)
-        adaptive_windows = get_adaptive_windows(data_length)
-
-        logger.info(f"Data length: {data_length} days")
-        logger.info(f"Adaptive windows: {adaptive_windows}")
 
         price_data = ticker_data.get(ticker, pd.Series(dtype=float))
 
@@ -575,33 +718,37 @@ def main_sample_adaptive():
             logger.error(f"No data available for ticker {ticker}")
             continue
 
-        # Process all adaptive windows for this ticker
-        for window in adaptive_windows:
+        adaptive_windows = get_adaptive_windows(len(price_data))
+        logger.info(f"Data length: {len(price_data)} trading days")
+        logger.info(f"Adaptive windows: {adaptive_windows}")
+
+        # Create a single classifier for all windows
+        classifier = OptimizedChartClassifier(
+            ticker=ticker,
+            window=CUMULATIVE_WINDOWS[0],
+            price_data=price_data,
+            logger=logger,
+        )
+
+        for window_spec in adaptive_windows:
             try:
-                if len(price_data) < window:
+                required_len = (
+                    window_spec[1] if isinstance(window_spec, tuple) else window_spec
+                )
+
+                if len(price_data) < required_len:
                     logger.warning(
-                        f"Insufficient data for {ticker} window {window}: {len(price_data)} < {window}"
+                        f"Insufficient data for {ticker} window {window_spec}: {len(price_data)} < {required_len}"
                     )
                     continue
 
-                classifier = OptimizedChartClassifier(
-                    ticker=ticker, window=window, price_data=price_data, logger=logger
-                )
-
-                label, score, data_date = classifier.classify_latest()
+                label, score, data_date = classifier.classify_window(window_spec)
                 logger.info(
-                    f"[Ticker: {ticker}, Window: {window}] -> Classification: {label} (r={score:.3f}) [{data_date}]"
+                    f"[Ticker: {ticker}, Window: {window_spec}] -> Classification: {label} (r={score:.3f}) [{data_date}]"
                 )
-
-                # Save plot for demonstration (especially for long-term windows)
-                if window >= 960:
-                    classifier.save_classification_plot(label, score, OUTPUT_DIR)
-                    logger.info(
-                        f"Saved long-term pattern plot for {ticker} with {window}-day window"
-                    )
 
             except Exception as e:
-                logger.error(f"Error processing {ticker} window {window}: {e}")
+                logger.error(f"Error processing {ticker} window {window_spec}: {e}")
 
     logger.info("Adaptive windows sample run completed")
 
@@ -623,27 +770,32 @@ def main_full_run_optimized():
         return
 
     logger.info(
-        f"Processing {len(all_tickers)} tickers with adaptive windows (1200/960 days)"
+        f"Processing {len(all_tickers)} tickers with adaptive windows (480/1200/2400/4800 days)"
     )
     init_results_db_optimized(RESULTS_DB_PATH, logger)
 
-    # Check data lengths for all tickers first (batch operation)
+    # Check data lengths for window distribution statistics
     ticker_data_lengths = check_all_tickers_data_length(
         JQUANTS_DB_PATH, all_tickers, logger
     )
 
-    # Analyze window distribution
-    window_stats = {"1200": 0, "960": 0, "base_only": 0}
+    # Log window distribution (informational only; actual windows determined by loaded data)
+    window_stats = {"4800+": 0, "2400+": 0, "1200+": 0, "480+": 0, "base_only": 0}
     for ticker, length in ticker_data_lengths.items():
-        if length >= 1200:
-            window_stats["1200"] += 1
-        elif length >= 960:
-            window_stats["960"] += 1
+        if length >= 4800:
+            window_stats["4800+"] += 1
+        elif length >= 2400:
+            window_stats["2400+"] += 1
+        elif length >= 1200:
+            window_stats["1200+"] += 1
+        elif length >= 480:
+            window_stats["480+"] += 1
         else:
             window_stats["base_only"] += 1
 
     logger.info(
-        f"Window distribution: 1200-day={window_stats['1200']}, 960-day={window_stats['960']}, base-only={window_stats['base_only']}"
+        f"Window distribution: 4800+={window_stats['4800+']}, 2400+={window_stats['2400+']}, "
+        f"1200+={window_stats['1200+']}, 480+={window_stats['480+']}, base-only={window_stats['base_only']}"
     )
 
     # Process tickers in batches for memory efficiency
@@ -661,9 +813,10 @@ def main_full_run_optimized():
                 f"tickers {batch_start + 1}-{batch_end}"
             )
 
-            # Load all data for this batch at once (using 1300 days to support 1200-day windows)
             data_loader = BatchDataLoader(JQUANTS_DB_PATH, logger)
-            ticker_data = data_loader.load_all_ticker_data(batch_tickers, days=1300)
+            ticker_data = data_loader.load_all_ticker_data(
+                batch_tickers, trading_days=_MAX_SLICE_END
+            )
 
             # Process each ticker in the batch
             for ticker in batch_tickers:
@@ -672,55 +825,54 @@ def main_full_run_optimized():
 
                     if price_data.empty:
                         logger.debug(f"No data available for ticker {ticker}")
-                        # Count errors based on adaptive windows
-                        adaptive_windows = get_adaptive_windows(
-                            ticker_data_lengths.get(ticker, 0)
-                        )
-                        total_errors += len(adaptive_windows)
+                        total_errors += len(get_adaptive_windows(0))
                         continue
 
-                    # Get adaptive windows for this ticker
-                    ticker_data_length = ticker_data_lengths.get(
-                        ticker, len(price_data)
+                    # Adaptive windows based on actual loaded trading days
+                    adaptive_windows = get_adaptive_windows(len(price_data))
+
+                    # Create a single classifier for all windows (reuse price_data)
+                    classifier = OptimizedChartClassifier(
+                        ticker=ticker,
+                        window=CUMULATIVE_WINDOWS[0],
+                        price_data=price_data,
+                        logger=logger,
                     )
-                    adaptive_windows = get_adaptive_windows(ticker_data_length)
 
                     # Process all adaptive windows for this ticker
-                    for window in adaptive_windows:
+                    for window_spec in adaptive_windows:
                         try:
-                            if len(price_data) < window:
+                            # Data length check
+                            if isinstance(window_spec, tuple):
+                                required_len = window_spec[1]
+                            else:
+                                required_len = window_spec
+
+                            if len(price_data) < required_len:
                                 logger.debug(
-                                    f"Insufficient data for {ticker} window {window}: {len(price_data)} < {window}"
+                                    f"Insufficient data for {ticker} window {window_spec}: {len(price_data)} < {required_len}"
                                 )
                                 total_errors += 1
                                 continue
 
-                            classifier = OptimizedChartClassifier(
-                                ticker=ticker,
-                                window=window,
-                                price_data=price_data,
-                                logger=logger,
+                            label, score, data_date = classifier.classify_window(
+                                window_spec
                             )
-
-                            label, score, data_date = classifier.classify_latest()
+                            save_window = window_spec_to_db_value(window_spec)
                             results_processor.add_result(
-                                data_date, ticker, window, label, score
+                                data_date, ticker, save_window, label, score
                             )
                             total_processed += 1
 
                         except Exception as e:
                             logger.debug(
-                                f"Error processing {ticker} window {window}: {e}"
+                                f"Error processing {ticker} window {window_spec}: {e}"
                             )
                             total_errors += 1
 
                 except Exception as e:
                     logger.error(f"Error processing ticker {ticker}: {e}")
-                    # Count errors based on adaptive windows
-                    adaptive_windows = get_adaptive_windows(
-                        ticker_data_lengths.get(ticker, 0)
-                    )
-                    total_errors += len(adaptive_windows)
+                    total_errors += 1
 
             # Log progress
             progress = (batch_end / len(all_tickers)) * 100
@@ -746,7 +898,8 @@ def main_full_run_optimized():
         f"Processing rate: {total_processed / total_time:.1f} classifications/second"
     )
     logger.info(
-        f"Window distribution: 1200-day={window_stats['1200']}, 960-day={window_stats['960']}, base-only={window_stats['base_only']}"
+        f"Window distribution: 4800+={window_stats['4800+']}, 2400+={window_stats['2400+']}, "
+        f"1200+={window_stats['1200+']}, 480+={window_stats['480+']}, base-only={window_stats['base_only']}"
     )
     logger.info(f"Results saved to: {RESULTS_DB_PATH}")
 

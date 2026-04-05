@@ -100,6 +100,9 @@ class JQuantsDataProcessor:
         """Return headers for API requests."""
         return {"Authorization": f"Bearer {self._id_token}"}
 
+    # Japan market has 4000+ listed companies; anything below this is suspect
+    MIN_EXPECTED_COMPANIES = 100
+
     def get_listed_info_cached(self) -> pd.DataFrame:
         """
         Get listed company info with caching.
@@ -111,8 +114,18 @@ class JQuantsDataProcessor:
         cached_data = self.cache.get(cache_key)
 
         if cached_data is not None:
-            self.logger.info("Using cached listed info")
-            return pd.DataFrame(cached_data)
+            if len(cached_data) >= self.MIN_EXPECTED_COMPANIES:
+                self.logger.info(
+                    "Using cached listed info (%d companies)", len(cached_data)
+                )
+                return pd.DataFrame(cached_data)
+            else:
+                self.logger.warning(
+                    "Cached listed info has only %d entries (expected %d+). "
+                    "Re-fetching from API.",
+                    len(cached_data),
+                    self.MIN_EXPECTED_COMPANIES,
+                )
 
         self.logger.info("Fetching listed company info from API...")
         params: Dict[str, str] = {}
@@ -137,10 +150,16 @@ class JQuantsDataProcessor:
 
         df = pd.DataFrame(data)
 
-        # Cache for 24 hours
-        self.cache.put(cache_key, data, ttl_hours=24)
+        if len(data) >= self.MIN_EXPECTED_COMPANIES:
+            # Cache for 24 hours
+            self.cache.put(cache_key, data, ttl_hours=24)
+            self.logger.info(f"Retrieved and cached {len(df)} company listings")
+        else:
+            self.logger.warning(
+                f"API returned only {len(data)} companies (expected "
+                f"{self.MIN_EXPECTED_COMPANIES}+). Result NOT cached."
+            )
 
-        self.logger.info(f"Retrieved {len(df)} company listings")
         return df
 
     async def get_daily_quotes_async(
@@ -322,7 +341,9 @@ class JQuantsDataProcessor:
             self.logger.info(f"Batch inserted {inserted} records")
 
     @measure_performance
-    def get_all_prices_for_past_5_years_to_db_optimized(self, db_path: str):
+    def get_all_prices_for_past_5_years_to_db_optimized(
+        self, db_path: str
+    ) -> Dict[str, int]:
         """
         Optimized version of get_all_prices_for_past_5_years_to_db.
 
@@ -419,8 +440,16 @@ class JQuantsDataProcessor:
                 f"Failed codes: {failed_codes[:10]}{'...' if len(failed_codes) > 10 else ''}"
             )
 
+        return {
+            "total_listed": total_codes,
+            "codes_to_update": total_codes,
+            "codes_updated": successful_codes,
+            "records_inserted": total_records_saved,
+            "codes_failed": len(failed_codes),
+        }
+
     @measure_performance
-    def update_prices_to_db_optimized(self, db_path: str):
+    def update_prices_to_db_optimized(self, db_path: str) -> Dict[str, int]:
         """
         Optimized version of update_prices_to_db.
 
@@ -469,7 +498,13 @@ class JQuantsDataProcessor:
 
         if not codes_to_update:
             self.logger.info("All data is up to date")
-            return
+            return {
+                "total_listed": total_codes,
+                "codes_to_update": 0,
+                "codes_updated": 0,
+                "records_inserted": 0,
+                "codes_failed": 0,
+            }
 
         # Group codes by date range for efficient processing
         date_groups: Dict[str, List[str]] = {}
@@ -551,6 +586,14 @@ class JQuantsDataProcessor:
         self.logger.info(
             f"Update completed in {total_time:.1f}s: {successful_codes}/{len(codes_to_update)} processed ({(successful_codes / len(codes_to_update)) * 100:.1f}%), {updated_codes} updated with {total_records_updated} records, {len(failed_codes)} failed"
         )
+
+        return {
+            "total_listed": total_codes,
+            "codes_to_update": len(codes_to_update),
+            "codes_updated": updated_codes,
+            "records_inserted": total_records_updated,
+            "codes_failed": len(failed_codes),
+        }
 
     def _initialize_database(self, db_path: str):
         """Initialize database with optimized settings."""

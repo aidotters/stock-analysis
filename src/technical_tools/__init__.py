@@ -58,7 +58,7 @@ from .exceptions import (
 )
 from .optimization_results import OptimizationResults, TrialResult
 from .optimizer import StrategyOptimizer
-from .screener import ScreenerFilter, StockScreener
+from .screener import PATTERN_LABELS, ScreenerFilter, StockScreener
 from .signals import Signal
 from .virtual_portfolio import VirtualPortfolio
 
@@ -67,6 +67,7 @@ __all__ = [
     "TechnicalAnalyzer",
     "StockScreener",
     "ScreenerFilter",
+    "PATTERN_LABELS",
     "Signal",
     # Backtest
     "Backtester",

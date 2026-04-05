@@ -96,6 +96,7 @@ class TestStockScreener:
                 )
 
         # Add classification_results
+        # codes[:3] = 10010, 10020, 10030
         for code in codes[:3]:
             conn.execute(
                 """
@@ -111,6 +112,40 @@ class TestStockScreener:
             """,
                 (test_date, code, 120, "横ばい", 0.75),
             )
+        # codes[:2] have "上昇" in window 20 as well; codes[2] has "下落" in window 20
+        for code in codes[:2]:
+            conn.execute(
+                """
+                INSERT INTO classification_results (date, ticker, window, pattern_label, score)
+                VALUES (?, ?, ?, ?, ?)
+            """,
+                (test_date, code, 20, "上昇", 0.90),
+            )
+        conn.execute(
+            """
+            INSERT INTO classification_results (date, ticker, window, pattern_label, score)
+            VALUES (?, ?, ?, ?, ?)
+        """,
+            (test_date, codes[2], 20, "下落", 0.60),
+        )
+
+        # Add slice window data (2400480 = (240, 480))
+        for code in codes[:2]:
+            conn.execute(
+                """
+                INSERT INTO classification_results (date, ticker, window, pattern_label, score)
+                VALUES (?, ?, ?, ?, ?)
+            """,
+                (test_date, code, 2400480, "上昇", 0.70),
+            )
+        # codes[2] has "不明" for slice window
+        conn.execute(
+            """
+            INSERT INTO classification_results (date, ticker, window, pattern_label, score)
+            VALUES (?, ?, ?, ?, ?)
+        """,
+            (test_date, codes[2], 2400480, "不明", 0.25),
+        )
 
         conn.commit()
         conn.close()
@@ -250,6 +285,88 @@ class TestStockScreener:
         """Test filter with pattern_labels."""
         results = screener.filter(pattern_window=60, pattern_labels=["上昇"])
         assert len(results) > 0
+
+    def test_filter_pattern_window_list(self, screener):
+        """Test filter with pattern_window as list (AND logic)."""
+        # codes[:2] have "上昇" in window 20 and 60
+        results = screener.filter(pattern_window=[20, 60], pattern_labels=["上昇"])
+        assert len(results) == 2
+        assert "pattern_w20" in results.columns
+        assert "pattern_w60" in results.columns
+        assert "score_w20" in results.columns
+        assert "score_w60" in results.columns
+
+    def test_filter_pattern_window_list_no_match(self, screener):
+        """Test multi-window filter returns empty when AND condition not met."""
+        # No stock has "上昇" in both window 20 and 120
+        # (window 120 is "横ばい" for all)
+        results = screener.filter(pattern_window=[20, 120], pattern_labels=["上昇"])
+        assert len(results) == 0
+
+    def test_filter_pattern_window_all(self, screener):
+        """Test filter with pattern_window='all' and label filter (AND logic).
+
+        All existing windows must match pattern_labels (NaN ignored).
+        - codes[:2]: w20=上昇, w60=上昇, w120=横ばい, w240_480=上昇
+        - codes[2]:  w20=下落, w60=上昇, w120=横ばい, w240_480=不明
+
+        With labels=["上昇","横ばい"], codes[:2] match (all windows match).
+        codes[2] fails because w20=下落 and w240_480=不明.
+        """
+        results = screener.filter(
+            pattern_window="all", pattern_labels=["上昇", "横ばい"]
+        )
+        assert len(results) == 2
+
+    def test_filter_pattern_window_all_no_label_filter(self, screener):
+        """Test pattern_window='all' returns fixed standard window columns."""
+        results = screener.filter(pattern_window="all")
+        # All 3 stocks have data for windows 20, 60, 120, 2400480
+        assert len(results) == 3
+        # Should have standard window columns (NaN for missing)
+        for w in ["pattern_w20", "pattern_w60", "pattern_w120", "pattern_w240"]:
+            assert w in results.columns
+        # Slice window columns
+        for w in [
+            "pattern_w240_480",
+            "pattern_w480_1200",
+            "pattern_w1200_2400",
+            "pattern_w2400_4800",
+        ]:
+            assert w in results.columns
+        # Windows with data should have values
+        assert results["pattern_w60"].notna().all()
+        # Slice window with data
+        assert results["pattern_w240_480"].notna().all()
+        # Windows without data should be NaN
+        assert results["pattern_w240"].isna().all()
+        assert results["pattern_w480_1200"].isna().all()
+
+    def test_filter_pattern_window_int_backward_compat(self, screener):
+        """Test single int pattern_window still uses legacy columns."""
+        results = screener.filter(pattern_window=60)
+        assert "pattern_label" in results.columns
+        assert "score" in results.columns
+        # Should NOT have pivoted columns
+        assert "pattern_w60" not in results.columns
+
+    def test_filter_pattern_slice_window(self, screener):
+        """Test filter with slice window DB value."""
+        results = screener.filter(pattern_window=2400480)
+        assert len(results) == 3
+        assert "pattern_label" in results.columns
+
+    def test_filter_pattern_slice_window_with_labels(self, screener):
+        """Test filter with slice window and label filter."""
+        results = screener.filter(pattern_window=2400480, pattern_labels=["上昇"])
+        assert len(results) == 2  # Only codes[:2] have "上昇"
+
+    def test_filter_pattern_slice_window_list(self, screener):
+        """Test filter with mixed cumulative and slice windows as list."""
+        results = screener.filter(pattern_window=[20, 2400480], pattern_labels=["上昇"])
+        assert len(results) == 2
+        assert "pattern_w20" in results.columns
+        assert "pattern_w240_480" in results.columns
 
     def test_filter_limit(self, screener):
         """Test filter with limit."""
@@ -1022,6 +1139,161 @@ class TestStockScreenerInclude:
             assert results["sector"].isna().all()
         finally:
             os.unlink(temp_stmt.name)
+
+
+class TestNormalizeWindowValue:
+    """Tests for _normalize_window_value()."""
+
+    def test_cumulative_int(self):
+        from technical_tools.screener import _normalize_window_value
+
+        assert _normalize_window_value(20) == 20
+        assert _normalize_window_value(240) == 240
+
+    def test_slice_int(self):
+        from technical_tools.screener import _normalize_window_value
+
+        assert _normalize_window_value(2400480) == 2400480
+
+    def test_tuple(self):
+        from technical_tools.screener import _normalize_window_value
+
+        assert _normalize_window_value((240, 480)) == 2400480
+        assert _normalize_window_value((480, 1200)) == 4801200
+        assert _normalize_window_value((1200, 2400)) == 12002400
+        assert _normalize_window_value((2400, 4800)) == 24004800
+
+    def test_str_dash(self):
+        from technical_tools.screener import _normalize_window_value
+
+        assert _normalize_window_value("240-480") == 2400480
+
+    def test_str_underscore(self):
+        from technical_tools.screener import _normalize_window_value
+
+        assert _normalize_window_value("240_480") == 2400480
+
+    def test_str_w_prefix(self):
+        from technical_tools.screener import _normalize_window_value
+
+        assert _normalize_window_value("w240_480") == 2400480
+        assert _normalize_window_value("w60") == 60
+
+    def test_str_pattern_prefix(self):
+        from technical_tools.screener import _normalize_window_value
+
+        assert _normalize_window_value("pattern_w240_480") == 2400480
+        assert _normalize_window_value("pattern_w20") == 20
+
+    def test_str_score_prefix(self):
+        from technical_tools.screener import _normalize_window_value
+
+        assert _normalize_window_value("score_w240_480") == 2400480
+
+    def test_str_cumulative(self):
+        from technical_tools.screener import _normalize_window_value
+
+        assert _normalize_window_value("60") == 60
+
+    def test_invalid_str_raises(self):
+        from technical_tools.screener import _normalize_window_value
+
+        with pytest.raises(ValueError):
+            _normalize_window_value("foobar")
+
+    def test_tuple_invalid_order_raises(self):
+        from technical_tools.screener import _normalize_window_value
+
+        with pytest.raises(ValueError):
+            _normalize_window_value((480, 240))
+
+    def test_negative_raises(self):
+        from technical_tools.screener import _normalize_window_value
+
+        with pytest.raises(ValueError):
+            _normalize_window_value((-1, 480))
+
+    def test_unsupported_type_raises(self):
+        from technical_tools.screener import _normalize_window_value
+
+        with pytest.raises(TypeError):
+            _normalize_window_value(3.14)
+
+
+class TestNormalizePatternWindow:
+    """Tests for _normalize_pattern_window()."""
+
+    def test_all_string(self):
+        from technical_tools.screener import _normalize_pattern_window
+
+        assert _normalize_pattern_window("all") is None
+
+    def test_all_case_insensitive(self):
+        from technical_tools.screener import _normalize_pattern_window
+
+        assert _normalize_pattern_window("ALL") is None
+
+    def test_mixed_list(self):
+        from technical_tools.screener import _normalize_pattern_window
+
+        result = _normalize_pattern_window([20, (240, 480), "480-1200"])
+        assert result == [20, 2400480, 4801200]
+
+    def test_all_in_list_raises(self):
+        from technical_tools.screener import _normalize_pattern_window
+
+        with pytest.raises(ValueError):
+            _normalize_pattern_window([20, "all"])
+
+    def test_single_tuple(self):
+        from technical_tools.screener import _normalize_pattern_window
+
+        assert _normalize_pattern_window((240, 480)) == [2400480]
+
+    def test_single_string(self):
+        from technical_tools.screener import _normalize_pattern_window
+
+        assert _normalize_pattern_window("pattern_w240_480") == [2400480]
+
+
+class TestScreenerPatternWindowFormats(TestStockScreener):
+    """Integration tests: new pattern_window formats produce same results.
+
+    Inherits fixtures from TestStockScreener.
+    """
+
+    def test_tuple_same_as_int(self, screener):
+        """Tuple (240, 480) produces same results as int 2400480."""
+        r_int = screener.filter(pattern_window=2400480, pattern_labels=["上昇"])
+        r_tuple = screener.filter(pattern_window=(240, 480), pattern_labels=["上昇"])
+        assert len(r_int) == len(r_tuple)
+        assert set(r_int["code"]) == set(r_tuple["code"])
+
+    def test_string_same_as_int(self, screener):
+        """String '240-480' produces same results as int 2400480."""
+        r_int = screener.filter(pattern_window=2400480, pattern_labels=["上昇"])
+        r_str = screener.filter(pattern_window="240-480", pattern_labels=["上昇"])
+        assert len(r_int) == len(r_str)
+        assert set(r_int["code"]) == set(r_str["code"])
+
+    def test_column_name_string(self, screener):
+        """String 'pattern_w240_480' works as window spec."""
+        r = screener.filter(pattern_window="pattern_w240_480", pattern_labels=["上昇"])
+        assert len(r) > 0
+
+    def test_mixed_list(self, screener):
+        """Mixed list [20, (240, 480)] works like [20, 2400480]."""
+        r_int = screener.filter(pattern_window=[20, 2400480], pattern_labels=["上昇"])
+        r_mixed = screener.filter(
+            pattern_window=[20, (240, 480)], pattern_labels=["上昇"]
+        )
+        assert len(r_int) == len(r_mixed)
+        assert set(r_int["code"]) == set(r_mixed["code"])
+
+    def test_invalid_string_raises(self, screener):
+        """Invalid string raises ValueError."""
+        with pytest.raises(ValueError):
+            screener.filter(pattern_window="bad_input")
 
 
 if __name__ == "__main__":

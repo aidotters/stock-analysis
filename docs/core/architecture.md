@@ -127,6 +127,8 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 | `run_monthly_master.py` | 毎月1日 20:30 | 銘柄マスターデータ更新 |
 | `run_historical_prices.py` | 手動（初回） | yfinanceから過去20年分の日足データを取得 |
 | `migrate_add_source_column.py` | 手動（初回） | daily_quotesにsourceカラムを追加するマイグレーション |
+| `migrate_refetch_yfinance.py` | 手動（必要時） | yfinanceデータを削除してauto_adjust=Falseで再取得 |
+| `migrate_rescale_yfinance.py` | 手動（必要時） | yfinanceデータをJ-Quants境界比率でリスケール |
 
 ### 2. API連携レイヤー (`src/market_pipeline/jquants/`)
 
