@@ -31,8 +31,12 @@ def setup_logging(settings):
     return logging.getLogger(__name__)
 
 
-def main():
-    """日次株価データ取得処理"""
+def main(chain: bool = True):
+    """日次株価データ取得処理
+
+    Args:
+        chain: True の場合、完了後に Daily Analysis → Integrated Analysis を起動
+    """
     settings = get_settings()
     logger = setup_logging(settings)
 
@@ -48,13 +52,15 @@ def main():
             logger.info(
                 f"設定: max_concurrent_requests={settings.jquants.max_concurrent_requests}, "
                 f"batch_size={settings.jquants.batch_size}, "
-                f"request_delay={settings.jquants.request_delay}s"
+                f"request_delay={settings.jquants.request_delay}s, "
+                f"timeout={settings.jquants.timeout_seconds}s"
             )
 
             processor = JQuantsDataProcessor(
                 max_concurrent_requests=settings.jquants.max_concurrent_requests,
                 batch_size=settings.jquants.batch_size,
                 request_delay=settings.jquants.request_delay,
+                timeout_seconds=settings.jquants.timeout_seconds,
             )
 
             # データベースの存在確認
@@ -100,6 +106,16 @@ def main():
 
         logger.info("=== J-Quants日次データ取得完了 ===")
 
+        # チェーン実行: J-Quants完了後にDaily Analysisを起動（DB競合回避）
+        if chain:
+            logger.info("=== チェーン実行: Daily Analysis開始 ===")
+            try:
+                from scripts.run_daily_analysis import run_daily_analysis
+
+                run_daily_analysis()
+            except Exception as e:
+                logger.error(f"Daily Analysisでエラー: {e}", exc_info=True)
+
     except Exception as e:
         logger.error(f"エラーが発生しました: {e}", exc_info=True)
         logger.error(
@@ -109,4 +125,14 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="J-Quants日次データ取得")
+    parser.add_argument(
+        "--no-chain",
+        action="store_true",
+        help="後続ジョブ（Daily Analysis, Integrated Analysis）を起動しない",
+    )
+    args = parser.parse_args()
+
+    main(chain=not args.no_chain)

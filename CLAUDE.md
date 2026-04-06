@@ -22,19 +22,25 @@ pytest -v
 
 ### Daily Operations (launchd-scheduled)
 ```bash
-# Fetch daily stock prices from J-Quants API (weekdays 18:00)
+# Daily pipeline: J-Quants取得 → Daily Analysis → Integrated Analysis (weekdays 18:00, チェーン実行)
 python scripts/run_daily_jquants.py
 
-# Run daily analysis (weekdays 18:30)
+# J-Quantsデータ取得のみ（後続ジョブなし）
+python scripts/run_daily_jquants.py --no-chain
+
+# Run daily analysis standalone (後続のIntegrated Analysisも自動実行)
 python scripts/run_daily_analysis.py
 
-# Run specific analysis modules only
-python scripts/run_daily_analysis.py --modules hl_ratio rsp
+# Run daily analysis without chained integrated analysis
+python scripts/run_daily_analysis.py --no-chain
+
+# Run specific analysis modules only (no chain)
+python scripts/run_daily_analysis.py --modules hl_ratio rsp --no-chain
 
 # Run yfinance valuation rolling update only
-python scripts/run_daily_analysis.py --modules yfinance_valuation
+python scripts/run_daily_analysis.py --modules yfinance_valuation --no-chain
 
-# Run adhoc integrated analysis (weekdays 19:00)
+# Run adhoc integrated analysis (standalone)
 python scripts/run_adhoc_integrated_analysis.py
 
 # Weekly tasks: financial statements data + integrated analysis (Saturday 06:00)

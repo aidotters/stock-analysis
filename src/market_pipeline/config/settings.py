@@ -80,10 +80,10 @@ class JQuantsAPISettings(BaseSettings):
     password: str = Field(default="", validation_alias="PASSWORD")
 
     # Rate limiting
-    max_concurrent_requests: int = 3
+    max_concurrent_requests: int = 10
     batch_size: int = 100
-    request_delay: float = 0.1  # seconds between requests
-    timeout_seconds: int = 30
+    request_delay: float = 0.05  # seconds between requests
+    timeout_seconds: int = 10  # per-request timeout
 
     # Caching
     cache_ttl_hours: int = 24

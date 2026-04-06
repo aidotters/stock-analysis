@@ -34,10 +34,10 @@ settings = get_settings()
 
 | 属性 | 型 | デフォルト | 説明 |
 |-----|-----|---------|------|
-| `max_concurrent_requests` | `int` | 3 | 同時リクエスト数上限 |
+| `max_concurrent_requests` | `int` | 10 | 同時リクエスト数上限 |
 | `batch_size` | `int` | 100 | バッチサイズ |
-| `request_delay` | `float` | 0.1 | リクエスト間隔（秒） |
-| `timeout_seconds` | `int` | 30 | リクエストタイムアウト（秒） |
+| `request_delay` | `float` | 0.05 | リクエスト間隔（秒） |
+| `timeout_seconds` | `int` | 10 | リクエストタイムアウト（秒）。タイムアウト時は1回リトライ |
 | `cache_ttl_hours` | `int` | 24 | キャッシュ有効期間（時間） |
 
 #### settings.yfinance

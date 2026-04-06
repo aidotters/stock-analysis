@@ -12,7 +12,7 @@ flowchart TB
     end
 
     subgraph Collection["データ収集レイヤー"]
-        RDJ[run_daily_jquants.py<br/>平日 18:00]
+        RDJ[run_daily_jquants.py<br/>平日 18:00<br/>チェーン実行起点]
         RWT[run_weekly_tasks.py<br/>土曜 06:00]
         RMM[run_monthly_master.py<br/>毎月1日 20:30]
     end
@@ -25,7 +25,7 @@ flowchart TB
     end
 
     subgraph Analysis["分析レイヤー"]
-        RDA[run_daily_analysis.py<br/>平日 18:30]
+        RDA[run_daily_analysis.py<br/>チェーン実行]
         MIN[minervini.py]
         HLR[high_low_ratio.py]
         RSP[relative_strength.py]
@@ -146,7 +146,7 @@ graph LR
     INT --> ADB[(analysis_results.db)]
 ```
 
-## シーケンス図: 日次処理フロー
+## シーケンス図: 日次処理フロー（チェーン実行）
 
 ```mermaid
 sequenceDiagram
@@ -157,6 +157,7 @@ sequenceDiagram
     participant RDA as run_daily_analysis
     participant ADB as analysis_results.db
     participant SDB as statements.db
+    participant IA2 as integrated_analysis2
     participant Slack as Slack Webhook
 
     Note over Launchd: 平日 18:00
@@ -164,17 +165,16 @@ sequenceDiagram
     RDJ->>JQ: 認証 (refresh token)
     JQ-->>RDJ: id token
 
-    loop 各銘柄バッチ (100件)
+    loop 各銘柄バッチ (100件, 10並列, timeout=10s)
         RDJ->>JQ: 株価データ取得 (非同期)
         JQ-->>RDJ: 日次株価
     end
 
     RDJ->>DB: バッチ保存
     RDJ->>Slack: 成功/エラー通知
-    RDJ-->>Launchd: 完了
 
-    Note over Launchd: 平日 18:30
-    Launchd->>RDA: 起動
+    Note over RDJ,RDA: チェーン実行（DB競合回避）
+    RDJ->>RDA: 直接呼び出し
     RDA->>DB: 株価データ読込
 
     par 並列処理
@@ -190,7 +190,14 @@ sequenceDiagram
     RDA->>SDB: yfinance_valuation保存
 
     RDA->>Slack: 成功/エラー通知
-    RDA-->>Launchd: 完了
+
+    Note over RDA,IA2: チェーン実行
+    RDA->>IA2: 直接呼び出し
+    IA2->>ADB: integrated_scores保存
+    IA2->>Slack: 成功/エラー通知
+    IA2-->>RDA: 完了
+    RDA-->>RDJ: 完了
+    RDJ-->>Launchd: 完了
 ```
 
 ## シーケンス図: 週次処理フロー
@@ -417,8 +424,7 @@ classDiagram
 graph TB
     subgraph Server["サーバー環境"]
         subgraph Cron["launchdジョブ"]
-            C1[18:00 run_daily_jquants]
-            C2[18:30 run_daily_analysis]
+            C1[18:00 run_daily_jquants<br/>→ daily_analysis → integrated_analysis]
             C3[土曜 06:00 run_weekly_tasks]
             C4[毎月1日 run_monthly_master]
         end

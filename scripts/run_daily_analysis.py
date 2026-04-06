@@ -108,7 +108,9 @@ class DailyAnalysisConfig:
 
 @measure_performance
 def run_daily_analysis(
-    target_date: Optional[str] = None, modules: Optional[List[str]] = None
+    target_date: Optional[str] = None,
+    modules: Optional[List[str]] = None,
+    chain: bool = True,
 ) -> bool:
     """
     Run the optimized daily analysis workflow.
@@ -466,6 +468,20 @@ def run_daily_analysis(
         )
         success = False
 
+    # チェーン実行: Daily Analysis完了後にIntegrated Analysisを起動
+    if chain:
+        logger.info("=== チェーン実行: Integrated Analysis開始 ===")
+        try:
+            from market_pipeline.analysis.integrated_analysis2 import (
+                main as run_integrated_analysis2_main,
+            )
+            from market_pipeline.utils.slack_notifier import JobContext as _JobContext
+
+            with _JobContext("統合分析") as _job:
+                run_integrated_analysis2_main()
+        except Exception as e:
+            logger.error(f"Integrated Analysisでエラー: {e}", exc_info=True)
+
     return success
 
 
@@ -495,6 +511,13 @@ if __name__ == "__main__":
         ],
         help="Analysis modules to run (default: all modules)",
     )
+    parser.add_argument(
+        "--no-chain",
+        action="store_true",
+        help="後続ジョブ（Integrated Analysis）を起動しない",
+    )
     args = parser.parse_args()
 
-    run_daily_analysis(target_date=args.date, modules=args.modules)
+    run_daily_analysis(
+        target_date=args.date, modules=args.modules, chain=not args.no_chain
+    )

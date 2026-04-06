@@ -89,8 +89,8 @@ Stock-Analysis/
 │           └── volume.py                 # VolumeSpike/VolumeBreakoutシグナル
 │
 ├── scripts/                          # 実行スクリプト（launchd用）
-│   ├── run_daily_jquants.py          # 日次株価取得（平日18:00）
-│   ├── run_daily_analysis.py         # 日次分析（平日18:30）
+│   ├── run_daily_jquants.py          # 日次株価取得（平日18:00）→ チェーンで日次分析・統合分析を順次実行
+│   ├── run_daily_analysis.py         # 日次分析（チェーン実行 / --no-chainで単独実行可）
 │   ├── run_weekly_tasks.py           # 週次タスク（土曜06:00）
 │   ├── run_monthly_master.py         # 月次マスター更新（1日20:30）
 │   ├── run_adhoc_integrated_analysis.py # アドホック統合分析
@@ -286,9 +286,9 @@ Stock-Analysis/
 
 | パス | 実行タイミング | 説明 |
 |-----|--------------|------|
-| `scripts/run_daily_jquants.py` | 平日18:00 | J-Quants APIから株価取得 |
-| `scripts/run_daily_analysis.py` | 平日18:30 | 日次分析実行 |
-| `scripts/run_adhoc_integrated_analysis.py` | 平日19:00 | アドホック統合分析実行 |
+| `scripts/run_daily_jquants.py` | 平日18:00 (launchd) | J-Quants APIから株価取得 → チェーンで daily_analysis → integrated_analysis を順次実行 |
+| `scripts/run_daily_analysis.py` | チェーン実行 | 日次分析実行 → チェーンで integrated_analysis を実行（`--no-chain`で単独実行可） |
+| `scripts/run_adhoc_integrated_analysis.py` | チェーン実行 / 手動 | アドホック統合分析実行 |
 | `scripts/run_weekly_tasks.py` | 土曜06:00 | 財務諸表取得 + 統合分析 |
 | `scripts/run_monthly_master.py` | 毎月1日20:30 | マスターデータ更新 |
 | `scripts/create_database_indexes.py` | 初回のみ | DBインデックス作成 |

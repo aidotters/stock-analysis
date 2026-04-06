@@ -42,9 +42,10 @@ class JQuantsDataProcessor:
     def __init__(
         self,
         refresh_token: Optional[str] = None,
-        max_concurrent_requests: int = 3,
+        max_concurrent_requests: int = 10,
         batch_size: int = 100,
-        request_delay: float = 0.1,
+        request_delay: float = 0.05,
+        timeout_seconds: int = 10,
     ):
         """
         Initialize optimized JQuants data processor.
@@ -54,10 +55,12 @@ class JQuantsDataProcessor:
             max_concurrent_requests: Maximum concurrent API requests
             batch_size: Batch size for database operations
             request_delay: Delay between requests in seconds
+            timeout_seconds: Per-request timeout in seconds
         """
         self.max_concurrent_requests = max_concurrent_requests
         self.batch_size = batch_size
         self.request_delay = request_delay
+        self.timeout_seconds = timeout_seconds
 
         # Setup logging first
         self.logger = logging.getLogger(__name__)
@@ -166,54 +169,69 @@ class JQuantsDataProcessor:
         self, session: aiohttp.ClientSession, code: str, from_date: str, to_date: str
     ) -> Tuple[str, pd.DataFrame]:
         """
-        Async version of get_daily_quotes.
+        Async version of get_daily_quotes with retry support.
 
         Returns:
             Tuple of (code, DataFrame)
         """
-        params = {
-            "code": code,
-            "from": from_date,
-            "to": to_date,
-        }
+        max_retries = 1
+        for attempt in range(max_retries + 1):
+            params = {
+                "code": code,
+                "from": from_date,
+                "to": to_date,
+            }
 
-        try:
-            async with session.get(
-                f"{API_URL}/v1/prices/daily_quotes",
-                params=params,
-                headers=self._headers,
-            ) as response:
-                if response.status != 200:
-                    error_text = await response.text()
+            try:
+                async with session.get(
+                    f"{API_URL}/v1/prices/daily_quotes",
+                    params=params,
+                    headers=self._headers,
+                ) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        self.logger.warning(
+                            f"Failed to get quotes for {code}: {error_text}"
+                        )
+                        return code, pd.DataFrame()
+
+                    d = await response.json()
+                    data = d["daily_quotes"]
+
+                    # Handle pagination
+                    while "pagination_key" in d:
+                        params["pagination_key"] = d["pagination_key"]
+                        async with session.get(
+                            f"{API_URL}/v1/prices/daily_quotes",
+                            params=params,
+                            headers=self._headers,
+                        ) as page_response:
+                            if page_response.status != 200:
+                                self.logger.warning(
+                                    f"Failed to get paginated quotes for {code}"
+                                )
+                                break
+                            d = await page_response.json()
+                            data += d["daily_quotes"]
+
+                    return code, pd.DataFrame(data)
+
+            except asyncio.TimeoutError:
+                if attempt < max_retries:
                     self.logger.warning(
-                        f"Failed to get quotes for {code}: {error_text}"
+                        f"Timeout for {code} (attempt {attempt + 1}/{max_retries + 1}), retrying..."
                     )
-                    return code, pd.DataFrame()
+                    await asyncio.sleep(1)
+                    continue
+                self.logger.error(
+                    f"Timeout for {code} after {max_retries + 1} attempts, skipping"
+                )
+                return code, pd.DataFrame()
+            except Exception as e:
+                self.logger.error(f"Error getting quotes for {code}: {e}")
+                return code, pd.DataFrame()
 
-                d = await response.json()
-                data = d["daily_quotes"]
-
-                # Handle pagination
-                while "pagination_key" in d:
-                    params["pagination_key"] = d["pagination_key"]
-                    async with session.get(
-                        f"{API_URL}/v1/prices/daily_quotes",
-                        params=params,
-                        headers=self._headers,
-                    ) as page_response:
-                        if page_response.status != 200:
-                            self.logger.warning(
-                                f"Failed to get paginated quotes for {code}"
-                            )
-                            break
-                        d = await page_response.json()
-                        data += d["daily_quotes"]
-
-                return code, pd.DataFrame(data)
-
-        except Exception as e:
-            self.logger.error(f"Error getting quotes for {code}: {e}")
-            return code, pd.DataFrame()
+        return code, pd.DataFrame()
 
     async def process_codes_batch(
         self, codes: List[str], from_date: str, to_date: str
@@ -241,7 +259,7 @@ class JQuantsDataProcessor:
                 return result
 
         connector = aiohttp.TCPConnector(limit=self.max_concurrent_requests)
-        timeout = aiohttp.ClientTimeout(total=30)
+        timeout = aiohttp.ClientTimeout(total=self.timeout_seconds)
 
         async with aiohttp.ClientSession(
             connector=connector, timeout=timeout
@@ -555,13 +573,20 @@ class JQuantsDataProcessor:
 
                     # Separate successful and failed results
                     batch_successful = []
+                    batch_empty_codes = []
                     for result_code, df in results:
                         if not df.empty:
                             batch_successful.append((result_code, df))
                             successful_codes += 1
                             updated_codes += 1
                         else:
+                            batch_empty_codes.append(result_code)
                             successful_codes += 1  # No data is not an error
+
+                    if batch_empty_codes:
+                        self.logger.info(
+                            f"Batch: {len(batch_empty_codes)} codes returned no data: {batch_empty_codes[:5]}{'...' if len(batch_empty_codes) > 5 else ''}"
+                        )
 
                     # Save successful results in batch
                     if batch_successful:
@@ -687,9 +712,10 @@ def main():
     try:
         # Initialize optimized processor
         processor = JQuantsDataProcessor(
-            max_concurrent_requests=3,  # Adjust based on API limits
+            max_concurrent_requests=10,
             batch_size=100,
-            request_delay=0.1,
+            request_delay=0.05,
+            timeout_seconds=10,
         )
 
         # Database path

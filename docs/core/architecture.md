@@ -20,6 +20,8 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 │  ┌─────────────────────┐ ┌─────────────────────┐ ┌─────────────────────────┐ │
 │  │ run_daily_jquants   │ │ run_weekly_tasks    │ │ run_monthly_master      │ │
 │  │ (平日 18:00)         │ │ (土曜 06:00)         │ │ (毎月1日 20:30)          │ │
+│  │ → daily_analysis    │ │                     │ │                         │ │
+│  │ → integrated_anal.  │ │                     │ │                         │ │
 │  └─────────┬───────────┘ └─────────┬───────────┘ └───────────┬─────────────┘ │
 └────────────┼───────────────────────┼─────────────────────────┼───────────────┘
              │                       │                         │
@@ -41,7 +43,7 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 ┌───────────────────────────────────────────────────────────────────────────────┐
 │                             分析レイヤー                                      │
 │  ┌────────────────────────────────────────────────────────────────────────┐  │
-│  │                    run_daily_analysis.py (平日 18:30)                  │  │
+│  │                    run_daily_analysis.py (チェーン実行)                 │  │
 │  │  ┌──────────────┐ ┌────────────────┐ ┌──────────────────────────────┐ │  │
 │  │  │ minervini.py │ │ high_low_ratio │ │ relative_strength.py         │ │  │
 │  │  │ トレンド選別   │ │   HL比率計算    │ │ RSP/RSI計算                   │ │  │
@@ -120,9 +122,9 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 
 | スクリプト | 実行タイミング | 役割 |
 |-----------|---------------|------|
-| `run_daily_jquants.py` | 平日 18:00 | J-Quants APIから日次株価データを取得 |
-| `run_daily_analysis.py` | 平日 18:30 | 日次分析実行（HL比率、Minervini、RSP/RSI） |
-| `run_adhoc_integrated_analysis.py` | 平日 19:00 | アドホック統合分析実行 |
+| `run_daily_jquants.py` | 平日 18:00 (launchd) | J-Quants APIから日次株価取得 → チェーンで daily_analysis → integrated_analysis を順次実行 |
+| `run_daily_analysis.py` | チェーン実行 | 日次分析実行（HL比率、Minervini、RSP/RSI）→ チェーンで integrated_analysis を実行 |
+| `run_adhoc_integrated_analysis.py` | チェーン実行 / 手動 | アドホック統合分析実行 |
 | `run_weekly_tasks.py` | 土曜 06:00 | 財務諸表取得 + 統合分析実行 |
 | `run_monthly_master.py` | 毎月1日 20:30 | 銘柄マスターデータ更新 |
 | `run_historical_prices.py` | 手動（初回） | yfinanceから過去20年分の日足データを取得 |

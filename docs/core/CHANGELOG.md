@@ -137,6 +137,17 @@
 - `pyproject.toml`: `backtesting>=0.3.3` 依存関係追加
 
 ### Changed
+- 日次パイプラインをチェーン実行に変更（DB競合回避）
+  - `run_daily_jquants.py` → `run_daily_analysis.py` → `integrated_analysis2.py` を順序実行
+  - launchd は `daily-jquants`（18:00）のみ。`daily-analysis`（18:30）/ `integrated-analysis`（19:00）は廃止
+  - `--no-chain` フラグで個別実行可能（両スクリプト対応）
+- `JQuantsDataProcessor`: APIタイムアウト・並列数の最適化
+  - `timeout_seconds`: 30秒 → 10秒（タイムアウト時は1回リトライ）
+  - `max_concurrent_requests`: 3 → 10
+  - `request_delay`: 0.1秒 → 0.05秒
+  - `get_daily_quotes_async()`: `asyncio.TimeoutError` 個別ハンドリング + リトライ
+  - 空データコードのバッチ内サマリーログ追加
+- `JQuantsSettings`（settings.py）: デフォルト値を `max_concurrent_requests=10`, `request_delay=0.05`, `timeout_seconds=10` に変更
 - `HistoricalPriceFetcher.map_columns()`: `auto_adjust=False`に変更し、生OHLCV + Adj Close比率による調整済み価格を正しく格納
   - 生OHLCV → Open/High/Low/Close/Volume
   - AdjustmentOpen/High/Low = 生値 × (Adj Close / Close)
