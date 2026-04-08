@@ -7,6 +7,7 @@ cronから実行される日次タスク
 import logging
 import sys
 from datetime import datetime
+from pathlib import Path
 
 from market_pipeline.config import get_settings
 from market_pipeline.jquants.data_processor import JQuantsDataProcessor
@@ -110,9 +111,17 @@ def main(chain: bool = True):
         if chain:
             logger.info("=== チェーン実行: Daily Analysis開始 ===")
             try:
-                from scripts.run_daily_analysis import run_daily_analysis
+                import subprocess
 
-                run_daily_analysis()
+                result = subprocess.run(
+                    [sys.executable, "scripts/run_daily_analysis.py"],
+                    cwd=str(Path(__file__).parent.parent),
+                    capture_output=False,
+                )
+                if result.returncode != 0:
+                    logger.error(
+                        f"Daily Analysisが終了コード {result.returncode} で終了"
+                    )
             except Exception as e:
                 logger.error(f"Daily Analysisでエラー: {e}", exc_info=True)
 
