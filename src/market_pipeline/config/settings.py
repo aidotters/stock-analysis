@@ -169,6 +169,33 @@ class DatabaseSettings(BaseSettings):
         ]
 
 
+class EdinetSettings(BaseSettings):
+    """EDINET API configuration."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="EDINET_", env_file=_ENV_FILE, extra="ignore"
+    )
+
+    api_key: str = Field(default="", validation_alias="EDINET_API_KEY")
+    base_url: str = "https://api.edinet-fsa.go.jp/api/v2"
+    timeout_list: int = 30
+    timeout_download: int = 120
+    max_retries: int = 3
+
+
+class ExecutivesSettings(BaseSettings):
+    """Executive analysis module configuration."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="EXECUTIVES_", env_file=_ENV_FILE, extra="ignore"
+    )
+
+    cache_ttl_days: int = 30
+    max_parallel_fetch: int = 3
+    doc_scan_fallback_months: int = 18
+    doc_scan_narrow_days: int = 30
+
+
 class SlackSettings(BaseSettings):
     """Slack notification settings."""
 
@@ -218,6 +245,8 @@ class Settings(BaseSettings):
     database: DatabaseSettings = Field(default_factory=DatabaseSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
     slack: SlackSettings = Field(default_factory=SlackSettings)
+    edinet: EdinetSettings = Field(default_factory=EdinetSettings)
+    executives: ExecutivesSettings = Field(default_factory=ExecutivesSettings)
 
     # Global processing settings
     n_workers: Optional[int] = None  # None = auto-detect CPU count

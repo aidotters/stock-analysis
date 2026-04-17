@@ -106,7 +106,8 @@ Stock-Analysis/
 ├── tests/                            # テストコード
 │   ├── conftest.py                   # 共有フィクスチャ
 │   ├── fixtures/                     # テスト用データファイル
-│   │   └── sample_prices.csv         # サンプル株価データ
+│   │   ├── sample_prices.csv         # サンプル株価データ
+│   │   └── executives/               # EDINET iXBRLサンプル（toyota/sony）＋build_fixtures.py
 │   ├── test_minervini.py
 │   ├── test_high_low_ratio.py
 │   ├── test_relative_strength.py
@@ -139,10 +140,10 @@ Stock-Analysis/
 │   └── benchmark_optimizations.py                     # 最適化ベンチマーク
 │
 ├── data/                             # SQLiteデータベース
-│   ├── jquants.db                    # 日次株価（820MB）
-│   ├── statements.db                 # 財務諸表（30MB）
-│   ├── analysis_results.db           # 分析結果（1.7GB）
-│   ├── master.db                     # 銘柄マスター（964KB）
+│   ├── jquants.db                    # 日次株価（参考値2026-04: ~2.7GB、yfinance20年取得後）
+│   ├── statements.db                 # 財務諸表・yfinance_valuation・executives系（参考値2026-04: ~63MB）
+│   ├── analysis_results.db           # 分析結果（参考値2026-04: ~2.0GB）
+│   ├── master.db                     # 銘柄マスター（~964KB）
 │   ├── yfinance.db                   # レガシー（1.4MB）
 │   └── portfolios/                   # VirtualPortfolio用JSONファイル（.gitignore）
 │       └── *.json
@@ -166,6 +167,7 @@ Stock-Analysis/
 │   │   ├── diagrams.md
 │   │   ├── CHANGELOG.md
 │   │   ├── dev-guidelines.md
+│   │   ├── launchd-operations.md     # launchd運用ガイド（2026-04追加）
 │   │   └── repo-structure.md
 │   ├── refs/                         # 参照用ドキュメント
 │   │   ├── technical_design.md
@@ -268,6 +270,14 @@ Stock-Analysis/
 | `src/market_pipeline/utils/slack_notifier.py` | Slack Incoming Webhook通知（SlackNotifier, JobContext, JobResult） |
 | `src/market_pipeline/news/config_parser.py` | ニュース巡回先YAML設定パーサー |
 | `src/market_pipeline/yfinance/historical_price_fetcher.py` | HistoricalPriceFetcher（yfinance過去20年分日足データ取得） |
+| `src/market_pipeline/executives/edinet_executive_fetcher.py` | EDINETから有価証券報告書をダウンロードし役員情報＋略歴をパース |
+| `src/market_pipeline/executives/edinet_doc_resolver.py` | 銘柄→doc_id 解決（キャッシュ利用で高速化） |
+| `src/market_pipeline/executives/repository.py` | 3テーブル（executives系）のCRUD |
+| `src/market_pipeline/executives/communication_collector.py` | WebSearch + 30日キャッシュで発信収集、発信日抽出フォールバック |
+| `src/market_pipeline/executives/published_date_extractor.py` | URL HTMLから発信日抽出（JSON-LD/meta/time/URLパス） |
+| `src/market_pipeline/executives/evaluator.py` | Claude LLMで6軸スコアリング（成長志向含む） |
+| `src/market_pipeline/executives/exceptions.py` | ExecutiveError系例外 |
+| `src/market_pipeline/prompts/executive_evaluation.md` | 6軸評価プロンプト（Markdown形式でファイル管理） |
 | `src/market_reader/reader.py` | DataReaderクラス（pandas_datareader風API） |
 | `src/market_reader/exceptions.py` | カスタム例外クラス |
 | `src/technical_tools/analyzer.py` | TechnicalAnalyzerファサードクラス（テクニカル分析統合） |
@@ -296,13 +306,19 @@ Stock-Analysis/
 | `scripts/migrate_add_source_column.py` | 手動（初回） | daily_quotesにsourceカラム追加マイグレーション |
 | `scripts/migrate_refetch_yfinance.py` | 手動（必要時） | yfinanceデータを削除してauto_adjust=Falseで再取得 |
 | `scripts/migrate_rescale_yfinance.py` | 手動（必要時） | yfinanceデータをJ-Quants境界比率でリスケール |
+| `scripts/run_executive_master_update.py` | 月次（手動 or launchd） | EDINET有報から役員マスターを更新 |
+| `scripts/run_research_executives.py` | `/research-executives`スキルから | 役員リストJSON出力＋キャッシュから経営陣レポート組立て |
+| `scripts/poc_edinet_executives.py` | 初期検証のみ | Phase 0 PoC: EDINET役員情報取得の動作確認用 |
+| `scripts/migrate_executives_add_career_column.py` | 一度のみ | `executives.career_summary` カラム追加 |
+| `scripts/migrate_executives_add_growth_axis.py` | 一度のみ | `executive_evaluations.growth_ambition` カラム追加 |
+| `scripts/verify_cache_7203.py` | 手動（開発者向け） | EDINET doc_idキャッシュ動作確認用デバッグスクリプト |
 
 ### データベース
 
 | ファイル | サイズ | 主要テーブル |
 |---------|-------|-------------|
 | `data/jquants.db` | 820MB | daily_quotes（sourceカラムで'jquants'/'yfinance'を区別） |
-| `data/statements.db` | 30MB | financial_statements, calculated_fundamentals |
+| `data/statements.db` | 30MB | financial_statements, calculated_fundamentals, yfinance_valuation, executives, executive_communications, executive_evaluations |
 | `data/analysis_results.db` | 1.7GB | hl_ratio, minervini, relative_strength, classification_results, integrated_scores |
 | `data/master.db` | 964KB | stocks_master |
 
@@ -335,6 +351,13 @@ Stock-Analysis/
 | `tests/test_slack_notifier.py` | SlackNotifier/JobContext/JobResult |
 | `tests/test_news_config.py` | ニュース巡回先設定パーサー |
 | `tests/test_historical_price_fetcher.py` | HistoricalPriceFetcher（yfinance過去データ取得・カラムマッピング・マイグレーション） |
+| `tests/test_edinet_executive_fetcher.py` | EdinetExecutiveFetcher（iXBRLパース・正規化・両タグ系統） |
+| `tests/test_executive_repository.py` | ExecutiveRepository（3テーブルCRUD・UPSERT・フィルタ） |
+| `tests/test_executive_batch.py` | 月次バッチ（docID比較・スキップ最適化・Slack通知メトリクス） |
+| `tests/test_communication_collector.py` | CommunicationCollector（WebSearchモック・30日キャッシュ・URL重複排除） |
+| `tests/test_executive_evaluator.py` | ExecutiveEvaluator（JSON抽出・スキーマ検証・リトライ・前回差分警告） |
+| `tests/test_executive_integration.py` | 経営陣評価E2E統合（EDINET→収集→LLM→DB） |
+| `tests/test_published_date_extractor.py` | 発信日抽出（JSON-LD/meta/time/URLパス） |
 | `tests/test_type8_optimization.py` | Type8最適化 |
 | `tests/test_rsi_optimization.py` | RSI最適化 |
 | `tests/test_fixes.py` | バグ修正検証 |

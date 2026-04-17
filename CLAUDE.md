@@ -73,6 +73,17 @@ python scripts/migrate_refetch_yfinance.py --symbols 7203 9984
 python scripts/migrate_rescale_yfinance.py
 python scripts/migrate_rescale_yfinance.py --dry-run
 python scripts/migrate_rescale_yfinance.py --symbols 7203 9984
+
+# 役員マスター月次更新（EDINET 有価証券報告書から法定役員情報を取得）
+python scripts/run_executive_master_update.py
+python scripts/run_executive_master_update.py --codes 7203 9984
+python scripts/run_executive_master_update.py --limit 10 --dry-run
+
+# Migration: executives テーブルに career_summary カラムを追加
+python scripts/migrate_executives_add_career_column.py
+
+# Migration: executive_evaluations テーブルに growth_ambition カラムを追加
+python scripts/migrate_executives_add_growth_axis.py
 ```
 
 ### Chart Classification
@@ -99,6 +110,16 @@ mypy .
 
 ## Architecture
 
+### 関連ドキュメント
+
+- `docs/core/architecture.md`: アーキテクチャ設計書（全体像・レイヤー構成）
+- `docs/core/repo-structure.md`: リポジトリ構造・ファイル一覧
+- `docs/core/api-reference.md`: モジュール別API仕様
+- `docs/core/dev-guidelines.md`: 開発ガイドライン
+- `docs/core/diagrams.md`: データフロー図・コンポーネント図（Mermaid）
+- `docs/core/launchd-operations.md`: launchd運用ガイド（ジョブ一覧・チェーン実行・トラブルシューティング）
+- `docs/core/CHANGELOG.md`: 変更履歴
+
 ### Data Flow
 1. **Price Collection** (scripts/run_daily_jquants.py) -> J-Quants API -> data/jquants.db
 2. **Historical Prices** (scripts/run_historical_prices.py) -> yfinance -> data/jquants.db (daily_quotes, source='yfinance') ⚠ 品質問題あり（後述）
@@ -108,7 +129,7 @@ mypy .
 
 ### Key Databases (data/)
 - `jquants.db`: Daily stock prices (daily_quotes table, sourceカラムで'jquants'/'yfinance'を区別)
-- `statements.db`: Financial statements and calculated fundamentals (financial_statements, calculated_fundamentals tables)
+- `statements.db`: Financial statements, calculated fundamentals, yfinance valuation, **executives / executive_communications / executive_evaluations**
 - `analysis_results.db`: Analysis outputs (minervini, hl_ratio, relative_strength, classification_results, integrated_scores tables)
 - `master.db`: Stock master data
 
@@ -301,6 +322,110 @@ output/reports/stocks/YYYYMMDD-HHMM-{code}-analysis/
 - 8. 投資判断サマリー（5段階評価、セグメント分析・成長性を含む判断根拠）
 
 **チャート生成依存:** `kaleido`（オプショナル）。未インストール時はチャート生成をスキップし、テキストのみのレポートを生成する。
+
+### Executive Communication Analysis (src/market_pipeline/executives/)
+EDINET有価証券報告書から法定役員（取締役・監査役・執行役）と略歴を取得し、外部発信を WebSearch で収集して Claude LLM で6軸スコアリング（ビジョン一貫性・実行力・市場認識・リスク開示誠実性・コミュニケーション能力・成長志向）する経営陣評価モジュール:
+
+```python
+from market_pipeline.executives import (
+    EdinetExecutiveFetcher,
+    EdinetDocResolver,
+    ExecutiveRepository,
+    CommunicationCollector,
+    ExecutiveEvaluator,
+)
+
+repo = ExecutiveRepository()
+repo.initialize_tables()
+
+# 1) EDINETから役員リスト取得（月次バッチで実行）
+resolver = EdinetDocResolver(repository=repo)
+fetcher = EdinetExecutiveFetcher()
+doc_id = resolver.resolve("7203", fiscal_year_end_month=3)
+if doc_id:
+    execs, _ = fetcher.fetch_from_doc_id(doc_id, code="7203")
+    repo.upsert_executives(execs, replace_for_code="7203")
+
+# 2) 発信収集（WebSearch注入）
+def web_search(query: str) -> list[dict]:
+    # Claude Code WebSearch ツールを呼び出す
+    return [...]
+
+collector = CommunicationCollector(web_search_fn=web_search)
+collector.collect("佐藤恒治", "トヨタ自動車", code="7203")
+
+# 3) LLMスコアリング
+def claude_llm(prompt: str) -> str:
+    return "..."  # JSON
+
+evaluator = ExecutiveEvaluator(llm_fn=claude_llm)
+evaluator.evaluate_and_persist(
+    name="佐藤恒治", company="トヨタ自動車",
+    communications=[...], code="7203",
+)
+```
+
+**モジュール構成:**
+- `edinet_executive_fetcher.py`: EDINET APIから有報をダウンロードし、`0104010_*_ixbrl.htm` の役員情報（取締役系＋執行役系の両タグ系統、略歴含む）をパース
+- `edinet_doc_resolver.py`: `executives.edinet_source_doc_id` キャッシュによるバッチ高速化（2回目以降は期末月前後30日のみスキャン）
+- `repository.py`: 3テーブル（`executives` / `executive_communications` / `executive_evaluations`）のCRUD
+- `communication_collector.py`: WebSearch + 30日キャッシュで発信を収集、URLからの発信日抽出もDIで注入可能
+- `published_date_extractor.py`: URL HTMLから JSON-LD/meta/time/URLパスで発信日を抽出
+- `evaluator.py`: Claude LLMで6軸スコアリング（成長志向含む）、スキーマ違反時は最大3回リトライ
+- `exceptions.py`: `ExecutiveError` 基底クラスと派生例外
+
+**スコープ（Phase 0 PoC で確定）:**
+- 対象は **法定役員のみ**（取締役・監査役・執行役）
+- 執行役員（社内職位）専任者は XBRL 構造化データに含まれないため対象外
+- 取締役兼任の執行役員は役職文字列に兼任情報が含まれるため自然に取得される
+
+**関連スキル:**
+- `/analyze-stock --with-executive-research`: 既存の投資判断レポートに経営陣評価セクションを追加
+- `/research-executives`: 経営陣評価のみの独立レポート生成
+
+**月次バッチ:**
+```bash
+# 全アクティブ銘柄の役員マスターを更新
+python scripts/run_executive_master_update.py
+
+# 特定銘柄のみ
+python scripts/run_executive_master_update.py --codes 7203 9984
+
+# dry-run でDB書き込みなし
+python scripts/run_executive_master_update.py --codes 7203 --dry-run
+```
+
+**環境変数:** `.env` に `EDINET_API_KEY` を設定（`.env.example` 参照）
+
+### Executive Research Skill (`/research-executives`)
+特定銘柄の法定役員（取締役・監査役・執行役）について、外部発信を Claude LLM で6軸スコアリング（ビジョン一貫性・実行力・市場認識・リスク開示誠実性・コミュニケーション能力・**成長志向**）し、独立した `executive_report.md` を生成する。
+
+```bash
+/research-executives 7203
+/research-executives 7203 9984
+/research-executives 7203 --include-directors
+/research-executives 6758 --include-executive-officers
+/research-executives 7203 --persons "佐藤恒治,豊田章男"
+/research-executives 7203 --force-refresh
+
+# 期間指定（既定: 過去3年対象／直近1年ハイライト）
+python scripts/run_research_executives.py build-report 7203 --lookback-days 1095 --highlight-days 365
+```
+
+**構成ファイル:**
+- `.claude/skills/research-executives/SKILL.md`: スキル定義
+- `scripts/run_research_executives.py`: CLIエントリ（list-executives / build-report サブコマンド）
+- 出力先: `output/reports/stocks/YYYYMMDD-HHMM-{code}-analysis/executive_report.md`
+
+**レポート構成（4セクション）:**
+1. 役員サマリー（表形式、総合スコア＋軸ハイライト）
+2. 役員別評価（EDINET XBRL 略歴＋6軸スコア＋各軸rationale）
+3. タイムライン（発信日降順、対象は過去3年、直近1年は🆕＋太字でハイライト、発信日不明は末尾に `—` でまとめ表示）
+4. 主要発信引用集（直近1年を優先、不足時は1〜3年の新しい順にフォールバック、各役員最大5件）
+
+**期間・キーワード定数:** `src/market_pipeline/executives/__init__.py` に `LOOKBACK_DAYS_TOTAL=1095`（過去3年）、`HIGHLIGHT_DAYS_RECENT=365`（直近1年）。検索キーワードは `SEARCH_KEYWORDS`（10語: インタビュー／講演／対談／コラム／ブログ／記事／寄稿／note／メッセージ／登壇）。
+
+**月次バッチ DL スキップ最適化（Phase F）:** `documents.json` から取得した `docID` を `executives.edinet_source_doc_id` と比較し、一致すれば XBRL ZIP の DL・パース・upsert を全てスキップ（`status=unchanged`）。Slack 通知のメトリクス「スキップ（有報未更新）」に集計される。
 
 ### Document Creation & Quality Assurance Skills
 Claude Codeスキルとして、ドキュメント作成と品質管理のためのスキルも提供:
@@ -733,9 +858,12 @@ settings = reload_settings()
 - `settings.slack`: Slack notification settings (webhook_url, enabled, timeout, retries)
 - `settings.yfinance`: yfinance API settings (legacy)
 - `settings.logging`: Logging configuration (level, format)
+- `settings.edinet`: EDINET API settings (api_key, base_url, timeout_list, timeout_download, max_retries)
+- `settings.executives`: Executive analysis settings (cache_ttl_days, max_parallel_fetch, doc_scan_fallback_months, doc_scan_narrow_days)
 
 **Environment variables:** See `.env.example` for all options. Key settings:
 - `EMAIL`, `PASSWORD`: J-Quants API credentials (required)
+- `EDINET_API_KEY`: EDINET API key (required for `/research-executives` and `run_executive_master_update.py`)
 
 ## Testing
 - Tests use pytest with fixtures defined in `tests/conftest.py`
@@ -766,3 +894,10 @@ settings = reload_settings()
   - `tests/test_data_processor.py`: データプロセッサテスト
   - `tests/test_valuation_fetcher.py`: ValuationFetcherテスト（yfinance BS取得・バリュエーション計算）
   - `tests/test_historical_price_fetcher.py`: HistoricalPriceFetcherテスト（yfinance過去データ取得・カラムマッピング・マイグレーション）
+  - `tests/test_edinet_executive_fetcher.py`: EdinetExecutiveFetcherテスト（iXBRLパース・正規化・両タグ系統）
+  - `tests/test_executive_repository.py`: ExecutiveRepositoryテスト（3テーブルCRUD・UPSERT・フィルタ）
+  - `tests/test_executive_batch.py`: 月次バッチ（docID比較・スキップ最適化・Slack通知メトリクス）
+  - `tests/test_communication_collector.py`: CommunicationCollectorテスト（WebSearchモック・30日キャッシュ・URL重複排除）
+  - `tests/test_executive_evaluator.py`: ExecutiveEvaluatorテスト（JSON抽出・スキーマ検証・リトライ・前回差分警告）
+  - `tests/test_executive_integration.py`: 経営陣評価E2E統合テスト（EDINET→収集→LLM→DB）
+  - `tests/test_published_date_extractor.py`: 発信日抽出テスト（JSON-LD / meta / time / URLパス）

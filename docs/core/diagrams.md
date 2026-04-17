@@ -9,19 +9,23 @@ flowchart TB
         JS[J-Quants Statements<br/>財務諸表]
         MA[Master API<br/>銘柄マスター]
         YF[yfinance API<br/>BS・時価総額・PER・過去日足]
+        ED[EDINET API<br/>有価証券報告書 XBRL]
+        WS[WebSearch<br/>役員外部発信]
     end
 
     subgraph Collection["データ収集レイヤー"]
         RDJ[run_daily_jquants.py<br/>平日 18:00<br/>チェーン実行起点]
         RWT[run_weekly_tasks.py<br/>土曜 06:00]
         RMM[run_monthly_master.py<br/>毎月1日 20:30]
+        REM[run_executive_master_update.py<br/>月次バッチ]
+        RRE[run_research_executives.py<br/>/research-executives スキル]
     end
 
     subgraph Storage["SQLiteストレージ"]
-        JDB[(jquants.db<br/>820MB)]
-        SDB[(statements.db<br/>30MB)]
-        MDB[(master.db<br/>964KB)]
-        ADB[(analysis_results.db<br/>1.7GB)]
+        JDB[(jquants.db)]
+        SDB[(statements.db<br/>+ yfinance_valuation<br/>+ executives / communications / evaluations)]
+        MDB[(master.db)]
+        ADB[(analysis_results.db)]
     end
 
     subgraph Analysis["分析レイヤー"]
@@ -34,10 +38,20 @@ flowchart TB
         HPF[historical_price_fetcher.py<br/>過去20年日足取得]
     end
 
+    subgraph ExecLayer["経営陣評価レイヤー (src/market_pipeline/executives/)"]
+        EEF[edinet_executive_fetcher.py<br/>iXBRLパース]
+        EDR[edinet_doc_resolver.py<br/>doc_idキャッシュ]
+        CC[communication_collector.py<br/>30日キャッシュ]
+        PDE[published_date_extractor.py]
+        EV[evaluator.py<br/>Claude LLM 6軸]
+        EREP[repository.py<br/>3テーブルCRUD]
+    end
+
     subgraph Integration["統合・出力"]
         IA1[integrated_analysis.py]
         IA2[integrated_analysis2.py]
         OUT[output/*.xlsx]
+        EXR[output/reports/stocks/<br/>executive_report.md]
     end
 
     JQ --> RDJ --> JDB
@@ -57,7 +71,18 @@ flowchart TB
     ADB --> IA1
     SDB --> IA1
     IA1 --> IA2 --> OUT
+
+    ED --> EEF --> EREP --> SDB
+    EDR --> EEF
+    REM --> EDR
+    WS --> CC --> EREP
+    CC --> PDE
+    EREP --> EV --> EREP
+    RRE --> EREP
+    EREP --> EXR
 ```
+
+> サイズ参考値（2026-04時点）: jquants.db ≒ 2.7GB、analysis_results.db ≒ 2.0GB、statements.db ≒ 63MB、master.db ≒ 964KB。yfinance過去20年取得後の実測値で変動する。
 
 ## コンポーネント図
 

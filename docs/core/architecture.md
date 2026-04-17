@@ -2,7 +2,7 @@
 
 ## 概要
 
-Stock-Analysisは、日本株式市場データの自動収集・分析システムです。J-Quants APIを利用して日次株価、財務諸表、マスターデータを収集し、複数の分析戦略（Minervini、HL比率、相対力、チャートパターン分類）を実行します。
+Stock-Analysisは、日本株式市場データの自動収集・分析システムです。J-Quants APIを利用して日次株価、財務諸表、マスターデータを収集し、複数の分析戦略（Minervini、HL比率、相対力、チャートパターン分類）を実行します。さらに yfinance バリュエーション指標（ネットキャッシュ比率・キャッシュニュートラルPER）の取得と、EDINET 有価証券報告書からの経営陣6軸スコアリングも統合しています。
 
 ## システム全体像
 
@@ -10,8 +10,8 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 ┌───────────────────────────────────────────────────────────────────────────────────────┐
 │                            外部データソース                                             │
 ├───────────────────────┬─────────────────────────┬──────────────────┬──────────────────┤
-│    J-Quants API       │  J-Quants Statements    │  Master Data API │  yfinance API    │
-│   (日次株価四本値)      │  (財務諸表データ)         │  (銘柄マスター)   │ (BS・時価総額)    │
+│    J-Quants API       │  J-Quants Statements    │  Master Data API │  yfinance / EDINET API │
+│   (日次株価四本値)      │  (財務諸表データ)         │  (銘柄マスター)   │ (BS・時価総額・有報)     │
 └───────────┬───────────┴────────────┬────────────┴────────┬─────────┴──────┬───────────┘
             │                        │                          │
             ▼                        ▼                          ▼
@@ -21,8 +21,13 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 │  │ run_daily_jquants   │ │ run_weekly_tasks    │ │ run_monthly_master      │ │
 │  │ (平日 18:00)         │ │ (土曜 06:00)         │ │ (毎月1日 20:30)          │ │
 │  │ → daily_analysis    │ │                     │ │                         │ │
+│  │   (yfinance_valu.)  │ │                     │ │                         │ │
 │  │ → integrated_anal.  │ │                     │ │                         │ │
 │  └─────────┬───────────┘ └─────────┬───────────┘ └───────────┬─────────────┘ │
+│  ┌────────────────────────────────────────────────────────────────────────┐  │
+│  │ run_executive_master_update.py (月次 / EDINET有報→役員マスター)         │  │
+│  │ /research-executives, /analyze-stock --with-executive-research         │  │
+│  └────────────────────────────────────────────────────────────────────────┘  │
 └────────────┼───────────────────────┼─────────────────────────┼───────────────┘
              │                       │                         │
              ▼                       ▼                         ▼
@@ -30,13 +35,19 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 │                           データストレージ (SQLite)                            │
 │  ┌─────────────────┐ ┌─────────────────┐ ┌──────────────┐ ┌────────────────┐ │
 │  │  jquants.db     │ │  statements.db  │ │  master.db   │ │analysis_results│ │
-│  │  (820MB)        │ │  (30MB)         │ │  (964KB)     │ │   .db (1.7GB)  │ │
 │  │  daily_quotes   │ │  financial_     │ │ stocks_master│ │ hl_ratio,      │ │
-│  │                 │ │  statements     │ │              │ │ minervini,     │ │
-│  │                 │ │  calculated_    │ │              │ │ relative_      │ │
-│  │                 │ │  fundamentals   │ │              │ │ strength, etc  │ │
+│  │  (source区別:   │ │  statements     │ │              │ │ minervini,     │ │
+│  │   jquants/yf)   │ │  calculated_    │ │              │ │ relative_      │ │
+│  │                 │ │  fundamentals   │ │              │ │ strength,      │ │
+│  │                 │ │  yfinance_      │ │              │ │ classification,│ │
+│  │                 │ │  valuation      │ │              │ │ integrated_    │ │
+│  │                 │ │  executives,    │ │              │ │ scores         │ │
+│  │                 │ │  executive_com. │ │              │ │                │ │
+│  │                 │ │  executive_eval.│ │              │ │                │ │
 │  └────────┬────────┘ └────────┬────────┘ └──────────────┘ └───────┬────────┘ │
 └───────────┼────────────────────┼──────────────────────────────────┼──────────┘
+
+> サイズ参考値（2026-04時点）: jquants.db ≒ 2.7GB（yfinance過去20年取得後）／ analysis_results.db ≒ 2.0GB ／ statements.db ≒ 63MB ／ master.db ≒ 964KB。yfinance/経営陣データ投入状況により変動する。
             │                    │                                  ▲
             └────────────────────┼──────────────────────────────────┘
                                  ▼
@@ -171,6 +182,24 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 | `integrated_analysis.py` | 複数指標の統合クエリ | - |
 | `integrated_analysis2.py` | DB保存 + CSV/Excel出力 | integrated_scores |
 | `integrated_scores_repository.py` | integrated_scoresテーブルCRUD | integrated_scores |
+
+### 3.1 経営陣評価レイヤー (`src/market_pipeline/executives/`)
+
+EDINET有価証券報告書から法定役員（取締役・監査役・執行役）情報＋略歴を取得し、外部発信を WebSearch + Claude LLM で6軸スコアリング（ビジョン一貫性・実行力・市場認識・リスク開示誠実性・コミュニケーション能力・成長志向）するモジュール群。
+
+| モジュール | 機能 | 入出力 |
+|-----------|------|--------|
+| `edinet_executive_fetcher.py` | EDINET API ダウンロード + `0104010_*_ixbrl.htm` の iXBRL パース（取締役系＋執行役系の両タグ、略歴含む） | XBRL → `Executive` dataclass |
+| `edinet_doc_resolver.py` | 銘柄コード→`doc_id` 解決（初回18ヶ月フルスキャン、2回目以降は期末月前後30日のみ）。月次バッチは `documents.json` から取得した `docID` を前回キャッシュと比較し、一致すれば XBRL ZIP の DL・パース・upsert を全てスキップ（`status=unchanged`） | `executives.edinet_source_doc_id` キャッシュ参照 |
+| `repository.py` | 3テーブル（`executives`/`executive_communications`/`executive_evaluations`）のCRUD・UPSERT・差分更新 | `statements.db` |
+| `communication_collector.py` | WebSearch（DI）+ 30日キャッシュで発信収集、URLドメイン→カテゴリ一次分類、発信日抽出フォールバック | WebSearch → `executive_communications` |
+| `published_date_extractor.py` | URL HTMLから発信日を抽出（JSON-LD / meta / time / URLパス） | URL → YYYY-MM-DD |
+| `evaluator.py` | Claude LLM（DI）で6軸スコアリング（成長志向含む）、スキーマ違反時は最大3回リトライ | Communications → `executive_evaluations` |
+| `exceptions.py` | `ExecutiveError` 基底＋派生（`EdinetFetchError` / `EdinetParseError` / `EvaluationError`） | - |
+
+プロンプトは `src/market_pipeline/prompts/executive_evaluation.md` にファイル管理。
+
+スキル層 `/analyze-stock --with-executive-research` および `/research-executives` から共通モジュールとして呼び出される。
 
 ### 4. ユーティリティレイヤー (`src/market_pipeline/utils/`)
 
@@ -327,6 +356,53 @@ CREATE TABLE yfinance_valuation (
     bs_updated_at TEXT,
     updated_at TEXT
 );
+
+-- 経営陣評価モジュール用（executives/）
+CREATE TABLE executives (
+    code TEXT NOT NULL,
+    name TEXT NOT NULL,
+    role TEXT NOT NULL,
+    is_representative INTEGER NOT NULL DEFAULT 0,
+    appointed_date TEXT,
+    birthdate TEXT,
+    edinet_source_doc_id TEXT,
+    career_summary TEXT,  -- EDINET XBRL の略歴テキスト（~400字）
+    updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    PRIMARY KEY (code, name, role)
+);
+CREATE INDEX idx_executives_code ON executives (code);
+CREATE INDEX idx_executives_repr ON executives (code, is_representative);
+
+CREATE TABLE executive_communications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT NOT NULL,
+    executive_name TEXT NOT NULL,
+    source_url TEXT NOT NULL,
+    source_type TEXT,  -- interview/blog/speech/book/article
+    published_date TEXT,
+    title TEXT,
+    summary TEXT,
+    collected_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    UNIQUE (executive_name, source_url)
+);
+CREATE INDEX idx_comm_code_name ON executive_communications (code, executive_name);
+CREATE INDEX idx_comm_collected ON executive_communications (executive_name, collected_at);
+
+CREATE TABLE executive_evaluations (
+    code TEXT NOT NULL,
+    executive_name TEXT NOT NULL,
+    evaluation_date TEXT NOT NULL,
+    vision_consistency REAL,
+    execution_track_record REAL,
+    market_awareness REAL,
+    risk_disclosure_honesty REAL,
+    communication_clarity REAL,
+    growth_ambition REAL,  -- 成長志向・戦略性（Phase 2改善で追加）
+    overall_score REAL,
+    rationale TEXT,  -- JSON: {axis: comment}
+    PRIMARY KEY (code, executive_name, evaluation_date)
+);
+CREATE INDEX idx_eval_code ON executive_evaluations (code);
 ```
 
 ### analysis_results.db - 分析結果

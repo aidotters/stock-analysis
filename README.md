@@ -17,7 +17,7 @@
     - **ミネルヴィニ戦略:** マーク・ミネルヴィニの投資基準に基づき、銘柄のトレンドと強さを評価します。
     - **高値・安値比率 (HL Ratio):** 過去一定期間の高値と安値に対する現在の株価の位置を評価し、買われすぎ・売られすぎを判断します。
     - **相対力 (Relative Strength):** 市場全体や他の銘柄と比較した株価の相対的な強さを評価します。
-    - **チャートパターン分類:** 機械学習を用いて、株価チャートの形状を自動的に分類し、特定のパターン（上昇、下落、もみ合いなど）を識別します。短期は累積ウィンドウ（直近20/60/120/240日）、中長期は期間スライスウィンドウ（240-480/480-1200/1200-2400/2400-4800日前）でデータの可用性に応じて動的に選択します。対数正規化により急騰・急落の歪み��軽減します。相関スコア（r値）で分類の信頼度を���認できます。
+    - **チャートパターン分類:** 機械学習を用いて、株価チャートの形状を自動的に分類し、特定のパターン（上昇、下落、もみ合いなど）を識別します。短期は累積ウィンドウ（直近20/60/120/240日）、中長期は期間スライスウィンドウ（240-480/480-1200/1200-2400/2400-4800日前）でデータの可用性に応じて動的に選択します。対数正規化により急騰・急落の歪みを軽減します。相関スコア（r値）で分類の信頼度を確認できます。
     - **統合分析:** 上記の各分析結果を組み合わせ、複合的なスコアや条件フィルタリングにより、多角的な視点から銘柄を評価します。
 
 - **ニュース駆動型銘柄発見 (`/discover-stocks`):**
@@ -36,6 +36,13 @@
     - 会社四季報銘柄ページ（CDP経由）、gemini CLI（セグメント分析・業界分析・SWOT分析）、既存テクニカルツールを情報ソースとして活用します。
     - Gemini Advanced Deep Researchによる深掘り分析に対応（`--deep-research`オプション）。
     - 8セクション構成（企業概要、事業構造・セグメント分析、財務分析、テクニカル分析、業界・競合分析、適時開示・ニュース、リスク要因、投資判断サマリー）のレポートを `output/reports/stocks/` に出力します。
+    - `--with-executive-research` オプションで経営陣6軸評価セクション（6.5節）を追記できます。
+
+- **経営陣評価 (`/research-executives`):**
+    - EDINET有価証券報告書から法定役員（取締役・監査役・執行役）の情報＋略歴を取得し、外部発信（インタビュー・講演・対談・記事等）を WebSearch で収集して Claude LLM で6軸スコアリング（ビジョン一貫性・実行力・市場認識・リスク開示誠実性・コミュニケーション能力・成長志向）するClaude Codeスキルです。
+    - 対象期間は過去3年、タイムラインでは直近1年を🆕＋太字でハイライト表示します。
+    - 独立レポート（`executive_report.md`）として `output/reports/stocks/YYYYMMDD-HHMM-{code}-analysis/` に出力します。
+    - 月次バッチ `scripts/run_executive_master_update.py` で役員マスターを更新（`docID` 比較で新規有報のない銘柄は XBRL ダウンロードをスキップ）。
 
 ## 分析機能の詳細
 
@@ -56,9 +63,11 @@
 │   ├── market_pipeline/ # データ処理のコアロジック（旧core/）
 │   │   ├── analysis/    # 各種分析ロジック
 │   │   ├── config/      # 設定管理（Pydantic Settings）
+│   │   ├── executives/  # 経営陣評価（EDINET役員取得・発信収集・LLM 6軸評価）
 │   │   ├── jquants/     # J-Quants API関連の処理（株価・財務諸表）
 │   │   ├── master/      # 銘柄マスター関連の処理
 │   │   ├── news/        # ニュース巡回設定（YAML設定パーサー）
+│   │   ├── prompts/     # LLM プロンプト（経営陣評価等）
 │   │   ├── utils/       # ユーティリティ（キャッシュ、並列処理、Slack通知等）
 │   │   └── yfinance/    # yfinance連携（バリュエーション指標・過去日足データ取得）
 │   ├── market_reader/   # pandas_datareader風のデータアクセスAPI（旧stock_reader/）
@@ -73,7 +82,7 @@
 ├── config/              # 設定ファイル
 │   └── news_sources.yaml # ニュース巡回先設定
 ├── docs/                # ドキュメント
-│   ├── core/            # コア設計ドキュメント
+│   ├── core/            # コア設計ドキュメント（architecture.md, api-reference.md, launchd-operations.md 等）
 │   ├── reports/         # レポート出力
 │   │   ├── adhoc/       # アドホック分析レポート（discover-stocks等）
 │   │   └── stocks/      # 銘柄ニュース調査レポート（research-stock-news出力）
@@ -89,11 +98,14 @@
 *   **`data/jquants.db`**:
     *   J-Quants APIおよびyfinanceから取得した日次株価データ（`daily_quotes`テーブル、`source`カラムで`'jquants'`/`'yfinance'`を区別）が格納されます。
 *   **`data/statements.db`**:
-    *   J-Quants Statements APIから取得した財務諸表データと、計算済み財務指標が格納されます。
+    *   J-Quants Statements APIから取得した財務諸表データと、計算済み財務指標、経営陣評価データが格納されます。
     *   主なテーブル:
         *   `financial_statements`: 生の財務諸表データ（売上高、利益、EPS、BPS、キャッシュフロー等）
         *   `calculated_fundamentals`: 計算済み財務指標（PER、PBR、ROE、ROA、配当利回り等）
         *   `yfinance_valuation`: yfinanceから取得したBS情報とバリュエーション指標（現金等、有利子負債、時価総額、PER、純ネットキャッシュ比率、キャッシュニュートラルPER）
+        *   `executives`: EDINET有報から取得した法定役員（氏名・役職・代表権・略歴・`edinet_source_doc_id` 等）
+        *   `executive_communications`: 役員の外部発信URL・タイトル・発信日・カテゴリ（WebSearchキャッシュ）
+        *   `executive_evaluations`: LLMによる6軸スコア＋総合スコア＋rationale（JSON）
 *   **`data/master.db`**:
     *   銘柄マスターデータ（`stocks_master`テーブルなど）が格納されます。
 *   **`data/analysis_results.db`**:
@@ -104,6 +116,31 @@
         *   `relative_strength`: 相対力（RSP, RSI）の計算結果
         *   `classification_results`: チャートパターン分類の結果
         *   `integrated_scores`: 統合スコアと順位（日次蓄積）
+
+## レポート出力ディレクトリ一覧
+
+スキル・スクリプトごとにレポート出力先が異なります:
+
+| ディレクトリ | 出力元 | 内容 |
+|------------|--------|------|
+| `docs/reports/adhoc/` | `/discover-stocks` | ニュース駆動型の候補銘柄レポート |
+| `docs/reports/stocks/` | `/research-stock-news` | 銘柄別ニュース・適時開示調査（`{code}-news.md`） |
+| `output/reports/stocks/YYYYMMDD-HHMM-{code}-analysis/` | `/analyze-stock`, `/research-executives` | 銘柄詳細分析（`base_report.md` / `executive_report.md` / `deep_research_report.md` / `chart.png`） |
+| `output/analysis_YYYY-MM-DD.xlsx` | `integrated_analysis2.py` | 日次統合分析レポート |
+
+## 関連ドキュメント
+
+詳細は `docs/core/` 配下を参照してください:
+
+| ドキュメント | 内容 |
+|------------|------|
+| `docs/core/architecture.md` | アーキテクチャ設計書（全体像・レイヤー構成） |
+| `docs/core/api-reference.md` | モジュール別API仕様 |
+| `docs/core/repo-structure.md` | リポジトリ構造・ファイル一覧 |
+| `docs/core/dev-guidelines.md` | 開発ガイドライン |
+| `docs/core/diagrams.md` | データフロー図・コンポーネント図 |
+| `docs/core/launchd-operations.md` | launchdジョブ運用ガイド |
+| `docs/core/CHANGELOG.md` | 変更履歴 |
 
 ## セットアップ方法
 
@@ -142,29 +179,29 @@
     J-Quants APIから日次株価データを取得し、完了後に日次分析→統合分析を順次実行します。
     ```bash
     # デフォルト: J-Quants取得 → Daily Analysis → Integrated Analysis をチェーン実行
-    python scripts/run_daily_jquants.py
+    uv run python scripts/run_daily_jquants.py
 
     # J-Quantsデータ取得のみ（後続ジョブなし）
-    python scripts/run_daily_jquants.py --no-chain
+    uv run python scripts/run_daily_jquants.py --no-chain
     ```
 
 - **週次タスク (財務データ取得 & 統合分析):**
     J-Quants Statements APIから財務諸表データを取得し、財務指標を計算、統合分析を実行します。
     ```bash
     # 全タスク実行
-    python scripts/run_weekly_tasks.py
+    uv run python scripts/run_weekly_tasks.py
 
     # 財務データ取得のみ
-    python scripts/run_weekly_tasks.py --statements-only
+    uv run python scripts/run_weekly_tasks.py --statements-only
 
     # 統合分析のみ
-    python scripts/run_weekly_tasks.py --analysis-only
+    uv run python scripts/run_weekly_tasks.py --analysis-only
     ```
 
 - **月次マスターデータ更新:**
     銘柄マスターデータを更新します。
     ```bash
-    python scripts/run_monthly_master.py
+    uv run python scripts/run_monthly_master.py
     ```
 
 - **日次分析フロー:**
@@ -186,50 +223,50 @@
 - **統合分析:**
     `integrated_analysis2.py` を直接実行することで、統合分析を行い、結果をExcelファイルに出力します。
     ```bash
-    python src/market_pipeline/analysis/integrated_analysis2.py
+    uv run python src/market_pipeline/analysis/integrated_analysis2.py
     ```
 
 - **チャートパターン分類:**
     チャートパターンの分類分析を実行します。複数の実行モードが利用可能です。
     ```bash
     # サンプル実行（基本的なパターン分析）
-    python src/market_pipeline/analysis/chart_classification.py --mode sample
+    uv run python src/market_pipeline/analysis/chart_classification.py --mode sample
 
     # アダプティブウィンドウのサンプル実行（累積+スライスウィンドウの動的選択をテスト）
-    python src/market_pipeline/analysis/chart_classification.py --mode sample-adaptive
+    uv run python src/market_pipeline/analysis/chart_classification.py --mode sample-adaptive
 
     # 全銘柄での高性能分析（アダプティブウィンドウ付き）
-    python src/market_pipeline/analysis/chart_classification.py --mode full-optimized
+    uv run python src/market_pipeline/analysis/chart_classification.py --mode full-optimized
 
     # バッチサイズの調整（メモリ使用量の制御）
-    python src/market_pipeline/analysis/chart_classification.py --mode full --batch-size 50
+    uv run python src/market_pipeline/analysis/chart_classification.py --mode full --batch-size 50
     ```
 
 - **yfinance過去データ一括取得（初回のみ）:**
     J-Quants Light契約（5年分）の範囲外を補完し、最大20年分の日足データをyfinanceから取得します。
     ```bash
     # マイグレーション（sourceカラム追加、初回のみ）
-    python scripts/migrate_add_source_column.py
+    uv run python scripts/migrate_add_source_column.py
 
     # 全銘柄の過去データ取得
-    python scripts/run_historical_prices.py
+    uv run python scripts/run_historical_prices.py
 
     # DB書き込みなしで確認
-    python scripts/run_historical_prices.py --dry-run
+    uv run python scripts/run_historical_prices.py --dry-run
 
     # 指定銘柄のみ
-    python scripts/run_historical_prices.py --symbols 7203 9984
+    uv run python scripts/run_historical_prices.py --symbols 7203 9984
 
     # 過去10年分のみ
-    python scripts/run_historical_prices.py --years 10
+    uv run python scripts/run_historical_prices.py --years 10
 
     # yfinanceデータをauto_adjust=Falseで再取得（既存データの修正）
-    python scripts/migrate_refetch_yfinance.py
-    python scripts/migrate_refetch_yfinance.py --dry-run
+    uv run python scripts/migrate_refetch_yfinance.py
+    uv run python scripts/migrate_refetch_yfinance.py --dry-run
 
     # yfinanceデータをJ-Quants基準にリスケール（境界比率による修正）
-    python scripts/migrate_rescale_yfinance.py
-    python scripts/migrate_rescale_yfinance.py --dry-run
+    uv run python scripts/migrate_rescale_yfinance.py
+    uv run python scripts/migrate_rescale_yfinance.py --dry-run
     ```
 
 ### launchdによる自動実行
@@ -385,6 +422,84 @@ output/reports/stocks/YYYYMMDD-HHMM-{code}-analysis/
 - `.claude/skills/analyze-stock/SKILL.md`: スキル定義
 - `config/news_sources.yaml`: `financial`カテゴリの銘柄ページ設定
 - `output/reports/stocks/`: レポート出力先（タイムスタンプ付きディレクトリ）
+
+## 経営陣評価 (`/research-executives` / `--with-executive-research`)
+
+EDINET有価証券報告書から法定役員（取締役・監査役・執行役）の情報＋略歴を取得し、外部発信（インタビュー・講演・対談・コラム・ブログ・記事・寄稿・note・メッセージ・登壇）を WebSearch で収集して Claude LLM で6軸スコアリングします。
+
+### 6評価軸
+
+| 軸 | 説明 |
+|----|------|
+| ビジョン一貫性 | 長期的ビジョンや戦略がブレなく語られているか |
+| 実行力 | 宣言したことを実行に移せているか（有言実行度） |
+| 市場認識 | 市場動向・競合状況・マクロ環境を正確に把握しているか |
+| リスク開示誠実性 | ネガティブ情報や失敗を隠さず開示・説明しているか |
+| コミュニケーション能力 | 論理性・具体性・分かりやすさ |
+| 成長志向 | 事業成長・規模拡大への戦略的意欲と具体性（新規事業／M&A／海外展開／中期経営計画の野心度） |
+
+各軸 0.0〜10.0 のスコアと200文字以内の根拠コメントが出力される。総合スコアは6軸平均（小数第2位四捨五入）。
+
+### レポート構成
+
+`executive_report.md` は以下4セクション構成:
+
+1. **役員サマリー** — 総合スコア＋軸ハイライトの表
+2. **役員別評価** — 略歴（EDINET XBRL原文）＋6軸スコア＋各軸 rationale
+3. **タイムライン** — 発信日降順（過去3年対象、直近1年は🆕＋太字ハイライト、日付不明は末尾に `—` でまとめ表示）
+4. **主要発信引用集** — 直近1年を優先し不足時は1〜3年の新しい順にフォールバック（各役員最大5件）
+
+### 使用例
+
+```bash
+# 銘柄指定で経営陣評価のみ生成
+/research-executives 7203
+
+# 取締役全員を対象化
+/research-executives 7203 --include-directors
+
+# 指名委員会等設置会社の執行役も含める
+/research-executives 6758 --include-executive-officers
+
+# 特定役員のみ
+/research-executives 7203 --persons "佐藤恒治,豊田章男"
+
+# キャッシュ無視で再収集
+/research-executives 7203 --force-refresh
+
+# /analyze-stockと統合
+/analyze-stock 7203 --with-executive-research
+```
+
+CLI オプションとして `--lookback-days INT`（既定 1095：過去3年）、`--highlight-days INT`（既定 365：直近1年ハイライト）で期間を上書き可能。
+
+### 月次バッチで役員マスター更新
+
+```bash
+# 全アクティブ銘柄
+python scripts/run_executive_master_update.py
+
+# 特定銘柄のみ・DB書き込みなし
+python scripts/run_executive_master_update.py --codes 7203 9984 --dry-run
+```
+
+有価証券報告書は年1回しか新規作成されないため、2回目以降のバッチでは `documents.json` から取得した `docID` を前回キャッシュ（`executives.edinet_source_doc_id`）と比較し、一致する銘柄は XBRL ZIP の DL・パース・upsert を全てスキップ（`status=unchanged`）する。スキップ件数は Slack 通知のメトリクス「スキップ（有報未更新）」として集計される。
+
+### 既存DB向けマイグレーション
+
+```bash
+# executives テーブルに career_summary カラム追加
+python scripts/migrate_executives_add_career_column.py
+
+# executive_evaluations テーブルに growth_ambition カラム追加
+python scripts/migrate_executives_add_growth_axis.py
+```
+
+### 必要な環境変数
+
+`.env` に `EDINET_API_KEY` を設定（取得: https://disclosure2.edinet-fsa.go.jp/）。
+
+**スコープ:** 本機能の「役員」は EDINET で構造化される**法定役員のみ**（取締役・監査役・執行役）。執行役員専任者（社内職位のみ）は XBRL 構造化データに含まれないため対象外。
 
 ## Market Reader パッケージ
 
