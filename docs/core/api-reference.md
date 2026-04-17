@@ -270,6 +270,209 @@ daily_quotesにバッチINSERT（INSERT OR IGNORE）。
 
 ---
 
+## 経営陣評価モジュール (`src/market_pipeline/executives/`)
+
+EDINET有価証券報告書から法定役員（取締役・監査役・執行役）情報＋略歴を取得し、外部発信を WebSearch + Claude LLM で6軸スコアリング（ビジョン一貫性・実行力・市場認識・リスク開示誠実性・コミュニケーション能力・成長志向）するモジュール群。`/analyze-stock --with-executive-research` および `/research-executives` スキルから共通利用される。
+
+### Executive dataclass
+
+```python
+from market_pipeline.executives import Executive
+
+@dataclass
+class Executive:
+    code: str
+    name: str
+    role: str
+    is_representative: bool
+    birthdate: Optional[str] = None
+    appointed_date: Optional[str] = None
+    edinet_source_doc_id: Optional[str] = None
+    career_summary: Optional[str] = None  # EDINET XBRL の略歴テキスト（~400字）
+```
+
+同一人物が複数役職で掲載される場合（例: Sony 吉田氏の「取締役」と「代表執行役 会長」）は、役職ごとに別レコードとして扱う。
+
+### EdinetExecutiveFetcher
+
+```python
+from market_pipeline.executives import EdinetExecutiveFetcher
+
+fetcher = EdinetExecutiveFetcher(api_key="...")  # デフォルトは settings.edinet.api_key
+executives, doc_id = fetcher.fetch_from_doc_id("S100VWVY", code="7203")
+
+# ローカルiXBRLからの抽出（テスト・再処理用）
+executives = fetcher.fetch_from_local_ixbrl(Path("..."), code="7203", doc_id="S100VWVY")
+```
+
+**実装仕様（Phase 0 PoC で確定、略歴対応で拡張）:**
+- `XBRL/PublicDoc/0104010_honbun_*_ixbrl.htm` のみをパース対象とする
+- 取締役系タグ（`jpcrp_cor:NameInformationAboutDirectorsAndCorporateAuditors` / `CareerSummaryInformationAbout...TextBlock` 等）と執行役系タグ（`jpcrp_cor:NameInformationAboutExecutiveDirectors` / `CareerSummaryInformationAboutExecutiveDirectorsTextBlock` 等）の両系統を統合パース
+- 集約キーは `(contextRef, 役員種別)` の複合キー（Sony 等の contextRef 共有パターンに対応）
+- `is_representative` は役職文字列に `"代表"` を含むかで判定
+- 氏名・役職は `normalize_text()` で正規化（`\u00a0`/`\u3000` → 半角、連続空白圧縮）
+- 略歴 (`career_summary`) は XBRL の TextBlock から抽出した年月時系列テキスト
+
+### EdinetDocResolver
+
+```python
+from market_pipeline.executives import EdinetDocResolver, ExecutiveRepository
+
+repo = ExecutiveRepository()
+resolver = EdinetDocResolver(repository=repo)
+doc_id = resolver.resolve("7203", fiscal_year_end_month=3)
+```
+
+**doc_id 解決戦略:**
+1. `executives.edinet_source_doc_id` キャッシュに前回値があれば → 期末月前後 `doc_scan_narrow_days` 日（デフォルト30日）のみスキャン
+2. キャッシュミスまたは narrow スキャンで0件 → 直近 `doc_scan_fallback_months` ヶ月（デフォルト18ヶ月）のフルスキャンへフォールバック
+3. 書類一覧APIのレスポンスはインスタンス内でメモリキャッシュ（同一バッチで複数銘柄を処理する際の API 呼び出しを最小化）
+
+### ExecutiveRepository
+
+```python
+from market_pipeline.executives import ExecutiveRepository
+
+repo = ExecutiveRepository()  # settings.paths.statements_db を使用
+repo.initialize_tables()       # 3テーブル＋インデックス作成
+
+# UPSERT
+counts = repo.upsert_executives(executives, replace_for_code="7203")
+# => {"inserted": N, "updated": N, "deleted": N}
+
+# 取得（フィルタ）
+reps = repo.get_executives("7203", is_representative=True)
+directors = repo.get_executives("7203", role_contains="取締役")
+specific = repo.get_executives("7203", persons=["佐藤恒治"])
+
+# doc_idキャッシュ
+doc_id = repo.get_latest_doc_id("7203")
+
+# 発信コンテンツ
+inserted = repo.upsert_communications([{"code": "...", "executive_name": "...", ...}])
+is_valid = repo.is_cache_valid("佐藤恒治", ttl_days=30)
+comms = repo.get_communications("佐藤恒治", since_date="2026-01-01")
+
+# 評価
+repo.upsert_evaluation({"code": "...", "executive_name": "...", "evaluation_date": "...", ...})
+latest = repo.get_latest_evaluation("7203", "佐藤恒治")
+```
+
+**3テーブル:**
+- `executives` PK `(code, name, role)`: 法定役員マスター。`replace_for_code=X` で X の既存レコード削除→最新スナップショット反映
+- `executive_communications` AUTOINCREMENT + UNIQUE `(executive_name, source_url)`: 発信コンテンツ。INSERT OR IGNORE で重複URL排除、既存は `collected_at` のみ更新
+- `executive_evaluations` PK `(code, executive_name, evaluation_date)`: 6軸スコア＋rationale（JSON）
+
+### CommunicationCollector
+
+```python
+from market_pipeline.executives import (
+    CommunicationCollector,
+    LOOKBACK_DAYS_TOTAL,
+    extract_published_date,
+)
+
+def web_search(query: str) -> list[dict]:
+    # Claude Code 内蔵 WebSearch ツールを呼び出す
+    # 返却形式: [{"url": "...", "title": "...", "snippet": "...", "published_date": "YYYY-MM-DD"}]
+    ...
+
+collector = CommunicationCollector(
+    web_search_fn=web_search,
+    repository=repo,
+    cache_ttl_days=30,
+    lookback_days=LOOKBACK_DAYS_TOTAL,  # 既定 1095 日（過去3年）
+    date_extractor_fn=extract_published_date,  # 省略時は同関数が既定
+)
+comms = collector.collect("佐藤恒治", "トヨタ自動車", code="7203", force_refresh=False)
+```
+
+**動作:**
+- 検索クエリは `build_search_query(name, company, since_date=...)` で生成（汎用1本）。`since_date` を指定すると `after:YYYY-MM-DD` が末尾に付与される
+- 検索キーワードは `SEARCH_KEYWORDS`（10語: インタビュー／講演／対談／コラム／ブログ／記事／寄稿／note／メッセージ／登壇）を OR 結合
+- 全ての DB 読み出し経路（キャッシュヒット／`web_search_fn` 未設定／例外／新規収集後）で `get_communications(name, since_date=...)` に `since_date` を伝播して古レコードを除外
+- 30日キャッシュ有効時 → WebSearchをスキップ、既存DBレコードを返却
+- `force_refresh=True` でキャッシュ無効化
+- WebSearch例外は吸収して既存キャッシュを返却（バッチを止めない）
+- URLドメインとタイトルキーワードで `source_type` 一次分類（`classify_source_type()`）
+- `published_date` が WebSearch 結果に無い場合は `date_extractor_fn` で URL を直接取得して抽出
+
+**期間定数（`src/market_pipeline/executives/__init__.py` で集中管理）:**
+- `LOOKBACK_DAYS_TOTAL = 1095`: 収集・DB読み出し対象期間（過去3年）
+- `HIGHLIGHT_DAYS_RECENT = 365`: レポートタイムラインで🆕＋太字ハイライトする直近期間（過去1年）
+
+### extract_published_date
+
+```python
+from market_pipeline.executives import extract_published_date
+
+date = extract_published_date(
+    "https://example.com/article", timeout=5.0, min_interval=1.0
+)
+# "YYYY-MM-DD" or None
+```
+
+**抽出優先順位:**
+1. JSON-LD (`<script type="application/ld+json">` の `datePublished`/`dateCreated`)
+2. OGP/Article (`<meta property="article:published_time">`)
+3. Dublin Core (`<meta name="DC.date.issued">` / `<meta name="date">`)
+4. `<time datetime="...">` タグ
+5. URLパスの日付 (`/YYYY/MM/DD/` / `YYYY-MM-DD-` パターン)
+
+**エラー処理:** HTTP 失敗・タイムアウト・パース失敗は全て吸収し、URLパスのみで推定できれば `YYYY-MM-DD` を、何も取れなければ `None` を返す。
+
+**レート制御:** 同一ホストへの連続リクエストは `min_interval` 秒（既定 1.0 秒）以上空ける（モジュール内でプロセス共有の last-fetch 時刻を管理）。`min_interval=0` で無効化。
+
+### ExecutiveEvaluator
+
+```python
+from market_pipeline.executives import ExecutiveEvaluator
+from market_pipeline.executives.communication_collector import Communication
+
+def claude_llm(prompt: str) -> str:
+    # Claude Code 内蔵 LLM で評価（JSON応答をプロンプトで指示済み）
+    ...
+
+evaluator = ExecutiveEvaluator(
+    llm_fn=claude_llm,
+    repository=repo,
+    max_retries=3,
+    retry_delay=1.0,
+    score_alert_threshold=3.0,
+)
+
+result = evaluator.evaluate_and_persist(
+    name="佐藤恒治",
+    company="トヨタ自動車",
+    communications=[Communication(...)],
+    code="7203",
+)
+# result: Evaluation dataclass (overall_score, rationale, 6軸スコア)
+```
+
+**動作:**
+- プロンプトは `src/market_pipeline/prompts/executive_evaluation.md` を `str.format()` で埋め込み
+- 6評価軸: vision_consistency / execution_track_record / market_awareness / risk_disclosure_honesty / communication_clarity / **growth_ambition**（成長志向・戦略性）
+- JSONスキーマ違反時は最大3回リトライ
+- 全リトライ失敗時はスコアNULL＋`rationale="評価失敗: {エラー}"` で返却
+- `overall_score = round(mean(6軸), 2)`
+- 前回スコアと `score_alert_threshold` 以上変動したら `logger.warning`
+- `rationale` 各軸は200文字で切り詰め
+
+### 例外
+
+```python
+from market_pipeline.executives.exceptions import (
+    ExecutiveError,              # 基底
+    EdinetFetchError,            # EDINET取得失敗
+    EdinetParseError,            # iXBRLパース失敗
+    CommunicationCollectionError, # WebSearch失敗
+    EvaluationError,             # LLM評価失敗
+)
+```
+
+---
+
 ## ニュース巡回設定モジュール (`src/market_pipeline/news/`)
 
 ニュース巡回先サイトのYAML設定を読み込み・バリデーションするモジュール。`/discover-stocks`スキルで使用。

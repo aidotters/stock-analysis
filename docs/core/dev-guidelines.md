@@ -353,7 +353,7 @@ uv pip sync requirements.txt
 ```toml
 [project]
 name = "stock-analysis"
-version = "0.1.0"
+version = "0.2.0"
 requires-python = ">=3.10"
 dependencies = [
     "pandas>=2.3.0",
@@ -387,7 +387,7 @@ chart-export = [
 1. [ ] `src/market_pipeline/` に適切なモジュールを作成
 2. [ ] 設定が必要な場合は `src/market_pipeline/config/settings.py` に追加
 3. [ ] テストを `tests/` に作成
-4. [ ] 必要に応じて `scripts/` に実行スクリプトを追加
+4. [ ] launchd定期実行・手動バッチ・マイグレーション等が必要な場合は `scripts/` に実行スクリプトを追加（APIから呼び出すだけのモジュールであれば不要）
 5. [ ] `CLAUDE.md` を更新
 6. [ ] `README.md` を更新（ユーザー向け機能説明）
 7. [ ] `docs/core/api-reference.md` にAPI仕様を追加
