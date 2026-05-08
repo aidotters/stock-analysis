@@ -196,6 +196,17 @@ class ExecutivesSettings(BaseSettings):
     doc_scan_narrow_days: int = 30
 
 
+class NewsDeliverySettings(BaseSettings):
+    """ウォッチリストニュース配信モジュールの設定。"""
+
+    model_config = SettingsConfigDict(
+        env_prefix="STOCK_NEWS_", env_file=_ENV_FILE, extra="ignore"
+    )
+
+    # 適時開示の取得対象期間 (日)。これより古い published_at の項目は除外する。
+    lookback_days: int = 7
+
+
 class SlackSettings(BaseSettings):
     """Slack notification settings."""
 
@@ -247,6 +258,7 @@ class Settings(BaseSettings):
     slack: SlackSettings = Field(default_factory=SlackSettings)
     edinet: EdinetSettings = Field(default_factory=EdinetSettings)
     executives: ExecutivesSettings = Field(default_factory=ExecutivesSettings)
+    news_delivery: NewsDeliverySettings = Field(default_factory=NewsDeliverySettings)
 
     # Global processing settings
     n_workers: Optional[int] = None  # None = auto-detect CPU count

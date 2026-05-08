@@ -282,10 +282,15 @@ class TestFilterKeywords:
         fk = FilterKeywords(include=["決算短信"])
         assert fk.exclude == []
 
-    def test_empty_include_raises(self):
-        """includeが空リストの場合はValueError。"""
-        with pytest.raises(ValueError, match="include must not be empty"):
-            FilterKeywords(include=[])
+    def test_both_empty_raises(self):
+        """include/exclude が両方空の場合はValueError。"""
+        with pytest.raises(ValueError, match="must define at least one"):
+            FilterKeywords(include=[], exclude=[])
+
+    def test_exclude_only_is_allowed(self):
+        """exclude のみでフィルタを定義できる (Phase 2 の general_news 等)。"""
+        fk = FilterKeywords(include=[], exclude=["株価チャート"])
+        assert fk.exclude == ["株価チャート"]
 
     def test_exclude_not_list_raises(self):
         """excludeがリストでない場合はValueError。"""
@@ -405,13 +410,13 @@ class TestFilterKeywordsYamlParse:
         with pytest.raises(ValueError, match="filter_keywords.*must be a mapping"):
             load_config(path)
 
-    def test_filter_keywords_missing_include_in_yaml(self, tmp_path):
-        """filter_keywords.includeがYAMLで省略された場合はValueError。"""
+    def test_filter_keywords_exclude_only_in_yaml(self, tmp_path):
+        """filter_keywords が exclude のみでもパースできる (Phase 2 の general_news 等)。"""
         config = {
             "sources": {
                 "news": [
                     {
-                        "name": "Bad",
+                        "name": "OK",
                         "url": "https://example.com/",
                         "auth": "none",
                         "filter_keywords": {"exclude": ["skip"]},
@@ -419,14 +424,14 @@ class TestFilterKeywordsYamlParse:
                 ]
             }
         }
-        path = tmp_path / "bad.yaml"
+        path = tmp_path / "ok.yaml"
         path.write_text(yaml.dump(config, allow_unicode=True), encoding="utf-8")
+        cfg = load_config(path)
+        fk = cfg.sources["news"][0].filter_keywords
+        assert fk is not None and fk.exclude == ["skip"]
 
-        with pytest.raises(ValueError, match="include must not be empty"):
-            load_config(path)
-
-    def test_filter_keywords_empty_include_raises(self, tmp_path):
-        """filter_keywords.includeが空リストの場合はValueError。"""
+    def test_filter_keywords_both_empty_raises(self, tmp_path):
+        """include/exclude 両方が空の場合は ValueError。"""
         config = {
             "sources": {
                 "news": [
@@ -434,7 +439,7 @@ class TestFilterKeywordsYamlParse:
                         "name": "Bad",
                         "url": "https://example.com/",
                         "auth": "none",
-                        "filter_keywords": {"include": [], "exclude": ["test"]},
+                        "filter_keywords": {"include": [], "exclude": []},
                     }
                 ]
             }
@@ -442,5 +447,5 @@ class TestFilterKeywordsYamlParse:
         path = tmp_path / "bad.yaml"
         path.write_text(yaml.dump(config, allow_unicode=True), encoding="utf-8")
 
-        with pytest.raises(ValueError, match="include must not be empty"):
+        with pytest.raises(ValueError, match="must define at least one"):
             load_config(path)

@@ -38,6 +38,11 @@
     - 8セクション構成（企業概要、事業構造・セグメント分析、財務分析、テクニカル分析、業界・競合分析、適時開示・ニュース、リスク要因、投資判断サマリー）のレポートを `output/reports/stocks/` に出力します。
     - `--with-executive-research` オプションで経営陣6軸評価セクション（6.5節）を追記できます。
 
+- **ウォッチリストニュース配信 (`/watch` + `scripts/run_news_delivery.py`):**
+    - ウォッチリスト（`data/watchlists/*.json`）に登録した銘柄について、適時開示（四季報CDP）・一般ニュース（Google News RSS）・TDnet（yanoshin Atom）・四季報銘柄関連記事を取得し Slack に配信します。
+    - launchd 連携で平日 08:00 / 12:30 / 19:30 の3スロットで自動配信。`RateLimitError` 発生時は priority=high のウォッチ銘柄のみで自動再試行。
+    - URL の SHA256 ハッシュをキーにした重複排除（`delivered_news` テーブル）と、Slack Block Kit の38000文字しきい値での自動分割に対応。
+
 - **経営陣評価 (`/research-executives`):**
     - EDINET有価証券報告書から法定役員（取締役・監査役・執行役）の情報＋略歴を取得し、外部発信（インタビュー・講演・対談・記事等）を WebSearch で収集して Claude LLM で6軸スコアリング（ビジョン一貫性・実行力・市場認識・リスク開示誠実性・コミュニケーション能力・成長志向）するClaude Codeスキルです。
     - 対象期間は過去3年、タイムラインでは直近1年を🆕＋太字でハイライト表示します。
@@ -67,6 +72,7 @@
 │   │   ├── jquants/     # J-Quants API関連の処理（株価・財務諸表）
 │   │   ├── master/      # 銘柄マスター関連の処理
 │   │   ├── news/        # ニュース巡回設定（YAML設定パーサー）
+│   │   ├── news_delivery/ # ウォッチリストニュース配信（fetchers, formatter, deduplicator, rate_limiter）
 │   │   ├── prompts/     # LLM プロンプト（経営陣評価等）
 │   │   ├── utils/       # ユーティリティ（キャッシュ、並列処理、Slack通知等）
 │   │   └── yfinance/    # yfinance連携（バリュエーション指標・過去日足データ取得）
@@ -81,6 +87,7 @@
 ├── tests/               # テストコード
 ├── config/              # 設定ファイル
 │   └── news_sources.yaml # ニュース巡回先設定
+├── launchd/             # launchd plist テンプレート（ニュース配信スロット別）
 ├── docs/                # ドキュメント
 │   ├── core/            # コア設計ドキュメント（architecture.md, api-reference.md, launchd-operations.md 等）
 │   ├── reports/         # レポート出力
@@ -326,7 +333,9 @@ SLACK_WEBHOOK_URL=https://hooks.slack.com/services/xxx/yyy/zzz
 - `news`: ニュースサイト（日経電子版, Reuters Japan）
 - `analysis`: 分析サイト（トウシル, 会社四季報オンライン）
 - `disclosure`: 適時開示情報（会社四季報、`filter_keywords`によるフィルタリング）
-- `financial`: 個別銘柄ページ（Phase 2用）
+- `general_news`: 一般ニュース（Google News RSS、銘柄名+コードで検索）
+- `ir_release`: TDnet 適時開示（yanoshin Atom）
+- `stock_news`: 四季報銘柄ページの「この銘柄の関連記事」（CDP経由、ログイン不要）
 
 **認証方式:**
 - `auth: cdp` — Chrome DevTools Protocol経由（要: `open -a 'Google Chrome' --args --remote-debugging-port=9222`）
@@ -420,7 +429,7 @@ output/reports/stocks/YYYYMMDD-HHMM-{code}-analysis/
 
 **構成ファイル:**
 - `.claude/skills/analyze-stock/SKILL.md`: スキル定義
-- `config/news_sources.yaml`: `financial`カテゴリの銘柄ページ設定
+- `config/news_sources.yaml`: `stock_news` / `disclosure` カテゴリの銘柄ページ設定
 - `output/reports/stocks/`: レポート出力先（タイムスタンプ付きディレクトリ）
 
 ## 経営陣評価 (`/research-executives` / `--with-executive-research`)
@@ -500,6 +509,59 @@ python scripts/migrate_executives_add_growth_axis.py
 `.env` に `EDINET_API_KEY` を設定（取得: https://disclosure2.edinet-fsa.go.jp/）。
 
 **スコープ:** 本機能の「役員」は EDINET で構造化される**法定役員のみ**（取締役・監査役・執行役）。執行役員専任者（社内職位のみ）は XBRL 構造化データに含まれないため対象外。
+
+## ウォッチリストニュース配信 (`/watch` + `scripts/run_news_delivery.py`)
+
+ウォッチリスト（`data/watchlists/*.json`）に登録した銘柄について、適時開示・一般ニュース・TDnet・四季報銘柄関連記事を取得し Slack に配信するモジュールです。launchd 連携で平日に朝（08:00）/ 昼（12:30）/ 夜（19:30）の3スロットで自動配信できます。
+
+### ウォッチリストCRUD（`/watch` スキル / `scripts/watchlist.py`）
+
+```bash
+python scripts/watchlist.py add 7203 --tag holding --priority high --note "押し目検討"
+python scripts/watchlist.py list
+python scripts/watchlist.py list --tag holding
+python scripts/watchlist.py update 7203 --priority mid
+python scripts/watchlist.py remove 7203
+```
+
+`tag` は `holding` / `watching` / `candidate`、`priority` は `high` / `mid` / `low` から選択。
+
+### Slack 配信の実行
+
+```bash
+# スロット指定（dry-run でSlack送信を抑止）
+python scripts/run_news_delivery.py --slot evening
+python scripts/run_news_delivery.py --slot evening --dry-run
+
+# 直近1日のみ（短時間スロット間隔向け）
+python scripts/run_news_delivery.py --slot morning --lookback-days 1
+
+# ソース選択（軽量運用: 四季報CDPなし）
+python scripts/run_news_delivery.py --slot morning --sources general_news,ir_release
+```
+
+`--sources` は `disclosure` / `general_news` / `ir_release` / `stock_news` から選択（カンマ区切り）。
+
+### 重複排除DBのクリーンアップ
+
+```bash
+# 90日より古いレコードを削除（デフォルト）
+python scripts/cleanup_news_db.py
+python scripts/cleanup_news_db.py --days 60
+```
+
+### 環境変数
+
+| 変数 | 説明 | デフォルト |
+|------|------|-----------|
+| `STOCK_NEWS_SLACK_WEBHOOK_URL` | ニュース配信専用 webhook | 未設定時 `SLACK_WEBHOOK_URL` にフォールバック |
+| `STOCK_NEWS_QUIET_WHEN_EMPTY` | 新規ニュース0件時に Slack 送信をスキップ | `false` |
+| `STOCK_NEWS_LOOKBACK_DAYS` | 取得対象期間（日）。`--lookback-days` で上書き可 | `7` |
+| `NEWS_DELIVERY_MAX_PARALLEL_FETCH` | DisclosureFetcher 並列度 | `5` |
+
+### launchd 登録
+
+`launchd/com.stock-analysis.news-delivery-{morning,noon,evening}.plist.template` を `~/Library/LaunchAgents/` にコピーして `launchctl load` する。詳細は `docs/core/launchd-operations.md` 参照。3スロット同時に運用する必要はなく、まずは朝＋夜の2スロットで運用し、必要に応じて noon を追加するのが推奨。
 
 ## Market Reader パッケージ
 
@@ -860,6 +922,8 @@ history = screener.history("7203", days=30)
 - scikit-learn: 機械学習（チャート分類で使用）
 - pyyaml: YAML設定ファイルの読み込み
 - kaleido: Plotlyチャートの静的画像エクスポート（オプション、`chart-export`エクストラ）
+- playwright: 四季報適時開示・銘柄ページのフェッチ（`news_delivery/fetchers/cdp_disclosure_fetcher.py`、`shikiho_stock_news_fetcher.py`）。初回セットアップ時に `playwright install chromium` を実行
+- feedparser: Google News RSS / TDnet Atom フィード解析（`news_delivery/fetchers/google_news_rss_fetcher.py`、`tdnet_rss_fetcher.py`）
 - pytest: テストフレームワーク
 - openpyxl: Excelファイルの読み書き
 

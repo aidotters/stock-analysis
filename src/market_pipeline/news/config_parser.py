@@ -20,8 +20,14 @@ class FilterKeywords:
     exclude: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
-        if not self.include:
-            raise ValueError("filter_keywords.include must not be empty.")
+        if not isinstance(self.include, list):
+            raise ValueError(
+                f"filter_keywords.include must be a list, got {type(self.include).__name__}."
+            )
+        if not self.include and not self.exclude:
+            raise ValueError(
+                "filter_keywords must define at least one of 'include' or 'exclude'."
+            )
         if not isinstance(self.exclude, list):
             raise ValueError(
                 f"filter_keywords.exclude must be a list, got {type(self.exclude).__name__}."
@@ -38,6 +44,8 @@ class NewsSource:
     selector: str = ""
     description: str = ""
     url_template: str = ""
+    query_template: str = ""
+    max_items_per_code: int = 0
     filter_keywords: FilterKeywords | None = None
 
     def __post_init__(self) -> None:
@@ -125,6 +133,8 @@ def load_config(path: str | Path) -> NewsConfig:
                     selector=item.get("selector", ""),
                     description=item.get("description", ""),
                     url_template=item.get("url_template", ""),
+                    query_template=item.get("query_template", ""),
+                    max_items_per_code=int(item.get("max_items_per_code", 0)),
                     filter_keywords=filter_kw,
                 )
             )

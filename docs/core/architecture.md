@@ -28,6 +28,12 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 │  │ run_executive_master_update.py (月次 / EDINET有報→役員マスター)         │  │
 │  │ /research-executives, /analyze-stock --with-executive-research         │  │
 │  └────────────────────────────────────────────────────────────────────────┘  │
+│  ┌────────────────────────────────────────────────────────────────────────┐  │
+│  │ run_news_delivery.py (平日 08:00 / 12:30 / 19:30)                      │  │
+│  │   data/watchlists/*.json → fetchers (四季報/Google News/TDnet)         │  │
+│  │   → Deduplicator (data/news_delivery.db) → SlackFormatter → Slack      │  │
+│  │ /watch スキル: ウォッチリスト CRUD                                      │  │
+│  └────────────────────────────────────────────────────────────────────────┘  │
 └────────────┼───────────────────────┼─────────────────────────┼───────────────┘
              │                       │                         │
              ▼                       ▼                         ▼
@@ -217,9 +223,33 @@ EDINET有価証券報告書から法定役員（取締役・監査役・執行�
 |-----------|------|
 | `config_parser.py` | YAML設定読み込み・バリデーション（NewsSource, NewsConfig, FilterKeywords） |
 
-設定ファイル: `config/news_sources.yaml`（カテゴリ: news, analysis, disclosure, financial）
+設定ファイル: `config/news_sources.yaml`（カテゴリ: `news`, `analysis`, `disclosure`, `general_news`, `ir_release`, `stock_news`）
 
-`disclosure` カテゴリは適時開示情報の巡回に使用され、`filter_keywords`（`include`/`exclude`リスト）によるタイトルベースのフィルタリングをサポートする。
+- `disclosure`: 四季報適時開示ページ。`filter_keywords`（`include`/`exclude`リスト）によるタイトルベースのフィルタリングをサポート
+- `general_news`: Google News RSS（銘柄名+コードで検索、`query_template` / `max_items_per_code` / `exclude` フィルタ）
+- `ir_release`: yanoshin TDnet ラッパー（Atom）
+- `stock_news`: 四季報銘柄ページの「この銘柄の関連記事」（Playwright/CDP、ログイン不要）
+
+### 4.2 ウォッチリスト・ニュース配信 (`src/market_pipeline/news_delivery/`)
+
+ウォッチリスト(`data/watchlists/*.json`)に登録した銘柄について、適時開示・一般ニュース・TDnet適時開示・銘柄関連記事を取得し Slack 配信するモジュール:
+
+| モジュール | 機能 |
+|-----------|------|
+| `models.py` | `NewsItem` (frozen dataclass + `url_hash` プロパティ) と `WatchListEntry` (pydantic) |
+| `watchlist.py` | `WatchList` クラス（アトミック書込、CRUD、`master.db` メタ解決） |
+| `deduplicator.py` | URL SHA256 ハッシュベースの重複排除 (`delivered_news` テーブル、90日クリーンアップ) |
+| `formatter.py` | Slack Block Kit（38000文字しきい値で分割、メトリクス行は最終メッセージのみ） |
+| `rate_limiter.py` | トークンバケット式レート制限 + `RateLimitError` |
+| `fetchers/cdp_disclosure_fetcher.py` | 四季報適時開示（Playwright + 専用Chromiumプロファイル） |
+| `fetchers/google_news_rss_fetcher.py` | Google News RSS（feedparser、レート制限統合） |
+| `fetchers/tdnet_rss_fetcher.py` | yanoshin TDnet（Atom、銘柄プレフィックス自動削除） |
+| `fetchers/shikiho_stock_news_fetcher.py` | 四季報銘柄ページの「この銘柄の関連記事」 |
+| `fetchers/disclosure_fetcher.py` | 旧HTTP版（BS4、テスト/レガシー用） |
+| `delivery_service.py` | オーケストレーター（`build_default_service`、`RateLimitError` 時 priority=high のみ自動再試行） |
+| `exceptions.py` | `RateLimitError` 等のカスタム例外 |
+
+CLI: `scripts/run_news_delivery.py --slot {morning|noon|evening} [--dry-run] [--lookback-days N] [--sources ...]`。launchd 連携・運用詳細は `launchd-operations.md` 参照。
 
 ### 5. データアクセスレイヤー (`src/market_reader/`)
 

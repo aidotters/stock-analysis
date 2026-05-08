@@ -42,6 +42,22 @@ Stock-Analysis/
 │   │   │   ├── __init__.py              # エクスポート定義
 │   │   │   └── config_parser.py          # YAML設定読み込み・バリデーション
 │   │   │
+│   │   ├── news_delivery/                # ウォッチリストニュース配信
+│   │   │   ├── __init__.py
+│   │   │   ├── models.py                 # NewsItem / WatchListEntry
+│   │   │   ├── watchlist.py              # WatchList (CRUD・master.db メタ解決)
+│   │   │   ├── deduplicator.py           # delivered_news 重複排除（URL SHA256）
+│   │   │   ├── formatter.py              # Slack Block Kit フォーマッタ
+│   │   │   ├── rate_limiter.py           # トークンバケット式レート制限
+│   │   │   ├── delivery_service.py       # オーケストレーター（fetcher 合成・再試行）
+│   │   │   ├── exceptions.py             # RateLimitError 等
+│   │   │   └── fetchers/
+│   │   │       ├── cdp_disclosure_fetcher.py    # 四季報適時開示（Playwright/CDP）
+│   │   │       ├── google_news_rss_fetcher.py   # Google News RSS
+│   │   │       ├── tdnet_rss_fetcher.py         # yanoshin TDnet (Atom)
+│   │   │       ├── shikiho_stock_news_fetcher.py # 四季報銘柄関連記事
+│   │   │       └── disclosure_fetcher.py        # 旧HTTP版（テスト/レガシー）
+│   │   │
 │   │   ├── utils/                        # ユーティリティ
 │   │   │   ├── __init__.py              # エクスポート定義
 │   │   │   ├── parallel_processor.py     # 並列処理フレームワーク
@@ -99,6 +115,9 @@ Stock-Analysis/
 │   ├── migrate_add_source_column.py  # daily_quotesにsourceカラム追加マイグレーション
 │   ├── migrate_refetch_yfinance.py  # yfinanceデータ削除→auto_adjust=Falseで再取得
 │   ├── migrate_rescale_yfinance.py  # yfinanceデータをJ-Quants境界比率でリスケール
+│   ├── run_news_delivery.py         # ウォッチリストニュース配信（launchd: 平日 朝/昼/夜）
+│   ├── watchlist.py                 # ウォッチリストCRUD CLI
+│   ├── cleanup_news_db.py           # delivered_news 重複排除DBのクリーンアップ
 │   └── _old/
 │       ├── run_daily_jquants.py
 │       └── run_daily_analysis.py
@@ -107,7 +126,8 @@ Stock-Analysis/
 │   ├── conftest.py                   # 共有フィクスチャ
 │   ├── fixtures/                     # テスト用データファイル
 │   │   ├── sample_prices.csv         # サンプル株価データ
-│   │   └── executives/               # EDINET iXBRLサンプル（toyota/sony）＋build_fixtures.py
+│   │   ├── executives/               # EDINET iXBRLサンプル（toyota/sony）＋build_fixtures.py
+│   │   └── news_delivery/            # ニュース配信フィクスチャ（四季報HTML・RSS等）
 │   ├── test_minervini.py
 │   ├── test_high_low_ratio.py
 │   ├── test_relative_strength.py
@@ -145,6 +165,9 @@ Stock-Analysis/
 │   ├── analysis_results.db           # 分析結果（参考値2026-04: ~2.0GB）
 │   ├── master.db                     # 銘柄マスター（~964KB）
 │   ├── yfinance.db                   # レガシー（1.4MB）
+│   ├── news_delivery.db              # ウォッチリスト重複排除（`delivered_news` テーブル）
+│   ├── watchlists/                   # ウォッチリスト定義JSON（`default.json` 等）
+│   │   └── default.json
 │   └── portfolios/                   # VirtualPortfolio用JSONファイル（.gitignore）
 │       └── *.json
 │
@@ -189,6 +212,11 @@ Stock-Analysis/
 ├── config/                          # 設定ファイル
 │   └── news_sources.yaml            # ニュース巡回先設定
 │
+├── launchd/                         # launchd plist テンプレート
+│   ├── com.stock-analysis.news-delivery-morning.plist.template
+│   ├── com.stock-analysis.news-delivery-noon.plist.template
+│   └── com.stock-analysis.news-delivery-evening.plist.template
+│
 ├── .claude/skills/                  # Claude Codeスキル定義
 │   ├── acceptance-test/             # 受け入れテストスキル
 │   │   └── SKILL.md
@@ -218,6 +246,8 @@ Stock-Analysis/
 │   │   └── SKILL.md
 │   ├── repository-structure/        # リポジトリ構造定義書作成スキル
 │   │   └── SKILL.md
+│   ├── research-executives/         # 経営陣6軸スコアリングスキル
+│   │   └── SKILL.md
 │   ├── research-stock-news/         # 銘柄ニュース調査スキル
 │   │   └── SKILL.md
 │   ├── review-docs/                 # ドキュメントレビュースキル
@@ -228,7 +258,9 @@ Stock-Analysis/
 │   │   └── SKILL.md
 │   ├── validate-code/               # コード品質検証スキル
 │   │   └── SKILL.md
-│   └── validation/                  # コード品質検証共通ロジック
+│   ├── validation/                  # コード品質検証共通ロジック
+│   │   └── SKILL.md
+│   └── watch/                       # ウォッチリストCRUDスキル
 │       └── SKILL.md
 │
 ├── .env                              # 環境変数（gitignore）
@@ -269,6 +301,11 @@ Stock-Analysis/
 | `src/market_pipeline/utils/cache_manager.py` | キャッシュ管理 |
 | `src/market_pipeline/utils/slack_notifier.py` | Slack Incoming Webhook通知（SlackNotifier, JobContext, JobResult） |
 | `src/market_pipeline/news/config_parser.py` | ニュース巡回先YAML設定パーサー |
+| `src/market_pipeline/news_delivery/delivery_service.py` | ウォッチリストニュース配信オーケストレーター |
+| `src/market_pipeline/news_delivery/watchlist.py` | WatchList クラス（CRUD・master.db メタ解決） |
+| `src/market_pipeline/news_delivery/deduplicator.py` | URL SHA256 重複排除 (`delivered_news` テーブル) |
+| `src/market_pipeline/news_delivery/formatter.py` | Slack Block Kit フォーマッタ |
+| `src/market_pipeline/news_delivery/fetchers/` | ソース別フェッチャ（四季報CDP・Google News・TDnet・四季報銘柄ページ） |
 | `src/market_pipeline/yfinance/historical_price_fetcher.py` | HistoricalPriceFetcher（yfinance過去20年分日足データ取得） |
 | `src/market_pipeline/executives/edinet_executive_fetcher.py` | EDINETから有価証券報告書をダウンロードし役員情報＋略歴をパース |
 | `src/market_pipeline/executives/edinet_doc_resolver.py` | 銘柄→doc_id 解決（キャッシュ利用で高速化） |
@@ -306,12 +343,22 @@ Stock-Analysis/
 | `scripts/migrate_add_source_column.py` | 手動（初回） | daily_quotesにsourceカラム追加マイグレーション |
 | `scripts/migrate_refetch_yfinance.py` | 手動（必要時） | yfinanceデータを削除してauto_adjust=Falseで再取得 |
 | `scripts/migrate_rescale_yfinance.py` | 手動（必要時） | yfinanceデータをJ-Quants境界比率でリスケール |
+| `scripts/run_news_delivery.py` | 平日 08:00 / 12:30 / 19:30 (launchd) | ウォッチリスト銘柄のニュース・適時開示を Slack 配信 |
+| `scripts/watchlist.py` | 手動 | ウォッチリストCRUD（add / list / update / remove） |
+| `scripts/cleanup_news_db.py` | 手動（任意） | `delivered_news` 重複排除DBのクリーンアップ（デフォルト90日） |
 | `scripts/run_executive_master_update.py` | 月次（手動 or launchd） | EDINET有報から役員マスターを更新 |
 | `scripts/run_research_executives.py` | `/research-executives`スキルから | 役員リストJSON出力＋キャッシュから経営陣レポート組立て |
-| `scripts/poc_edinet_executives.py` | 初期検証のみ | Phase 0 PoC: EDINET役員情報取得の動作確認用 |
 | `scripts/migrate_executives_add_career_column.py` | 一度のみ | `executives.career_summary` カラム追加 |
 | `scripts/migrate_executives_add_growth_axis.py` | 一度のみ | `executive_evaluations.growth_ambition` カラム追加 |
-| `scripts/verify_cache_7203.py` | 手動（開発者向け） | EDINET doc_idキャッシュ動作確認用デバッグスクリプト |
+
+#### 開発者向けユーティリティ（通常運用では使用しない）
+
+以下は PoC・デバッグ・動作確認用のスクリプト。CLAUDE.md の運用コマンドには含まれず、開発者が必要な時にのみ手動で実行する。
+
+| スクリプト | 用途 |
+|----------|------|
+| `scripts/poc_edinet_executives.py` | Phase 0 PoC: EDINET役員情報取得の動作確認 |
+| `scripts/verify_cache_7203.py` | EDINET doc_idキャッシュ動作確認用デバッグスクリプト |
 
 ### データベース
 
@@ -350,6 +397,16 @@ Stock-Analysis/
 | `tests/test_optimization_results.py` | OptimizationResultsクラス |
 | `tests/test_slack_notifier.py` | SlackNotifier/JobContext/JobResult |
 | `tests/test_news_config.py` | ニュース巡回先設定パーサー |
+| `tests/test_watchlist.py` | WatchList CRUD・master.db メタ解決 |
+| `tests/test_news_delivery_dedupe.py` | Deduplicator（URL SHA256・90日クリーンアップ） |
+| `tests/test_news_delivery_integration.py` | DeliveryService E2E（fetcher 合成・再試行） |
+| `tests/test_news_formatter.py` | SlackFormatter（Block Kit・38000文字分割） |
+| `tests/test_rate_limiter.py` | トークンバケット式レート制限 + RateLimitError |
+| `tests/test_cdp_disclosure_fetcher.py` | 四季報適時開示（Playwright/CDP） |
+| `tests/test_disclosure_fetcher.py` | 旧HTTP版適時開示フェッチャ（BS4） |
+| `tests/test_google_news_rss_fetcher.py` | Google News RSS フェッチャ |
+| `tests/test_tdnet_rss_fetcher.py` | yanoshin TDnet（Atom）フェッチャ |
+| `tests/test_shikiho_stock_news_fetcher.py` | 四季報銘柄ページ「この銘柄の関連記事」フェッチャ |
 | `tests/test_historical_price_fetcher.py` | HistoricalPriceFetcher（yfinance過去データ取得・カラムマッピング・マイグレーション） |
 | `tests/test_edinet_executive_fetcher.py` | EdinetExecutiveFetcher（iXBRLパース・正規化・両タグ系統） |
 | `tests/test_executive_repository.py` | ExecutiveRepository（3テーブルCRUD・UPSERT・フィルタ） |
