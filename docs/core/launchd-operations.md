@@ -10,6 +10,101 @@
 | 日次データ取得 | `com.tak.stock-analysis.daily-jquants` | 平日 18:00 | `scripts/run_daily_jquants.py` |
 | 週次タスク | `com.tak.stock-analysis.weekly-tasks` | 土曜 06:00 | `scripts/run_weekly_tasks.py` |
 | 月次マスタ更新 | `com.tak.stock-analysis.monthly-master` | 毎月1日 20:30 | `scripts/run_monthly_master.py` |
+| ニュース配信(朝) | `com.tak.stock-analysis.news-delivery-morning` | 平日 08:00 | `scripts/run_news_delivery.py --slot morning` |
+| ニュース配信(昼) | `com.tak.stock-analysis.news-delivery-noon` | 平日 12:30 | `scripts/run_news_delivery.py --slot noon` |
+| ニュース配信(夜) | `com.tak.stock-analysis.news-delivery-evening` | 平日 19:30 | `scripts/run_news_delivery.py --slot evening` |
+
+### ニュース配信ジョブの登録手順
+
+`launchd/com.stock-analysis.news-delivery-{morning,noon,evening}.plist.template` をリポジトリに同梱。
+スロットごとに次の手順で登録する（昼配信が不要であれば noon 分を省略可能）:
+
+```bash
+# 1. テンプレートを LaunchAgents へコピー (slot は morning / noon / evening)
+SLOT=evening
+cp launchd/com.stock-analysis.news-delivery-${SLOT}.plist.template \
+   ~/Library/LaunchAgents/com.tak.stock-analysis.news-delivery-${SLOT}.plist
+
+# 2. ジョブをロード
+launchctl load ~/Library/LaunchAgents/com.tak.stock-analysis.news-delivery-${SLOT}.plist
+
+# 3. 登録確認
+launchctl list | grep news-delivery
+```
+
+各ジョブは平日のみ起動し、`RunAtLoad=false` のため再起動・スリープ復帰時には即時実行されない。
+書き込み先は `data/news_delivery.db` のみで他ジョブとの競合は発生しない。
+
+### スロットの考え方
+
+- **朝 (08:00)**: 寄り付き前。前日夜〜早朝に出た適時開示・ニュースをまとめて把握
+- **昼 (12:30)**: 前場引け後の昼休み。午前中の発表を午後の取引に活かす
+- **夜 (19:30)**: 場中・引け後の発表をまとめて確認
+
+3スロット同時に運用する必要はなく、用途に応じて取捨選択する。**当初は朝＋夜の2スロットで運用** し、以下のような状況で noon を `launchctl load` で追加するのが推奨パターン:
+
+- **昼配信を追加すべき具体例:**
+  - **デイトレ・短期スイング運用**: 午前のIRリリースを当日午後の判断に反映したい
+  - **決算発表シーズン (4月下旬〜5月、10月下旬〜11月)**: ウォッチ銘柄の本決算・四半期決算が午前に集中する時期に午後の対応が遅れないようにする
+  - **昼休みの相場確認を業務に組み込んでいる**: 日中の取引ができる環境で、12:30〜13:00 の前場引け後 30 分にニュースを確認したい
+- **昼配信を追加しなくてよい具体例:**
+  - 中長期ホールド主体（夜の確認だけで十分）
+  - 平日昼間に Slack を見る習慣がない
+  - Slack 通知数を減らしたい（朝＋夜の2スロットでも `lookback-days` を伸ばせば取りこぼしは少ない）
+
+### 重複排除DB のクリーンアップ
+
+`data/news_delivery.db` の `delivered_news` テーブルは時間経過で肥大化するため、定期的に古いレコードを削除する。`scripts/cleanup_news_db.py` を使用する:
+
+```bash
+# デフォルト (90日経過レコードを削除)
+python scripts/cleanup_news_db.py
+
+# 60日に変更
+python scripts/cleanup_news_db.py --days 60
+```
+
+cron / launchd で月次実行する運用も可能。スキーマ詳細は `README.md` の "News Delivery Module" セクションを参照。
+
+### 取得ソースの選択 (`--sources`)
+
+`scripts/run_news_delivery.py` は `--sources` オプションで取得ソースを絞り込める:
+
+```bash
+# 全ソース (デフォルト): 四季報CDP + Google News RSS + TDnet RSS
+python scripts/run_news_delivery.py --slot evening
+
+# 適時開示のみ
+python scripts/run_news_delivery.py --slot evening --sources disclosure
+
+# 一般ニュースとTDnetのみ (四季報CDPを使わない=Playwright不要で軽量)
+python scripts/run_news_delivery.py --slot morning --sources general_news,ir_release
+```
+
+ソース別の特徴:
+
+| ソース | 取得元 | 特徴 |
+|--------|--------|------|
+| `disclosure` | 四季報オンライン (Playwright/CDP) | フィルタ済み適時開示。重要度ラベル `high` を付与 |
+| `general_news` | Google News RSS | 銘柄名 + コードで検索。Yahoo!ファイナンス等のノイズは exclude フィルタで除外 |
+| `ir_release` | yanoshin TDnet ラッパー (Atom) | TDnet 一次情報。四季報より早く反映される傾向 |
+| `stock_news` | 四季報銘柄ページ (Playwright/CDP) | 「この銘柄の関連記事」セクション。ログミー / お宝銘柄日々発見術等の編集記事 |
+
+### lookback 設定
+
+`STOCK_NEWS_LOOKBACK_DAYS` または `--lookback-days` で取得対象期間を制御。デフォルトは 7 日。
+
+```bash
+# 直近1日のみ (短時間スロット間隔向け)
+python scripts/run_news_delivery.py --slot morning --lookback-days 1
+
+# 過去30日 (深掘り運用観察向け)
+python scripts/run_news_delivery.py --slot evening --lookback-days 30
+```
+
+### レート制限
+
+Google News RSS / TDnet RSS は内部で1分あたりのリクエスト上限 (`RateLimiter`) を持つ。到達した場合 `RateLimitError` が発生し、`DeliveryService` は **priority=high のウォッチ銘柄のみで自動再試行**する。`JobContext.warnings` および `metrics` に「レート制限到達」が記録され、Slack のジョブ通知で確認可能。
 
 ### チェーン実行フロー（日次）
 
@@ -233,3 +328,40 @@ cd ~/.local/share/launchd
 - ログ: `logs/`（プロジェクトルート直下）
 - crontab移行前バックアップ: `~/.local/share/launchd/crontab_backup.txt`
 - Apple公式ドキュメント: `man launchd.plist`
+
+## 四季報の有料記事を取得する場合の初回ログイン手順 (オプション)
+
+`stock_news` / `disclosure` ソース (`CdpDisclosureFetcher` / `ShikihoStockNewsFetcher`) は四季報オンラインを Playwright で巡回するが、**「この銘柄の関連記事」一覧 / 適時開示一覧は無料で取得可能**であり、本手順は実施しなくても基本的な配信は動作する。
+
+四季報オンラインの**有料記事本文**（東洋経済オンライン会員限定記事等）を将来的に取得対象に加える場合に限り、専用Chromiumプロファイルへの初回ログインが必要。
+
+```bash
+# 1. 専用プロファイルを headed (GUI) で起動。無料記事配信時と同じプロファイルを使う。
+python -c "
+from playwright.sync_api import sync_playwright
+from pathlib import Path
+with sync_playwright() as pw:
+    ctx = pw.chromium.launch_persistent_context(
+        user_data_dir=str(Path.home()/'.stock-news/chrome-profile'),
+        headless=False,
+    )
+    page = ctx.new_page()
+    page.goto('https://shikiho.toyokeizai.net/')
+    input('Chromium ウィンドウでログイン → Enter で終了: ')
+    ctx.close()
+"
+
+# 2. ウィンドウが開いたら、画面右上「ログイン」から会員アカウントでサインインする
+#    (有料プラン契約済みの会員アカウント)。Cookie/セッションがプロファイルに永続化される。
+
+# 3. ログイン状態の確認: ヘッダーに自分のアカウント名が表示されること
+
+# 4. ターミナルで Enter キーを押して Python スクリプトを終了
+
+# 5. 以降の launchd ジョブは headless=True でも同プロファイルから Cookie を引き継ぐ
+```
+
+ログインが切れた場合（数ヶ月単位）、上記を再実行する。launchd ジョブの実行ログ
+(`logs/news_delivery_*.log`) で「ログイン要求」関連の警告が出始めたら再ログインのサイン。
+
+このログイン状態はオプションであり、未ログインでも `stock_news` fetcher は記事一覧（タイトル・URL・日時）を取得して配信する。本文閲覧時に四季報側でログイン誘導が出るのは Slack 通知から記事を開いた閲覧者の責任範囲となる。

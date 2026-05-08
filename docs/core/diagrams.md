@@ -11,6 +11,10 @@ flowchart TB
         YF[yfinance API<br/>BS・時価総額・PER・過去日足]
         ED[EDINET API<br/>有価証券報告書 XBRL]
         WS[WebSearch<br/>役員外部発信]
+        SHK[四季報 適時開示・銘柄ページ<br/>Playwright/CDP]
+        GNR[Google News RSS]
+        TDN[TDnet Atom<br/>yanoshin]
+        SLK[Slack Incoming Webhook]
     end
 
     subgraph Collection["データ収集レイヤー"]
@@ -19,6 +23,7 @@ flowchart TB
         RMM[run_monthly_master.py<br/>毎月1日 20:30]
         REM[run_executive_master_update.py<br/>月次バッチ]
         RRE[run_research_executives.py<br/>/research-executives スキル]
+        RND[run_news_delivery.py<br/>平日 08:00 / 12:30 / 19:30]
     end
 
     subgraph Storage["SQLiteストレージ"]
@@ -26,6 +31,8 @@ flowchart TB
         SDB[(statements.db<br/>+ yfinance_valuation<br/>+ executives / communications / evaluations)]
         MDB[(master.db)]
         ADB[(analysis_results.db)]
+        NDB[(news_delivery.db<br/>delivered_news 重複排除)]
+        WLD[/data/watchlists/<br/>default.json/]
     end
 
     subgraph Analysis["分析レイヤー"]
@@ -45,6 +52,14 @@ flowchart TB
         PDE[published_date_extractor.py]
         EV[evaluator.py<br/>Claude LLM 6軸]
         EREP[repository.py<br/>3テーブルCRUD]
+    end
+
+    subgraph NewsLayer["ニュース配信レイヤー (src/market_pipeline/news_delivery/)"]
+        WL[watchlist.py<br/>WatchList CRUD]
+        DS[delivery_service.py<br/>DeliveryService]
+        DD[deduplicator.py<br/>URL SHA256]
+        FMT[formatter.py<br/>SlackFormatter]
+        FCH[fetchers/<br/>CDP/RSS/Atom]
     end
 
     subgraph Integration["統合・出力"]
@@ -80,6 +95,18 @@ flowchart TB
     EREP --> EV --> EREP
     RRE --> EREP
     EREP --> EXR
+
+    RND --> WL
+    WLD --> WL
+    MDB --> WL
+    WL --> DS
+    SHK --> FCH
+    GNR --> FCH
+    TDN --> FCH
+    FCH --> DS
+    DS --> DD
+    NDB <--> DD
+    DS --> FMT --> SLK
 ```
 
 > サイズ参考値（2026-04時点）: jquants.db ≒ 2.7GB、analysis_results.db ≒ 2.0GB、statements.db ≒ 63MB、master.db ≒ 964KB。yfinance過去20年取得後の実測値で変動する。
@@ -122,6 +149,31 @@ graph LR
 
         subgraph News["news/"]
             NCP[config_parser.py<br/>NewsSource, NewsConfig]
+        end
+
+        subgraph NewsDelivery["news_delivery/"]
+            NDM[models.py<br/>NewsItem, WatchListEntry]
+            NWL[watchlist.py<br/>WatchList]
+            NDD[deduplicator.py<br/>Deduplicator]
+            NFM[formatter.py<br/>SlackFormatter]
+            NRL[rate_limiter.py<br/>RateLimiter]
+            NDS[delivery_service.py<br/>DeliveryService]
+            subgraph Fetchers["fetchers/"]
+                FCDP[cdp_disclosure_fetcher.py]
+                FGN[google_news_rss_fetcher.py]
+                FTD[tdnet_rss_fetcher.py]
+                FSH[shikiho_stock_news_fetcher.py]
+                FDS[disclosure_fetcher.py<br/>レガシー HTTP]
+            end
+        end
+
+        subgraph Executives["executives/"]
+            XEF[edinet_executive_fetcher.py]
+            XDR[edinet_doc_resolver.py]
+            XRP[repository.py]
+            XCC[communication_collector.py]
+            XPDE[published_date_extractor.py]
+            XEV[evaluator.py]
         end
     end
 

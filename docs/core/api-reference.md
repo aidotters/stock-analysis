@@ -103,6 +103,43 @@ settings = get_settings()
 | `timeout_seconds` | `int` | `10` | HTTPタイムアウト（秒） |
 | `max_retries` | `int` | `3` | リトライ回数 |
 
+**環境変数プレフィックス:** `SLACK_`（例: `SLACK_WEBHOOK_URL=...`）
+
+#### settings.edinet
+
+| 属性 | 型 | デフォルト | 説明 |
+|-----|-----|---------|------|
+| `api_key` | `str` | `""` | EDINET API キー（必須、`EDINET_API_KEY` で読み込み） |
+| `base_url` | `str` | `"https://api.edinet-fsa.go.jp/api/v2"` | EDINET API ベースURL |
+| `timeout_list` | `int` | `30` | documents.json 取得のタイムアウト（秒） |
+| `timeout_download` | `int` | `120` | XBRL ZIP ダウンロードのタイムアウト（秒） |
+| `max_retries` | `int` | `3` | リトライ回数 |
+
+**環境変数プレフィックス:** `EDINET_`（例: `EDINET_API_KEY=...`）
+
+> **必須設定:** `EDINET_API_KEY` は `/research-executives` および `scripts/run_executive_master_update.py` で必須。未設定時は EDINET 系処理が失敗する。
+
+#### settings.executives
+
+| 属性 | 型 | デフォルト | 説明 |
+|-----|-----|---------|------|
+| `cache_ttl_days` | `int` | `30` | 発信収集キャッシュの有効期限（日） |
+| `max_parallel_fetch` | `int` | `3` | 並列フェッチ数 |
+| `doc_scan_fallback_months` | `int` | `18` | 初回スキャン時の遡及月数（フォールバック範囲） |
+| `doc_scan_narrow_days` | `int` | `30` | docID キャッシュ命中後の絞り込みスキャン幅（期末月前後の日数） |
+
+**環境変数プレフィックス:** `EXECUTIVES_`（例: `EXECUTIVES_CACHE_TTL_DAYS=14`）
+
+#### settings.news_delivery
+
+| 属性 | 型 | デフォルト | 説明 |
+|-----|-----|---------|------|
+| `lookback_days` | `int` | `7` | ウォッチリストニュース取得対象期間（日）。これより古い `published_at` の項目は除外する |
+
+**環境変数プレフィックス:** `STOCK_NEWS_`（例: `STOCK_NEWS_LOOKBACK_DAYS=3`）
+
+> **関連環境変数:** `STOCK_NEWS_QUIET_WHEN_EMPTY`（新規0件時のSlack送信スキップ）、`STOCK_NEWS_SLACK_WEBHOOK_URL`（専用 webhook、未設定時は `SLACK_WEBHOOK_URL` にフォールバック）。これらは `delivery_service.py` 側で直接 `os.environ` を参照する。
+
 ---
 
 ## yfinanceバリュエーションモジュール (`src/market_pipeline/yfinance/`)
@@ -508,7 +545,7 @@ sources = get_sources_by_category(config, "news")
 | パラメータ | 型 | 説明 |
 |-----------|-----|------|
 | `config` | `NewsConfig` | 設定オブジェクト |
-| `category` | `str` | カテゴリ名（`news`, `analysis`, `disclosure`, `financial`） |
+| `category` | `str` | カテゴリ名（`news`, `analysis`, `disclosure`, `general_news`, `ir_release`, `stock_news`） |
 
 **戻り値**: `list[NewsSource]` - ソースのリスト（未知カテゴリの場合は空リスト）
 
@@ -523,16 +560,18 @@ frozenデータクラス。各巡回先サイトの情報を保持。
 | `url` | `str \| None` | サイトURL（`url`または`url_template`のいずれか必須） |
 | `selector` | `str \| None` | CSSセレクタ |
 | `description` | `str \| None` | サイト説明 |
-| `url_template` | `str \| None` | URLテンプレート（`{code}`プレースホルダー） |
+| `url_template` | `str \| None` | URLテンプレート（`{code}` / `{query}` プレースホルダー） |
+| `query_template` | `str` | クエリテンプレート（Google News RSS等、`{long_name}` `{code}` プレースホルダー）。デフォルト: 空文字 |
+| `max_items_per_code` | `int` | 銘柄ごとの最大取得件数（0=無制限）。デフォルト: 0 |
 | `filter_keywords` | `FilterKeywords \| None` | タイトルフィルタリング設定（省略時は`None`） |
 
 ### FilterKeywords（データクラス）
 
-frozenデータクラス。タイトルベースのキーワードフィルタリング設定を保持。
+frozenデータクラス。タイトルベースのキーワードフィルタリング設定を保持。`include` / `exclude` のいずれか少なくとも一方を指定する必要がある（両方空はエラー）。
 
 | 属性 | 型 | 説明 |
 |-----|-----|------|
-| `include` | `list[str]` | 含むべきキーワードリスト（必須、空リスト不可） |
+| `include` | `list[str]` | 含むべきキーワードリスト（デフォルト: 空リスト） |
 | `exclude` | `list[str]` | 除外キーワードリスト（デフォルト: 空リスト） |
 
 ### NewsConfig（データクラス）
@@ -545,6 +584,79 @@ frozenデータクラス。タイトルベースのキーワードフィルタ�
 |-----------|-----|------|
 | `categories` | `list[str]` | カテゴリ名リスト |
 | `all_sources` | `list[NewsSource]` | 全ソースのフラットリスト |
+
+---
+
+## ニュース配信モジュール (`src/market_pipeline/news_delivery/`)
+
+ウォッチリストに登録した銘柄について、適時開示・一般ニュース・TDnet・四季報銘柄関連記事を取得し Slack 配信するモジュール。`scripts/run_news_delivery.py` から launchd 経由で呼び出される。
+
+### 主要エクスポート
+
+```python
+from market_pipeline.news_delivery import WatchListEntry, NewsItem
+from market_pipeline.news_delivery.watchlist import WatchList, make_entry
+from market_pipeline.news_delivery.deduplicator import Deduplicator
+from market_pipeline.news_delivery.formatter import SlackFormatter
+from market_pipeline.news_delivery.rate_limiter import RateLimiter, RateLimitError
+from market_pipeline.news_delivery.delivery_service import (
+    DeliveryService,
+    build_default_service,
+)
+from market_pipeline.news_delivery.fetchers import (
+    CdpDisclosureFetcher,
+    GoogleNewsRssFetcher,
+    TdnetRssFetcher,
+    ShikihoStockNewsFetcher,
+    DisclosureFetcher,
+)
+```
+
+### NewsItem（データクラス）
+
+frozen dataclass。`url_hash` プロパティで URL の SHA256 ハッシュを返却し、重複排除のキーとして利用される。
+
+| 属性 | 型 | 説明 |
+|-----|-----|------|
+| `code` | `str` | 銘柄コード（4桁） |
+| `title` | `str` | 記事タイトル |
+| `url` | `str` | 記事URL |
+| `published_at` | `datetime \| None` | 発信日時 |
+| `source` | `str` | ソース識別子（`disclosure` / `general_news` / `ir_release` / `stock_news`） |
+| `category` | `str` | サブカテゴリ |
+| `importance` | `str` | 重要度（`high` 等） |
+
+### WatchListEntry（pydantic モデル）
+
+`Literal` で値域を限定（`tag`, `priority`）。
+
+| 属性 | 型 | 説明 |
+|-----|-----|------|
+| `code` | `str` | 銘柄コード（4桁） |
+| `tag` | `Literal["holding", "watching", "candidate"]` | 区分タグ |
+| `priority` | `Literal["high", "mid", "low"]` | 優先度 |
+| `note` | `str \| None` | メモ |
+
+### DeliveryService
+
+オーケストレーター。`build_default_service(sources=("disclosure","general_news","ir_release","stock_news"))` で標準fetcher合成。
+
+- `RateLimitError` 発生時、priority=high のウォッチ銘柄のみで自動再試行
+- `JobContext.warnings` / `metrics` に「レート制限到達」を記録
+- `STOCK_NEWS_QUIET_WHEN_EMPTY=true` で新規0件時の Slack 送信をスキップ
+- webhook URL は `STOCK_NEWS_SLACK_WEBHOOK_URL` → `SLACK_WEBHOOK_URL` の順でフォールバック
+
+### Deduplicator
+
+`delivered_news` テーブル + 2インデックスを自動作成。URL の SHA256 ハッシュを PK として UPSERT。`cleanup_older_than(days=90)` で古い行を削除。
+
+### SlackFormatter
+
+Slack Block Kit 形式で配信メッセージを生成。銘柄ごとセクション構成、38000文字しきい値で分割。メトリクス行（取得件数・新規件数・レート制限警告等）は最終メッセージのみに付与する。
+
+### RateLimiter
+
+トークンバケット式。レート上限到達時は `RateLimitError` を送出。
 
 ---
 

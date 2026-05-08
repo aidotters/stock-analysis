@@ -54,9 +54,36 @@ sources:
           - "コーポレート・ガバナンスに関する報告書"
           - "定款"
 
-  # Phase 2用: 銘柄個別ページの巡回設定
-  financial:
+  # Phase 2: 一般ニュース (Google News RSS 経由)
+  general_news:
+    - name: "Google News (Japan)"
+      url_template: "https://news.google.com/rss/search?q={query}&hl=ja&gl=JP&ceid=JP:ja"
+      auth: "none"
+      description: "Google News RSS 検索 (銘柄名 + コード)"
+      query_template: "{long_name} {code}"
+      max_items_per_code: 5
+      filter_keywords:
+        exclude:
+          - "株価チャート"
+          - "今の株価の理由"
+          - "リアルタイム株価"
+          - "プレスリリース配信"
+
+  # Phase 2: 適時開示の補強 (TDnet RSS 経由)
+  ir_release:
+    - name: "TDnet (yanoshin)"
+      url_template: "https://webapi.yanoshin.jp/webapi/tdnet/list/{code}.atom"
+      auth: "none"
+      description: "yanoshin TDnet ラッパー (Atom)"
+      max_items_per_code: 20
+
+  # Phase 3: 四季報銘柄ページの「この銘柄の関連記事」セクション
+  stock_news:
     - name: "会社四季報（銘柄ページ）"
       url_template: "https://shikiho.toyokeizai.net/stocks/{code}"
       auth: "cdp"
-      description: "四季報の個別銘柄ページ（Phase 2で使用）"
+      description: "四季報の個別銘柄ページの「この銘柄の関連記事」(ログイン不要、有料記事は本文未取得)"
+      max_items_per_code: 8
+      filter_keywords:
+        exclude:
+          - "もっと見る"

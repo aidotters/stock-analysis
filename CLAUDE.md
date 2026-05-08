@@ -84,6 +84,23 @@ python scripts/migrate_executives_add_career_column.py
 
 # Migration: executive_evaluations テーブルに growth_ambition カラムを追加
 python scripts/migrate_executives_add_growth_axis.py
+
+# ウォッチリストCRUD (Phase 1)
+python scripts/watchlist.py add 7203 --tag holding --priority high --note "押し目検討"
+python scripts/watchlist.py list
+python scripts/watchlist.py list --tag holding
+python scripts/watchlist.py update 7203 --priority mid
+python scripts/watchlist.py remove 7203
+
+# ウォッチリストニュース配信 (launchd: morning 08:00 / noon 12:30 / evening 19:30 — 平日のみ)
+python scripts/run_news_delivery.py --slot evening
+python scripts/run_news_delivery.py --slot evening --dry-run
+python scripts/run_news_delivery.py --slot morning --lookback-days 1
+python scripts/run_news_delivery.py --slot evening --sources disclosure,ir_release,stock_news
+
+# 重複排除DB (delivered_news) のクリーンアップ (デフォルト90日)
+python scripts/cleanup_news_db.py
+python scripts/cleanup_news_db.py --days 60
 ```
 
 ### Chart Classification
@@ -207,6 +224,39 @@ with JobContext("ジョブ名") as job:
 - リトライロジック（最大3回、1秒間隔）
 - 4つのlaunchdスクリプト全てに統合済み
 
+### Claude Code スキル一覧
+
+本プロジェクトで利用可能な全スキルの索引（各スキルの詳細は後続セクションを参照）:
+
+| カテゴリ | スキル | 用途 |
+|---------|--------|------|
+| 投資分析 | `/discover-stocks` | ニュースドリブン銘柄発見（巡回・抽出・裏付け・リスク分析） |
+| 投資分析 | `/analyze-stock` | 銘柄詳細分析（企業・財務・テクニカル統合レポート） |
+| 投資分析 | `/research-stock-news` | 特定銘柄のニュース・適時開示・IR情報の包括調査 |
+| 投資分析 | `/research-executives` | 経営陣6軸スコアリング（独立した executive_report.md 生成） |
+| 投資分析 | `/watch` | ウォッチリストCRUD（add / list / update / remove） |
+| ドキュメント作成 | `/architecture-design` | アーキテクチャ設計書の作成 |
+| ドキュメント作成 | `/functional-design` | 機能設計書の作成 |
+| ドキュメント作成 | `/development-guidelines` | 開発ガイドラインの作成 |
+| ドキュメント作成 | `/repository-structure` | リポジトリ構造定義書の作成 |
+| ドキュメント作成 | `/prd-writing` | PRD（製品要件定義書）の作成 |
+| ドキュメント作成 | `/glossary-creation` | 用語集の作成 |
+| 開発フロー | `/brainstorm` | アイデア壁打ち → docs/ideas/ に保存 |
+| 開発フロー | `/plan-feature` | 機能の計画ドキュメント作成 |
+| 開発フロー | `/implement-feature` | 計画に基づく機能実装 |
+| 開発フロー | `/initial-setup` | プロジェクト初期セットアップ |
+| 品質管理 | `/steering` | 作業計画・タスクリスト管理 |
+| 品質管理 | `/validation` | コード品質検証と受け入れテスト |
+| 品質管理 | `/validate-code` | コード品質・設計整合性検証 |
+| 品質管理 | `/acceptance-test` | 受け入れ条件の検証 |
+| 品質管理 | `/review-docs` | ドキュメント品質レビュー |
+| 品質管理 | `/update-docs` | 実装済みコードとドキュメントの同期 |
+| 品質管理 | `/gen-all-docs` | 全ドキュメント一括生成 |
+
+**表記ルール:** ドキュメント本文ではスキル名は単純表記（例: `/watch`）に統一する。引数や使用例は別途コードブロックや本文で記載する（`/watch add 7203 --tag holding` のように本文中で説明形式は混在させない）。
+
+**構成ファイル:** `.claude/skills/<skill-name>/SKILL.md`
+
 ### News Discovery Skill (`/discover-stocks`)
 ニュースや分析記事から有望銘柄を抽出するClaude Codeスキル。Playwright MCPでサイトを巡回し、銘柄コード・推奨理由を抽出、裏付け情報収集とリスク分析を経てレポートを生成する。
 
@@ -234,7 +284,9 @@ with JobContext("ジョブ名") as job:
 - `news`: ニュースサイト（日経電子版, Reuters Japan）
 - `analysis`: 分析サイト（トウシル, 会社四季報オンライン）
 - `disclosure`: 適時開示情報（会社四季報、`filter_keywords`によるフィルタリング）
-- `financial`: 個別銘柄ページ（Phase 2用）
+- `general_news`: 一般ニュース（Google News RSS、銘柄名+コードで検索）
+- `ir_release`: TDnet 適時開示（yanoshin Atom）
+- `stock_news`: 四季報銘柄ページの「この銘柄の関連記事」（CDP経由、ログイン不要）
 
 **認証方式:**
 - `auth: cdp` — Chrome DevTools Protocol経由（要: `open -a 'Google Chrome' --args --remote-debugging-port=9222`）
@@ -288,7 +340,7 @@ with JobContext("ジョブ名") as job:
 
 **構成ファイル:**
 - `.claude/skills/analyze-stock/SKILL.md`: スキル定義
-- `config/news_sources.yaml`: `financial`カテゴリの銘柄ページ設定
+- `config/news_sources.yaml`: `stock_news` / `disclosure` カテゴリの銘柄ページ設定
 - `output/reports/stocks/`: レポート出力先（タイムスタンプ付きディレクトリ）
 
 **出力ディレクトリ構成:**
@@ -427,6 +479,60 @@ python scripts/run_research_executives.py build-report 7203 --lookback-days 1095
 
 **月次バッチ DL スキップ最適化（Phase F）:** `documents.json` から取得した `docID` を `executives.edinet_source_doc_id` と比較し、一致すれば XBRL ZIP の DL・パース・upsert を全てスキップ（`status=unchanged`）。Slack 通知のメトリクス「スキップ（有報未更新）」に集計される。
 
+### News Delivery Module (src/market_pipeline/news_delivery/)
+ウォッチリスト(`data/watchlists/*.json`)に登録した銘柄について、適時開示・一般ニュース・TDnet適時開示・銘柄関連記事を取得しSlack配信するモジュール (Phase 1〜3 完了):
+
+```python
+from market_pipeline.news_delivery import WatchListEntry, NewsItem
+from market_pipeline.news_delivery.watchlist import WatchList, make_entry
+from market_pipeline.news_delivery.deduplicator import Deduplicator
+from market_pipeline.news_delivery.fetchers import (
+    CdpDisclosureFetcher,       # 四季報適時開示 (Playwright/CDP)
+    GoogleNewsRssFetcher,       # 一般ニュース (Google News RSS)
+    TdnetRssFetcher,            # TDnet適時開示 (yanoshin Atom)
+    ShikihoStockNewsFetcher,    # 四季報銘柄ページ「この銘柄の関連記事」(Playwright/CDP)
+    DisclosureFetcher,          # 旧HTTP版 (テスト/レガシー用)
+)
+from market_pipeline.news_delivery.formatter import SlackFormatter
+from market_pipeline.news_delivery.rate_limiter import RateLimiter, RateLimitError
+from market_pipeline.news_delivery.delivery_service import (
+    DeliveryService, build_default_service,
+)
+```
+
+**モジュール構成:**
+- `models.py`: `NewsItem` (frozen dataclass + `url_hash` プロパティ) と `WatchListEntry` (pydantic, `Literal` で値域限定)
+- `watchlist.py`: `WatchList` クラス (アトミック書込・CRUD・filter_by_tag/priority・`master.db` メタ解決)
+- `deduplicator.py`: `Deduplicator` (`delivered_news` テーブル + 2インデックス自動作成、URL SHA256ハッシュPKでUPSERT、90日クリーンアップ)
+- `formatter.py`: `SlackFormatter` (Block Kit、銘柄ごとセクション、38000文字しきい値で分割、メトリクス行は最終メッセージのみ)
+- `rate_limiter.py`: トークンバケット式レート制限 + `RateLimitError`
+- `fetchers/cdp_disclosure_fetcher.py`: 四季報適時開示 (Playwright + 専用Chromiumプロファイル `~/.stock-news/chrome-profile`、SPA対応)
+- `fetchers/google_news_rss_fetcher.py`: Google News RSS (銘柄名+コードで検索、`max_items_per_code`/`exclude` フィルタ、レート制限統合)
+- `fetchers/tdnet_rss_fetcher.py`: yanoshin TDnet (Atom、銘柄プレフィックス自動削除)
+- `fetchers/shikiho_stock_news_fetcher.py`: 四季報銘柄ページの「この銘柄の関連記事」(Playwright、ログイン不要、有料記事は本文未取得)
+- `fetchers/disclosure_fetcher.py`: 旧HTTP版 (BS4)、テスト用に保持
+- `delivery_service.py`: オーケストレーター。`build_default_service(sources=("disclosure","general_news","ir_release","stock_news"))` で fetcher 合成。`RateLimitError` 発生時 priority=high のみ自動再試行、`warnings`/`metrics` 記録。`STOCK_NEWS_QUIET_WHEN_EMPTY` / `STOCK_NEWS_SLACK_WEBHOOK_URL` → `SLACK_WEBHOOK_URL` フォールバック対応
+
+**設定 (`.env` または `settings`):**
+- `STOCK_NEWS_LOOKBACK_DAYS=7`: 取得対象期間（CLI `--lookback-days` で上書き可能）
+- `STOCK_NEWS_QUIET_WHEN_EMPTY=false`: 新規0件時のSlack送信スキップ
+- `STOCK_NEWS_SLACK_WEBHOOK_URL=`: 専用 webhook（未設定時は `SLACK_WEBHOOK_URL` にフォールバック）
+
+**CLI:**
+```bash
+python scripts/run_news_delivery.py --slot {morning|noon|evening} \
+    [--dry-run] [--lookback-days N] [--sources disclosure,general_news,ir_release]
+```
+
+**スキル:** `/watch` (`scripts/watchlist.py` を呼ぶラッパー。サブコマンド: `add` / `list` / `update` / `remove`)
+
+**launchd plist テンプレート:** `launchd/com.stock-analysis.news-delivery-{morning,noon,evening}.plist.template`
+- morning: 平日 08:00（寄り付き前の前日夜〜早朝のまとめ）
+- noon:    平日 12:30（前場引け後）— 必要時のみ load
+- evening: 平日 19:30（場中・引け後の発表）
+
+すべて `RunAtLoad=false`、書込先は `data/news_delivery.db` のみで他ジョブと競合しない。
+
 ### Document Creation & Quality Assurance Skills
 Claude Codeスキルとして、ドキュメント作成と品質管理のためのスキルも提供:
 
@@ -452,6 +558,13 @@ Claude Codeスキルとして、ドキュメント作成と品質管理のため
 - `/review-docs`: ドキュメント品質レビュー
 - `/update-docs`: 実装済みコードとドキュメントの同期
 - `/gen-all-docs`: 全ドキュメント一括生成
+
+**投資分析スキル:**
+- `/discover-stocks`: ニュースドリブン銘柄発見（巡回 → 銘柄抽出 → 裏付け → リスク分析）
+- `/analyze-stock`: 銘柄詳細分析（企業・財務・テクニカル統合レポート）
+- `/research-stock-news`: 特定銘柄のニュース・適時開示・IR情報の包括調査
+- `/research-executives`: 経営陣6軸スコアリング（独立した executive_report.md 生成）
+- `/watch`: ウォッチリストCRUD（`scripts/watchlist.py` を呼ぶラッパー、add / list / update / remove）
 
 **構成ファイル:** `.claude/skills/<skill-name>/SKILL.md`
 
