@@ -206,6 +206,11 @@ class NewsDeliverySettings(BaseSettings):
     # 適時開示の取得対象期間 (日)。これより古い published_at の項目は除外する。
     lookback_days: int = 7
 
+    # 配信先 Slack Webhook URL。未設定時は settings.slack.webhook_url にフォールバック。
+    slack_webhook_url: str = ""
+    # 新規0件時に Slack 送信をスキップするかどうか。
+    quiet_when_empty: bool = False
+
 
 class SlackSettings(BaseSettings):
     """Slack notification settings."""

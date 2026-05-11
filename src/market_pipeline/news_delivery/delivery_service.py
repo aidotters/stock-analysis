@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 from datetime import datetime
 from typing import Callable, Iterable, Optional
 
@@ -60,12 +61,19 @@ class DeliveryService:
         self._formatter = formatter
         self._slack_post = slack_post or _default_slack_post
         self._webhook_url = webhook_url or _resolve_webhook_url()
+        if self._webhook_url:
+            masked = self._webhook_url[-8:]
+            logger.info("Slack webhook resolved (suffix=...%s)", masked)
+        else:
+            logger.info("Slack webhook 未設定 (送信スキップ)")
         self._warn = warning_handler or (lambda _msg: None)
         self._metric = metric_handler or (lambda _k, _v: None)
         if quiet_when_empty is None:
-            quiet_when_empty = (
-                os.environ.get("STOCK_NEWS_QUIET_WHEN_EMPTY", "false").lower() == "true"
-            )
+            env_val = os.environ.get("STOCK_NEWS_QUIET_WHEN_EMPTY")
+            if env_val is not None:
+                quiet_when_empty = env_val.strip().lower() == "true"
+            else:
+                quiet_when_empty = get_settings().news_delivery.quiet_when_empty
         self._quiet_when_empty = quiet_when_empty
 
     def run(self, slot: str, *, dry_run: bool = False) -> dict[str, int]:
@@ -86,7 +94,21 @@ class DeliveryService:
         high_priority_codes = [
             e.code for e in entries if getattr(e, "priority", None) == "high"
         ]
-        for fetcher in self._fetchers:
+        logger.info(
+            "Fetch開始: %d銘柄 × %dソース (%s)",
+            len(codes),
+            len(self._fetchers),
+            ", ".join(f.source_name for f in self._fetchers),
+        )
+        for idx, fetcher in enumerate(self._fetchers, start=1):
+            t0 = time.monotonic()
+            logger.info(
+                "[%d/%d] %s 開始 (codes=%d)",
+                idx,
+                len(self._fetchers),
+                fetcher.source_name,
+                len(codes),
+            )
             try:
                 items, errors = _run_fetcher(fetcher, codes)
             except RateLimitError as e:
@@ -114,6 +136,15 @@ class DeliveryService:
                 self._warn(f"{code}: {fetcher.source_name} 取得失敗 ({exc})")
             if errors and not items:
                 per_fetcher_failures += 1
+            logger.info(
+                "[%d/%d] %s 完了 (items=%d, errors=%d, elapsed=%.1fs)",
+                idx,
+                len(self._fetchers),
+                fetcher.source_name,
+                len(items),
+                len(errors),
+                time.monotonic() - t0,
+            )
 
         if (
             self._fetchers
@@ -198,11 +229,18 @@ def _run_fetcher(
 
 
 def _resolve_webhook_url() -> Optional[str]:
-    """STOCK_NEWS_SLACK_WEBHOOK_URL → SLACK_WEBHOOK_URL の順でフォールバック。"""
+    """STOCK_NEWS_SLACK_WEBHOOK_URL → SLACK_WEBHOOK_URL の順でフォールバック。
+
+    os.environ は launchd 経由など .env が読まれない経路で空になり得るため、
+    Pydantic Settings (settings.news_delivery.slack_webhook_url) も参照する。
+    """
     url = os.environ.get("STOCK_NEWS_SLACK_WEBHOOK_URL", "").strip()
     if url:
         return url
     settings = get_settings()
+    url = (settings.news_delivery.slack_webhook_url or "").strip()
+    if url:
+        return url
     return settings.slack.webhook_url or None
 
 
