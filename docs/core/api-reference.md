@@ -140,6 +140,22 @@ settings = get_settings()
 
 > **関連環境変数:** `STOCK_NEWS_QUIET_WHEN_EMPTY`（新規0件時のSlack送信スキップ）、`STOCK_NEWS_SLACK_WEBHOOK_URL`（専用 webhook、未設定時は `SLACK_WEBHOOK_URL` にフォールバック）。これらは `delivery_service.py` 側で直接 `os.environ` を参照する。
 
+#### settings.notion
+
+| 属性 | 型 | デフォルト | 説明 |
+|-----|-----|---------|------|
+| `parent_page_id` | `str` | `""` | Notion 親ページID（投入先、`/sync-notion` で必須） |
+| `api_token` | `str` | `""` | Notion Internal Integration Token（REST API 認証、`/sync-notion` で必須） |
+| `enabled` | `bool` | `True` | Notion 投入機能の有効/無効 |
+| `api_timeout_seconds` | `int` | `30` | REST API リクエストタイムアウト（秒） |
+| `api_throttle_seconds` | `float` | `0.4` | `append_blocks` チャンク間のスロットル（秒、Notion レート制限約 3req/s 対応） |
+| `upload_chart_image` | `bool` | `True` | `chart.png` の File Upload API 経由アップロードを行うか |
+| `api_version` | `str` | `"2022-06-28"` | `Notion-Version` ヘッダ値 |
+
+**環境変数プレフィックス:** `NOTION_`（例: `NOTION_PARENT_PAGE_ID=...`, `NOTION_API_TOKEN=...`, `NOTION_ENABLED=false`）
+
+> **必須設定:** `NOTION_PARENT_PAGE_ID` と `NOTION_API_TOKEN` は `/sync-notion` 実行時に必須。未設定時は CLI が事前検証で停止する。
+
 ---
 
 ## yfinanceバリュエーションモジュール (`src/market_pipeline/yfinance/`)
@@ -2832,6 +2848,180 @@ pandas DataFrameをキャッシュに保存。
 
 ---
 
+## Notion 投入モジュール (`src/notion_export/`)
+
+投資分析レポート(`output/reports/stocks/YYYYMMDD-HHMM-{code}-analysis/`)を Notion 親ページ配下に 1 銘柄=1 ページで投入する独立パッケージ。`market_pipeline` の市場データ収集・分析パイプライン外の責務として `src/` 直下に配置。
+
+### convert（`markdown_converter.py`）
+
+Markdown を Notion blocks(dict)列に変換。
+
+```python
+from notion_export.markdown_converter import convert
+
+blocks = convert(
+    markdown_text,
+    image_resolver=None,            # ![alt](src) を解決する callable: (src: str) -> file_id | None
+    wrap_in_toggle="Deep Research", # 全体を toggle block でラップ（指定時のみ）
+)
+```
+
+**対応する Markdown 要素 → Notion block:**
+
+| Markdown | Notion block | 備考 |
+|----------|--------------|------|
+| `#` / `##` / `###` | `heading_1` / `heading_2` / `heading_3` | `####` 以下は `heading_3` にフラット化 |
+| 段落 | `paragraph` | 2000 文字超は annotation 境界を尊重して分割 |
+| `- ` / `1. ` | `bulleted_list_item` / `numbered_list_item` | 1段ネストまで |
+| `\|...\|` | `table` + `table_row` | 1行目をヘッダ行（`has_column_header: true`） |
+| `> ` | `quote` | 連続行は結合 |
+| ` ``` ` | `code` | 言語指定なしは `plain text` |
+| `![alt](path)` | `image` | `image_resolver` が `file_id` を返せば `file_upload`、なければ `external` URL |
+| YAML フロントマター（先頭のみ） | `callout` | 絵文字 `📋` |
+| `---` / `___` / `***` 単独行 | `divider` | フロントマター外のみ |
+
+**インラインリッチテキスト:**
+- `**bold**` / `*italic*` / `` `inline_code` `` / `~~strike~~` → `annotations` フラグ
+- `[text](url)` → `text.link`（`http(s):` / `mailto:` 以外は WARN ログ + プレーンテキストへフォールバック）
+- ネスト（例: `**[link](url)**`）で annotation と link を併用
+
+**未対応記法:** プレーンな `paragraph` にフォールバックし、`logger.warning("Unsupported markdown syntax: ...")` を出す。
+
+### ImageUploader（`image_uploader.py`）
+
+`chart.png` を Notion File Upload API へアップロード。
+
+```python
+from notion_export.image_uploader import ImageUploader, DryRunImageUploader
+
+uploader = ImageUploader(api_token="...", timeout_seconds=30)
+file_id = uploader.upload(Path("chart.png"))  # 失敗時 None
+```
+
+#### コンストラクタ
+
+```python
+ImageUploader(
+    api_token: str,
+    *,
+    timeout_seconds: int = 30,
+    http_session: requests.Session | None = None,
+)
+```
+
+#### `upload(path: Path) -> str | None`
+
+`POST /v1/file_uploads` で `upload_url` と `id` を取得し、続けて `POST {upload_url}` でファイル本体をマルチパート送信。5xx は最大 3 回試行（初回失敗時は 1 秒、2 秒、最後の 4 秒待機後に再試行、最終的に失敗時は `None` を返し WARN ログを出力。呼び出し側が image block を省略するか判断）。
+
+#### `DryRunImageUploader`
+
+`upload()` が `<dry-run:{filename}>` を返すテスト/`--dry-run`用ダミー実装。
+
+### NotionPageRepository（`page_repository.py`）
+
+Notion REST API ページ操作の抽象化。
+
+```python
+from typing import Protocol
+
+class NotionPageRepository(Protocol):
+    def fetch_parent(self, page_id: str) -> dict: ...
+    def search_children_by_title_prefix(self, parent_id: str, prefix: str) -> list[dict]: ...
+    def create_page(self, parent_id: str, title: str, blocks: list[dict]) -> str: ...
+    def archive_page(self, page_id: str) -> None: ...
+    def append_blocks(self, page_id: str, blocks: list[dict]) -> None: ...
+```
+
+#### RestNotionPageRepository
+
+本番実装。`Authorization: Bearer {api_token}` + `Notion-Version` ヘッダで Notion REST API を呼ぶ。
+
+```python
+RestNotionPageRepository(
+    api_token: str,
+    *,
+    timeout_seconds: int = 30,
+    api_version: str = "2022-06-28",
+    throttle_seconds: float = 0.4,
+    http_session: requests.Session | None = None,
+)
+```
+
+- `fetch_parent(page_id)`: `GET /v1/pages/{page_id}`。404 時は `ParentPageNotFoundError`（`GET /v1/pages/...` のみ。PATCH の 404 は `NotionApiError`）
+- `search_children_by_title_prefix(parent_id, prefix)`: `POST /v1/search` + 親フィルタ + タイトル先頭一致。`has_more` ページネーション対応
+- `create_page(parent_id, title, blocks)`: `POST /v1/pages` で先頭 100 blocks のみ `children` に渡す
+- `archive_page(page_id)`: `PATCH /v1/pages/{page_id}` を `{"archived": true}` で呼ぶ
+- `append_blocks(page_id, blocks)`: 100 件ずつ `PATCH /v1/blocks/{page_id}/children`、各呼び出し後 `throttle_seconds` で sleep
+- 5xx は最大 3 回試行（初回失敗時は 1 秒、2 秒、最後の 4 秒待機後に再試行、最終的に失敗時は `NotionApiError`）、4xx は即時 `NotionApiError`
+
+#### FakeNotionPageRepository
+
+テスト用 in-memory 実装。ページ状態を dict で保持し、`add_parent` / `pages` / `append_calls` 等の検査用属性を公開する。
+
+### SyncService（`sync_service.py`）
+
+オーケストレーター。レポートディレクトリ解決→Markdown 読み込み→変換→画像アップロード→既存ページ検索/アーカイブ→新規ページ作成と blocks 追記の順序制御を一括で行う。
+
+```python
+from notion_export import SyncService, build_sync_service
+
+service = build_sync_service(
+    parent_page_id="...",
+    api_token="...",
+    dry_run=False,
+    reports_root=Path("output/reports/stocks"),
+    master_db=stock_master_db,           # get_stock_by_code(code) を持つオブジェクト
+    timeout_seconds=30,
+    api_version="2022-06-28",
+    throttle_seconds=0.4,
+)
+result = service.run(code="7804", report_dir=None, dry_run=False, skip_deep=False)
+```
+
+#### `SyncResult` dataclass
+
+```python
+@dataclass(frozen=True)
+class SyncResult:
+    page_id: str | None              # dry_run: None
+    page_title: str                  # "{銘柄名}（{code}）投資分析"
+    block_count: int                 # dry_run: 生成 blocks 件数（API は呼ばれない）
+    archived_page_ids: list[str]     # dry_run: []
+    image_uploaded: bool             # dry_run: False（DryRunImageUploader を使用）
+    warnings: list[str]
+    dry_run: bool
+    report_dir: str
+```
+
+`to_dict()` で JSON 互換 dict に変換。CLI が `json.dumps(...)` で標準出力する。
+
+#### `SyncService.run(*, code, report_dir, dry_run, skip_deep, stdout=None) -> SyncResult`
+
+- `code` 指定時は `reports_root` 配下から `*-{code}-analysis` のディレクトリをタイムスタンプ降順で 1 件選択
+- `report_dir` が直接指定された場合はそれを優先
+- 該当ディレクトリ無しは `ReportDirectoryNotFoundError`
+- `master.db` から銘柄名を解決（失敗時は `銘柄{code}` フォールバック）
+- 既存同銘柄ページ 0 件→新規作成、1〜2 件→全件アーカイブ後新規作成、3 件以上→`TooManyExistingPagesError`
+- ページ作成は先頭 100 blocks、残りは `append_blocks` で 100 件ずつ分割追記
+- `dry_run=True` 時は repository / image_uploader の Notion API メソッドを呼ばず、blocks JSON を `stdout`(デフォルト `sys.stdout`)へ書き出して early return
+
+#### `build_sync_service(...)`
+
+CLI(`scripts/sync_notion.py`)から組み立てる便利関数。`RestNotionPageRepository` と `ImageUploader`(または `DryRunImageUploader`)、`StockMasterDB` を組み合わせて `SyncService` を返す。
+
+### 例外（`exceptions.py`）
+
+| 例外 | 用途 |
+|------|------|
+| `NotionExportError` | 基底クラス |
+| `ReportDirectoryNotFoundError` | レポートディレクトリ未検出 |
+| `ParentPageNotFoundError` | `NOTION_PARENT_PAGE_ID` が指す親ページが Notion 上に無い（`fetch_parent` の 404） |
+| `TooManyExistingPagesError(count, page_ids)` | 同銘柄ページが 3 件以上存在（自動アーカイブを停止） |
+| `NotionApiError(status_code, body)` | 上記以外の Notion REST API エラー |
+| `ImageUploadError` | 画像アップロードの補足ログ用（呼び出し側で握りつぶす） |
+
+---
+
 ## スクリプト (`scripts/`)
 
 ### run_daily_jquants.py
@@ -2887,3 +3077,41 @@ python scripts/create_database_indexes.py
 ```
 
 SQLiteデータベースにインデックスを作成（初回セットアップ時）。
+
+### sync_notion.py
+
+```bash
+python scripts/sync_notion.py 7804
+python scripts/sync_notion.py 7804 --dry-run
+python scripts/sync_notion.py --report-dir output/reports/stocks/20260413-2244-7804-analysis
+python scripts/sync_notion.py 7804 --skip-deep-research
+```
+
+`/sync-notion` スキルの CLI エントリ。`output/reports/stocks/YYYYMMDD-HHMM-{code}-analysis/` 配下の `base_report.md` + `deep_research_report.md` + `chart.png` を Notion 親ページ(`NOTION_PARENT_PAGE_ID`)配下に 1 ページとして投入する。
+
+**位置引数**:
+- `code`: 4桁銘柄コード（指定時は `output/reports/stocks/` から `*-{code}-analysis` の最新ディレクトリを自動選択）
+
+**オプション**:
+- `--report-dir <path>`: 投入対象ディレクトリを明示指定（バックフィル用途、`code` 省略可）
+- `--dry-run`: Notion API を呼ばず、生成される blocks JSON を標準出力に出力
+- `--skip-deep-research`: `deep_research_report.md` の取り込みをスキップ
+
+**前提:** `.env` に `NOTION_PARENT_PAGE_ID`(Notion 親ページ ID) と `NOTION_API_TOKEN`(Internal Integration Token) を設定し、親ページの「Connections」から Integration に編集権限を付与しておくこと。
+
+**動作:**
+- 同銘柄(`{銘柄名}（{code}）` プレフィックス)が親ページ配下に既存 1〜2 件あれば自動アーカイブ
+- 3 件以上は安全のため `TooManyExistingPagesError` で停止し、stderr に `アーカイブ候補がN件見つかりました。手動で整理してください。`（N は実件数）を出力
+- `SyncResult` を JSON で標準出力（成功時、終了コード 0）
+
+**終了コード:**
+
+| 終了コード | 条件 |
+|------------|------|
+| 0 | 成功 |
+| 1 | `NotionExportError`（汎用） |
+| 2 | 引数不足 / `NOTION_PARENT_PAGE_ID` 未設定 / `NOTION_API_TOKEN` 未設定 |
+| 3 | `ReportDirectoryNotFoundError` |
+| 4 | `ParentPageNotFoundError` |
+| 5 | `TooManyExistingPagesError` |
+| 6 | `NotionApiError` |

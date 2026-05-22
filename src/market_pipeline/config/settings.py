@@ -212,6 +212,22 @@ class NewsDeliverySettings(BaseSettings):
     quiet_when_empty: bool = False
 
 
+class NotionSettings(BaseSettings):
+    """Notion export configuration."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="NOTION_", env_file=_ENV_FILE, extra="ignore"
+    )
+
+    parent_page_id: str = ""
+    api_token: str = ""
+    enabled: bool = True
+    api_timeout_seconds: int = 30
+    api_throttle_seconds: float = 0.4
+    upload_chart_image: bool = True
+    api_version: str = "2022-06-28"
+
+
 class SlackSettings(BaseSettings):
     """Slack notification settings."""
 
@@ -264,6 +280,7 @@ class Settings(BaseSettings):
     edinet: EdinetSettings = Field(default_factory=EdinetSettings)
     executives: ExecutivesSettings = Field(default_factory=ExecutivesSettings)
     news_delivery: NewsDeliverySettings = Field(default_factory=NewsDeliverySettings)
+    notion: NotionSettings = Field(default_factory=NotionSettings)
 
     # Global processing settings
     n_workers: Optional[int] = None  # None = auto-detect CPU count

@@ -4,9 +4,19 @@
 
 ## [Unreleased]
 
-> このセクションは `feature/exexutive-communication-analysis` ブランチで進行中の作業をまとめたもの。main にマージされた時点で次バージョン（[0.10.0]）として切り出し予定。最終更新: 2026-05-08。
+> 現在の作業ブランチは `feature/notion-export`。`feature/exexutive-communication-analysis`（PR #22）および `feature/daily-news-watcher-for-stocks`（PR #23）は既に main にマージ済みで、次のリリース候補（[0.10.0]）に含まれる。最終更新: 2026-05-22。
 
 ### Added
+- Notion 投入モジュール (`src/notion_export/`) — 投資分析レポート(`output/reports/stocks/`)を Notion 親ページ配下にページ投入
+  - `markdown_converter`: Markdown → Notion blocks 変換(インライン bold/italic/code/strikethrough/link、表セル内も保持。2000 文字超の段落と 100 blocks 超の自動分割対応)
+  - `image_uploader`: Notion File Upload API(2-step)+ 5xx 指数バックオフ(1秒→2秒→4秒)+ `DryRunImageUploader`
+  - `page_repository`: `RestNotionPageRepository`(`requests` 直叩き)+ `FakeNotionPageRepository`(テスト用)
+  - `sync_service`: レポートディレクトリ自動検出 → 既存ページ検索 → 0/1〜2/3+ 件で分岐(3 件以上は安全のため停止)→ archive + create + append のオーケストレーション
+- `/sync-notion` スキル + `scripts/sync_notion.py` CLI(`code` / `--report-dir` / `--dry-run` / `--skip-deep-research`)
+- `NotionSettings` を `src/market_pipeline/config/settings.py` に追加(`parent_page_id` / `api_token` / `enabled` / `api_timeout_seconds` / `api_throttle_seconds` / `upload_chart_image` / `api_version`)
+- `.env.example` に `NOTION_PARENT_PAGE_ID` / `NOTION_API_TOKEN` / `NOTION_ENABLED` 等を追記
+- 関連テスト: `test_notion_markdown_converter.py`, `test_notion_image_uploader.py`, `test_notion_page_repository.py`, `test_notion_sync_service.py`(計 44 件)
+- 依存追加: `markdown-it-py>=3.0`(本体)、`responses>=0.25`(dev)
 - 経営陣コミュニケーション分析モジュール (`src/market_pipeline/executives/`)
   - `EdinetExecutiveFetcher`: EDINET API から有報をダウンロードし、`0104010_*_ixbrl.htm` の役員情報（取締役系＋執行役系の両タグ系統、略歴含む）をパース
   - `EdinetDocResolver`: `executives.edinet_source_doc_id` キャッシュによるバッチ高速化（2回目以降は期末月前後30日のみスキャン）

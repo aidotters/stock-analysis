@@ -235,6 +235,7 @@ with JobContext("ジョブ名") as job:
 | 投資分析 | `/research-stock-news` | 特定銘柄のニュース・適時開示・IR情報の包括調査 |
 | 投資分析 | `/research-executives` | 経営陣6軸スコアリング（独立した executive_report.md 生成） |
 | 投資分析 | `/watch` | ウォッチリストCRUD（add / list / update / remove） |
+| 投資分析 | `/sync-notion` | 投資分析レポートを Notion 親ページ配下にページ投入（同銘柄再投入は自動アーカイブ） |
 | ドキュメント作成 | `/architecture-design` | アーキテクチャ設計書の作成 |
 | ドキュメント作成 | `/functional-design` | 機能設計書の作成 |
 | ドキュメント作成 | `/development-guidelines` | 開発ガイドラインの作成 |
@@ -565,8 +566,43 @@ Claude Codeスキルとして、ドキュメント作成と品質管理のため
 - `/research-stock-news`: 特定銘柄のニュース・適時開示・IR情報の包括調査
 - `/research-executives`: 経営陣6軸スコアリング（独立した executive_report.md 生成）
 - `/watch`: ウォッチリストCRUD（`scripts/watchlist.py` を呼ぶラッパー、add / list / update / remove）
+- `/sync-notion`: 投資分析レポートを Notion 親ページ配下にページ投入（同銘柄再投入時は既存ページを自動アーカイブ）
 
 **構成ファイル:** `.claude/skills/<skill-name>/SKILL.md`
+
+### Notion Export (`/sync-notion`)
+`/analyze-stock` が生成する `output/reports/stocks/YYYYMMDD-HHMM-{code}-analysis/` 配下のレポート(`base_report.md` + `deep_research_report.md` + `chart.png`)を Notion 親ページ配下に 1 銘柄=1 ページの階層型構造で投入する。
+
+```bash
+# 通常投入（最新タイムスタンプのディレクトリを自動選択）
+python scripts/sync_notion.py 7804
+
+# Dry-run（API を呼ばず blocks JSON を標準出力）
+python scripts/sync_notion.py 7804 --dry-run
+
+# ディレクトリを明示指定
+python scripts/sync_notion.py --report-dir output/reports/stocks/20260413-2244-7804-analysis
+
+# Deep Research をスキップ
+python scripts/sync_notion.py 7804 --skip-deep-research
+```
+
+**前提条件:**
+- `.env` に `NOTION_PARENT_PAGE_ID`（投入先の親ページID）と `NOTION_API_TOKEN`（Internal Integration Token）を設定
+- 親ページの「Connections」から Integration に編集権限を付与
+- **セキュリティ注意:** 投資分析レポートは個人運用前提のため、Notion 親ページの共有設定は **ワークスペース内限定** を推奨（Web 公開・外部ゲスト招待を避ける）
+
+**特徴:**
+- Markdown → Notion blocks 変換（インライン bold/italic/code/strikethrough/link 対応、表セル内も保持）
+- 2000 文字超の段落と 100 blocks 超のページ投入を自動分割
+- 同銘柄の再投入時は既存ページを自動アーカイブ。3 件以上見つかった場合は安全のため停止
+- `chart.png` は Notion File Upload API でアップロードして image block に埋め込む
+- Deep Research セクションは `toggle` block 内にネスト
+
+**構成ファイル:**
+- `src/notion_export/`: 変換 / アップロード / API クライアント / オーケストレーション
+- `scripts/sync_notion.py`: CLI エントリ
+- `.claude/skills/sync-notion/SKILL.md`: スキル定義
 
 ### Technical Tools Package (src/technical_tools/)
 Jupyter Notebook用のテクニカル分析ツール。日本株(J-Quants)と米国株(yfinance)の統一インターフェースを提供:
@@ -1014,3 +1050,17 @@ settings = reload_settings()
   - `tests/test_executive_evaluator.py`: ExecutiveEvaluatorテスト（JSON抽出・スキーマ検証・リトライ・前回差分警告）
   - `tests/test_executive_integration.py`: 経営陣評価E2E統合テスト（EDINET→収集→LLM→DB）
   - `tests/test_published_date_extractor.py`: 発信日抽出テスト（JSON-LD / meta / time / URLパス）
+  - `tests/test_notion_markdown_converter.py`: NotionExport Markdown→blocks変換テスト（インラインリッチ・表セル・段落分割）
+  - `tests/test_notion_image_uploader.py`: NotionExport 画像アップロードテスト（File Upload API 2-step・5xxリトライ・DryRun）
+  - `tests/test_notion_page_repository.py`: NotionExport REST/Fakeリポジトリテスト（fetch_parent / search / create / archive / append）
+  - `tests/test_notion_sync_service.py`: NotionExport オーケストレーションE2Eテスト（ディレクトリ解決→変換→アーカイブ→投入）
+  - `tests/test_watchlist.py`: WatchList CRUD・filter・master.db メタ解決テスト
+  - `tests/test_news_delivery_dedupe.py`: Deduplicator URL SHA256 UPSERT・90日クリーンアップテスト
+  - `tests/test_news_delivery_integration.py`: DeliveryService E2E統合テスト（fetcher合成・rate limit再試行）
+  - `tests/test_news_formatter.py`: SlackFormatter Block Kit分割・38000文字しきい値テスト
+  - `tests/test_rate_limiter.py`: トークンバケット式レート制限・RateLimitErrorテスト
+  - `tests/test_cdp_disclosure_fetcher.py`: 四季報適時開示 CDP fetcher テスト（Playwright経由）
+  - `tests/test_disclosure_fetcher.py`: 旧HTTP版適時開示 fetcher テスト（BS4、レガシー）
+  - `tests/test_google_news_rss_fetcher.py`: Google News RSS fetcher テスト（銘柄名検索・excludeフィルタ）
+  - `tests/test_tdnet_rss_fetcher.py`: yanoshin TDnet Atom fetcher テスト
+  - `tests/test_shikiho_stock_news_fetcher.py`: 四季報銘柄ページ関連記事 fetcher テスト

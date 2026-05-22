@@ -43,6 +43,14 @@
     - launchd 連携で平日 08:00 / 12:30 / 19:30 の3スロットで自動配信。`RateLimitError` 発生時は priority=high のウォッチ銘柄のみで自動再試行。
     - URL の SHA256 ハッシュをキーにした重複排除（`delivered_news` テーブル）と、Slack Block Kit の38000文字しきい値での自動分割に対応。
 
+- **Notion 投入 (`/sync-notion`):**
+    - `output/reports/stocks/YYYYMMDD-HHMM-{code}-analysis/` 配下の投資分析レポートを Notion 親ページ配下にページとして投入するClaude Codeスキルです。
+    - 1 銘柄=1 ページ構造で、Markdown を Notion blocks に変換（インライン bold/italic/code/strikethrough/link、表、リスト、コードブロック、画像、Deep Research のトグル化に対応）。`chart.png` は Notion File Upload API でアップロードして image block に埋め込みます。
+    - 同銘柄の再投入時は既存ページを自動アーカイブ。**Notion 上で手編集した内容は再投入で失われる**ため、修正はローカルレポート側で行ってください。
+    - 既存ページが 3 件以上見つかった場合は安全のため停止します（手動アーカイブ後に再実行）。
+    - 前提条件: `.env` に `NOTION_PARENT_PAGE_ID`（Notion 親ページ ID）と `NOTION_API_TOKEN`（Internal Integration Token）を設定し、親ページの「Connections」から Integration に編集権限を付与しておくこと。
+    - セキュリティ上、Notion 親ページの共有設定は **ワークスペース内限定** を推奨します（外部共有時はレポート内の機密情報に注意）。
+
 - **経営陣評価 (`/research-executives`):**
     - EDINET有価証券報告書から法定役員（取締役・監査役・執行役）の情報＋略歴を取得し、外部発信（インタビュー・講演・対談・記事等）を WebSearch で収集して Claude LLM で6軸スコアリング（ビジョン一貫性・実行力・市場認識・リスク開示誠実性・コミュニケーション能力・成長志向）するClaude Codeスキルです。
     - 対象期間は過去3年、タイムラインでは直近1年を🆕＋太字でハイライト表示します。
@@ -77,6 +85,7 @@
 │   │   ├── utils/       # ユーティリティ（キャッシュ、並列処理、Slack通知等）
 │   │   └── yfinance/    # yfinance連携（バリュエーション指標・過去日足データ取得）
 │   ├── market_reader/   # pandas_datareader風のデータアクセスAPI（旧stock_reader/）
+│   ├── notion_export/   # Notion 投入パッケージ（独立、market_pipeline 外）
 │   └── technical_tools/ # Jupyter Notebook用テクニカル分析ツール
 ├── data/                # データベースファイル（.sqlite, .db）を格納
 ├── logs/                # launchdジョブの実行ログ

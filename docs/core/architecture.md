@@ -86,6 +86,14 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 │                    ┌─────────────────────────┐                              │
 │                    │ output/*.xlsx, *.csv     │                              │
 │                    │ analysis_YYYY-MM-DD.xlsx │                              │
+│                    │ output/reports/stocks/   │                              │
+│                    │  (analyze-stock 出力)    │                              │
+│                    └─────────┬───────────────┘                              │
+│                              ▼                                              │
+│                    ┌─────────────────────────┐                              │
+│                    │ /sync-notion             │                             │
+│                    │ src/notion_export/       │                             │
+│                    │  → Notion REST API       │                             │
 │                    └─────────────────────────┘                              │
 └───────────────────────────────────────────────────────────────────────────────┘
                                  │
@@ -268,7 +276,26 @@ df = reader.get_prices("7203", start="2024-01-01", end="2024-12-31")
 | `exceptions.py` | カスタム例外（StockNotFoundError等） |
 | `utils.py` | ユーティリティ関数 |
 
-### 5.1 テクニカル分析レイヤー (`src/technical_tools/`)
+### 5.5 Notion 投入レイヤー (`src/notion_export/`)
+
+`/analyze-stock` が生成する投資分析レポート(`output/reports/stocks/`)を Notion REST API で親ページ配下に投入する独立パッケージ。`market_pipeline` の市場データ収集・分析パイプライン外の責務として `src/` 直下に配置している。
+
+| モジュール | 機能 | 入出力 |
+|-----------|------|--------|
+| `markdown_converter.py` | `markdown-it-py` で Markdown をトークン化し、Notion blocks(dict)列に変換。インラインリッチテキスト(bold/italic/code/strikethrough/link)・表セル内のリッチ化・2000 文字超段落の自動分割・1段ネストリスト・トグルラップ対応 | Markdown → `list[dict]` |
+| `image_uploader.py` | `chart.png` を Notion File Upload API(`POST /v1/file_uploads` + 本体送信)へ送信。5xx は最大 3 回試行（1/2/4 秒バックオフ）。`DryRunImageUploader` はテスト/Dry-run用 | `Path` → `file_id` or `None` |
+| `page_repository.py` | `NotionPageRepository` Protocol と REST 実装(`RestNotionPageRepository`)＋テスト用 `FakeNotionPageRepository`。`fetch_parent` / `search_children_by_title_prefix` / `create_page` / `archive_page` / `append_blocks`(100件ずつチャンク送信) | Notion REST API |
+| `sync_service.py` | `SyncService` オーケストレーター。レポートディレクトリ解決→Markdown 読み込み→画像アップロード→既存ページ検索/アーカイブ→`create_page` + `append_blocks` の順序制御。`SyncResult` dataclass を返却。`build_sync_service` で CLI から組み立て | `output/reports/stocks/...` → Notion ページ |
+| `exceptions.py` | `NotionExportError` 基底＋派生(`ReportDirectoryNotFoundError` / `ParentPageNotFoundError` / `TooManyExistingPagesError` / `NotionApiError` / `ImageUploadError`) | - |
+
+**動作の特徴:**
+- 同銘柄(`{stock_name}（{code}）` プレフィックス)が親ページ配下に既存の場合、1〜2 件なら全件アーカイブして新規作成。3 件以上は安全のため `TooManyExistingPagesError` で停止
+- ページ作成時の先頭 100 blocks 上限と Notion 全体の `children` 一括送信上限を `_BLOCKS_PER_CREATE = 100` で対処、残りは `append_blocks` で 100 件ずつ分割追記(各呼び出し後 `throttle_seconds` で sleep)
+- `--dry-run` 時は Notion API を呼ばず、blocks JSON を標準出力へ吐く
+
+CLI: `scripts/sync_notion.py [code] [--report-dir PATH] [--dry-run] [--skip-deep-research]`。スキル層 `/sync-notion` から呼び出される。前提環境変数は `NOTION_PARENT_PAGE_ID` / `NOTION_API_TOKEN`。
+
+### 5.6 テクニカル分析レイヤー (`src/technical_tools/`)
 
 Jupyter Notebook向けのテクニカル分析ツール。日本株（J-Quants）と米国株（yfinance）の統一インターフェースを提供:
 

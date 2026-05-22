@@ -14,6 +14,8 @@
 | ニュース配信(昼) | `com.tak.stock-analysis.news-delivery-noon` | 平日 12:30 | `scripts/run_news_delivery.py --slot noon` |
 | ニュース配信(夜) | `com.tak.stock-analysis.news-delivery-evening` | 平日 19:30 | `scripts/run_news_delivery.py --slot evening` |
 
+> **推奨運用:** まずは朝＋夜の 2 スロットで開始し、ニュース流量や運用スタイル（デイトレ・決算シーズン等）に応じて noon を後から `launchctl load` で追加するのを推奨。詳細は後述の「スロットの考え方」を参照。
+
 ### ニュース配信ジョブの登録手順
 
 `launchd/com.stock-analysis.news-delivery-{morning,noon,evening}.plist.template` をリポジトリに同梱。
