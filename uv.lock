@@ -1283,6 +1283,18 @@ wheels = [
 ]
 
 [[package]]
+name = "markdown-it-py"
+version = "4.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "mdurl" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/06/ff/7841249c247aa650a76b9ee4bbaeae59370dc8bfd2f6c01f3630c35eb134/markdown_it_py-4.2.0.tar.gz", hash = "sha256:04a21681d6fbb623de53f6f364d352309d4094dd4194040a10fd51833e418d49", size = 82454 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl", hash = "sha256:9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a", size = 91687 },
+]
+
+[[package]]
 name = "markupsafe"
 version = "3.0.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1430,6 +1442,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/99/5b/a36a337438a14116b16480db471ad061c36c3694df7c2084a0da7ba538b7/matplotlib_inline-0.1.7.tar.gz", hash = "sha256:8423b23ec666be3d16e16b60bdd8ac4e86e840ebd1dd11a30b9f117f2fa0ab90", size = 8159 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8f/8e/9ad090d3553c280a8060fbf6e24dc1c0c29704ee7d1c372f0c174aa59285/matplotlib_inline-0.1.7-py3-none-any.whl", hash = "sha256:df192d39a4ff8f21b1895d72e6a13f5fcc5099f00fa84384e0ea28c2cc0653ca", size = 9899 },
+]
+
+[[package]]
+name = "mdurl"
+version = "0.1.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba", size = 8729 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8", size = 9979 },
 ]
 
 [[package]]
@@ -2721,6 +2742,20 @@ wheels = [
 ]
 
 [[package]]
+name = "responses"
+version = "0.26.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyyaml" },
+    { name = "requests" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9f/b4/b7e040379838cc71bf5aabdb26998dfbe5ee73904c92c1c161faf5de8866/responses-0.26.0.tar.gz", hash = "sha256:c7f6923e6343ef3682816ba421c006626777893cb0d5e1434f674b649bac9eb4", size = 81303 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ce/04/7f73d05b556da048923e31a0cc878f03be7c5425ed1f268082255c75d872/responses-0.26.0-py3-none-any.whl", hash = "sha256:03ec4409088cd5c66b71ecbbbd27fe2c58ddfad801c66203457b3e6a04868c37", size = 35099 },
+]
+
+[[package]]
 name = "rpds-py"
 version = "0.30.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3161,6 +3196,7 @@ dependencies = [
     { name = "ipykernel" },
     { name = "japanize-matplotlib" },
     { name = "joblib" },
+    { name = "markdown-it-py" },
     { name = "matplotlib" },
     { name = "mypy" },
     { name = "nbformat" },
@@ -3196,6 +3232,9 @@ dependencies = [
 chart-export = [
     { name = "kaleido" },
 ]
+dev = [
+    { name = "responses" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -3210,6 +3249,7 @@ requires-dist = [
     { name = "japanize-matplotlib", specifier = ">=1.1.3" },
     { name = "joblib", specifier = ">=1.5.1" },
     { name = "kaleido", marker = "extra == 'chart-export'", specifier = ">=1.0.0" },
+    { name = "markdown-it-py", specifier = ">=3.0" },
     { name = "matplotlib", specifier = ">=3.10.3" },
     { name = "mypy", specifier = ">=1.16.1" },
     { name = "nbformat", specifier = ">=5.10.4" },
@@ -3228,6 +3268,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "requests", specifier = ">=2.32.4" },
+    { name = "responses", marker = "extra == 'dev'", specifier = ">=0.25" },
     { name = "ruff", specifier = ">=0.12.2" },
     { name = "scikit-learn", specifier = ">=1.7.0" },
     { name = "seaborn", specifier = ">=0.13.2" },
@@ -3239,7 +3280,7 @@ requires-dist = [
     { name = "xlrd", specifier = ">=2.0.2" },
     { name = "yfinance", specifier = ">=0.2.65" },
 ]
-provides-extras = ["chart-export"]
+provides-extras = ["chart-export", "dev"]
 
 [[package]]
 name = "ta-lib"

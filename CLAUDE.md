@@ -235,6 +235,7 @@ with JobContext("ジョブ名") as job:
 | 投資分析 | `/research-stock-news` | 特定銘柄のニュース・適時開示・IR情報の包括調査 |
 | 投資分析 | `/research-executives` | 経営陣6軸スコアリング（独立した executive_report.md 生成） |
 | 投資分析 | `/watch` | ウォッチリストCRUD（add / list / update / remove） |
+| 投資分析 | `/sync-notion` | 投資分析レポートを Notion 親ページ配下にページ投入（同銘柄再投入は自動アーカイブ） |
 | ドキュメント作成 | `/architecture-design` | アーキテクチャ設計書の作成 |
 | ドキュメント作成 | `/functional-design` | 機能設計書の作成 |
 | ドキュメント作成 | `/development-guidelines` | 開発ガイドラインの作成 |
@@ -565,8 +566,42 @@ Claude Codeスキルとして、ドキュメント作成と品質管理のため
 - `/research-stock-news`: 特定銘柄のニュース・適時開示・IR情報の包括調査
 - `/research-executives`: 経営陣6軸スコアリング（独立した executive_report.md 生成）
 - `/watch`: ウォッチリストCRUD（`scripts/watchlist.py` を呼ぶラッパー、add / list / update / remove）
+- `/sync-notion`: 投資分析レポートを Notion 親ページ配下にページ投入（同銘柄再投入時は既存ページを自動アーカイブ）
 
 **構成ファイル:** `.claude/skills/<skill-name>/SKILL.md`
+
+### Notion Export (`/sync-notion`)
+`/analyze-stock` が生成する `output/reports/stocks/YYYYMMDD-HHMM-{code}-analysis/` 配下のレポート(`base_report.md` + `deep_research_report.md` + `chart.png`)を Notion 親ページ配下に 1 銘柄=1 ページの階層型構造で投入する。
+
+```bash
+# 通常投入（最新タイムスタンプのディレクトリを自動選択）
+python scripts/sync_notion.py 7804
+
+# Dry-run（API を呼ばず blocks JSON を標準出力）
+python scripts/sync_notion.py 7804 --dry-run
+
+# ディレクトリを明示指定
+python scripts/sync_notion.py --report-dir output/reports/stocks/20260413-2244-7804-analysis
+
+# Deep Research をスキップ
+python scripts/sync_notion.py 7804 --skip-deep-research
+```
+
+**前提条件:**
+- `.env` に `NOTION_PARENT_PAGE_ID`（投入先の親ページID）と `NOTION_API_TOKEN`（Internal Integration Token）を設定
+- 親ページの「Connections」から Integration に編集権限を付与
+
+**特徴:**
+- Markdown → Notion blocks 変換（インライン bold/italic/code/strikethrough/link 対応、表セル内も保持）
+- 2000 文字超の段落と 100 blocks 超のページ投入を自動分割
+- 同銘柄の再投入時は既存ページを自動アーカイブ。3 件以上見つかった場合は安全のため停止
+- `chart.png` は Notion File Upload API でアップロードして image block に埋め込む
+- Deep Research セクションは `toggle` block 内にネスト
+
+**構成ファイル:**
+- `src/notion_export/`: 変換 / アップロード / API クライアント / オーケストレーション
+- `scripts/sync_notion.py`: CLI エントリ
+- `.claude/skills/sync-notion/SKILL.md`: スキル定義
 
 ### Technical Tools Package (src/technical_tools/)
 Jupyter Notebook用のテクニカル分析ツール。日本株(J-Quants)と米国株(yfinance)の統一インターフェースを提供:
