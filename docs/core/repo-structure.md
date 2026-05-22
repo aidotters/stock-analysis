@@ -69,6 +69,14 @@ Stock-Analysis/
 │   │       ├── valuation_fetcher.py       # BSデータ・バリュエーション指標取得（ローリング更新）
 │   │       └── historical_price_fetcher.py # 過去20年分日足データ取得（J-Quantsデータ補完）
 │   │
+│   ├── notion_export/                    # Notion 投入パッケージ（独立、`market_pipeline` 外）
+│   │   ├── __init__.py                   # SyncService / SyncResult / build_sync_service / 例外をエクスポート
+│   │   ├── exceptions.py                 # NotionExportError 系
+│   │   ├── markdown_converter.py         # Markdown → Notion blocks（インラインリッチテキスト・2000字分割対応）
+│   │   ├── image_uploader.py             # Notion File Upload API ラッパー（ImageUploader / DryRunImageUploader）
+│   │   ├── page_repository.py            # NotionPageRepository Protocol + RestNotionPageRepository / FakeNotionPageRepository
+│   │   └── sync_service.py               # SyncService（オーケストレーション）/ build_sync_service
+│   │
 │   ├── market_reader/                    # pandas_datareader風データアクセスAPI（旧stock_reader/）
 │   │   ├── __init__.py                   # パッケージエクスポート
 │   │   ├── py.typed                      # PEP 561型ヒントマーカー
@@ -118,6 +126,7 @@ Stock-Analysis/
 │   ├── run_news_delivery.py         # ウォッチリストニュース配信（launchd: 平日 朝/昼/夜）
 │   ├── watchlist.py                 # ウォッチリストCRUD CLI
 │   ├── cleanup_news_db.py           # delivered_news 重複排除DBのクリーンアップ
+│   ├── sync_notion.py               # /sync-notion CLI エントリ（Notion 投入）
 │   └── _old/
 │       ├── run_daily_jquants.py
 │       └── run_daily_analysis.py
@@ -254,6 +263,8 @@ Stock-Analysis/
 │   │   └── SKILL.md
 │   ├── steering/                    # 作業計画・タスクリスト管理スキル
 │   │   └── SKILL.md
+│   ├── sync-notion/                 # 投資分析レポートを Notion 親ページ配下に投入するスキル
+│   │   └── SKILL.md
 │   ├── update-docs/                 # ドキュメント更新スキル
 │   │   └── SKILL.md
 │   ├── validate-code/               # コード品質検証スキル
@@ -328,6 +339,11 @@ Stock-Analysis/
 | `src/technical_tools/backtest_signals/` | バックテスト用シグナル定義（プラグイン形式） |
 | `src/technical_tools/optimizer.py` | StrategyOptimizerクラス（戦略パラメータ最適化） |
 | `src/technical_tools/optimization_results.py` | OptimizationResultsクラス（最適化結果分析・可視化） |
+| `src/notion_export/sync_service.py` | SyncService（オーケストレーション）/ SyncResult dataclass / build_sync_service |
+| `src/notion_export/markdown_converter.py` | Markdown → Notion blocks 変換（markdown-it-py 利用、インラインリッチテキスト・2000字分割・トグルラップ対応） |
+| `src/notion_export/page_repository.py` | NotionPageRepository Protocol + RestNotionPageRepository（REST 実装）+ FakeNotionPageRepository（テスト用） |
+| `src/notion_export/image_uploader.py` | Notion File Upload API ラッパー（ImageUploader / DryRunImageUploader、5xx リトライ） |
+| `src/notion_export/exceptions.py` | NotionExportError 系（ReportDirectoryNotFoundError / ParentPageNotFoundError / TooManyExistingPagesError / NotionApiError / ImageUploadError） |
 
 ### スクリプト
 
@@ -350,6 +366,7 @@ Stock-Analysis/
 | `scripts/run_research_executives.py` | `/research-executives`スキルから | 役員リストJSON出力＋キャッシュから経営陣レポート組立て |
 | `scripts/migrate_executives_add_career_column.py` | 一度のみ | `executives.career_summary` カラム追加 |
 | `scripts/migrate_executives_add_growth_axis.py` | 一度のみ | `executive_evaluations.growth_ambition` カラム追加 |
+| `scripts/sync_notion.py` | 手動（`/sync-notion` スキル経由 or 直接） | 投資分析レポートを Notion 親ページ配下に投入（`code` / `--report-dir` / `--dry-run` / `--skip-deep-research`） |
 
 #### 開発者向けユーティリティ（通常運用では使用しない）
 
@@ -415,6 +432,10 @@ Stock-Analysis/
 | `tests/test_executive_evaluator.py` | ExecutiveEvaluator（JSON抽出・スキーマ検証・リトライ・前回差分警告） |
 | `tests/test_executive_integration.py` | 経営陣評価E2E統合（EDINET→収集→LLM→DB） |
 | `tests/test_published_date_extractor.py` | 発信日抽出（JSON-LD/meta/time/URLパス） |
+| `tests/test_notion_markdown_converter.py` | Markdown → Notion blocks 変換（見出し / 段落 / 表 / リスト / 引用 / コード / 画像 / インラインリッチ / 2000字分割） |
+| `tests/test_notion_image_uploader.py` | ImageUploader（正常 / 5xx リトライ / DryRunImageUploader） |
+| `tests/test_notion_page_repository.py` | RestNotionPageRepository（fetch_parent / search / create / archive / append の REST 呼び出し） |
+| `tests/test_notion_sync_service.py` | SyncService E2E（新規投入 / アーカイブ / 3件停止 / 画像欠落 / skip_deep / dry-run） |
 | `tests/test_type8_optimization.py` | Type8最適化 |
 | `tests/test_rsi_optimization.py` | RSI最適化 |
 | `tests/test_fixes.py` | バグ修正検証 |

@@ -715,20 +715,8 @@ def _inline_to_rich_text(
         else:
             logger.warning("Unsupported markdown syntax: inline token %s", ttype)
 
-    # Some link_stack entries may be ``None`` placeholders; treat them as no link.
-    cleaned: list[dict] = []
-    for el in out:
-        if (
-            el["type"] == "text"
-            and el["text"].get("link") is None
-            and "link" in el["text"]
-        ):
-            # Notion accepts link=None; keep as-is.
-            pass
-        cleaned.append(el)
-
     # 2000 char split per element.
-    return list(_split_long_rich_text(cleaned))
+    return list(_split_long_rich_text(out))
 
 
 def _split_long_rich_text(elements: Iterable[dict]) -> Iterable[dict]:

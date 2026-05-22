@@ -85,6 +85,7 @@
 │   │   ├── utils/       # ユーティリティ（キャッシュ、並列処理、Slack通知等）
 │   │   └── yfinance/    # yfinance連携（バリュエーション指標・過去日足データ取得）
 │   ├── market_reader/   # pandas_datareader風のデータアクセスAPI（旧stock_reader/）
+│   ├── notion_export/   # Notion 投入パッケージ（独立、market_pipeline 外）
 │   └── technical_tools/ # Jupyter Notebook用テクニカル分析ツール
 ├── data/                # データベースファイル（.sqlite, .db）を格納
 ├── logs/                # launchdジョブの実行ログ

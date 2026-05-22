@@ -10,9 +10,12 @@ from typing import Optional
 import pytest
 
 from notion_export.exceptions import TooManyExistingPagesError
-from notion_export.image_uploader import DryRunImageUploader
-from notion_export.page_repository import FakeNotionPageRepository
-from notion_export.sync_service import SyncService
+from notion_export.image_uploader import DryRunImageUploader, ImageUploader
+from notion_export.page_repository import (
+    FakeNotionPageRepository,
+    RestNotionPageRepository,
+)
+from notion_export.sync_service import SyncService, build_sync_service
 
 _FIXTURE_ROOT = Path(__file__).parent / "fixtures" / "notion_reports"
 _SAMPLE_CODE = "7804"
@@ -248,3 +251,40 @@ def test_dry_run_snapshot(reports_root: Path) -> None:
     assert types[0] == "callout"
     assert types[1] == "heading_1"
     assert types[-1] == "toggle"
+
+
+# ---------------------------------------------------------------------------
+# build_sync_service smoke tests
+# ---------------------------------------------------------------------------
+
+
+def test_build_sync_service_dry_run_uses_dry_run_uploader(tmp_path: Path) -> None:
+    service = build_sync_service(
+        parent_page_id="PARENT",
+        api_token="",
+        dry_run=True,
+        reports_root=tmp_path,
+        master_db=None,
+        timeout_seconds=10,
+        api_version="2022-06-28",
+        throttle_seconds=0.0,
+    )
+    assert isinstance(service, SyncService)
+    assert isinstance(service._image_uploader, DryRunImageUploader)
+    assert isinstance(service._repo, RestNotionPageRepository)
+
+
+def test_build_sync_service_normal_uses_real_uploader(tmp_path: Path) -> None:
+    service = build_sync_service(
+        parent_page_id="PARENT",
+        api_token="secret",
+        dry_run=False,
+        reports_root=tmp_path,
+        master_db=None,
+        timeout_seconds=10,
+        api_version="2022-06-28",
+        throttle_seconds=0.0,
+    )
+    assert isinstance(service, SyncService)
+    assert isinstance(service._image_uploader, ImageUploader)
+    assert isinstance(service._repo, RestNotionPageRepository)

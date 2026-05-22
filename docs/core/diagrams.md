@@ -15,6 +15,7 @@ flowchart TB
         GNR[Google News RSS]
         TDN[TDnet Atom<br/>yanoshin]
         SLK[Slack Incoming Webhook]
+        NTN[Notion REST API<br/>+ File Upload API]
     end
 
     subgraph Collection["データ収集レイヤー"]
@@ -67,6 +68,15 @@ flowchart TB
         IA2[integrated_analysis2.py]
         OUT[output/*.xlsx]
         EXR[output/reports/stocks/<br/>executive_report.md]
+        ASR[output/reports/stocks/<br/>base_report.md / deep_research_report.md / chart.png<br/>(analyze-stock 出力)]
+    end
+
+    subgraph NotionLayer["Notion 投入 (src/notion_export/)"]
+        SN[scripts/sync_notion.py<br/>/sync-notion スキル]
+        SVC[sync_service.py<br/>SyncService]
+        MC[markdown_converter.py]
+        IU[image_uploader.py]
+        PR[page_repository.py<br/>RestNotionPageRepository]
     end
 
     JQ --> RDJ --> JDB
@@ -107,6 +117,14 @@ flowchart TB
     DS --> DD
     NDB <--> DD
     DS --> FMT --> SLK
+
+    ASR --> SN --> SVC
+    SVC --> MC
+    SVC --> IU
+    SVC --> PR
+    MDB --> SVC
+    IU --> NTN
+    PR --> NTN
 ```
 
 > サイズ参考値（2026-04時点）: jquants.db ≒ 2.7GB、analysis_results.db ≒ 2.0GB、statements.db ≒ 63MB、master.db ≒ 964KB。yfinance過去20年取得後の実測値で変動する。
@@ -183,6 +201,14 @@ graph LR
         UT[utils.py]
     end
 
+    subgraph NotionExport["src/notion_export/"]
+        NMC[markdown_converter.py<br/>convert]
+        NIU[image_uploader.py<br/>ImageUploader / DryRunImageUploader]
+        NPR[page_repository.py<br/>RestNotionPageRepository / FakeNotionPageRepository]
+        NSV[sync_service.py<br/>SyncService / SyncResult / build_sync_service]
+        NEX[exceptions.py]
+    end
+
     subgraph TechTools["src/technical_tools/"]
         TA[analyzer.py<br/>TechnicalAnalyzer]
         IND[indicators.py]
@@ -221,6 +247,11 @@ graph LR
     TA --> JQS
     TA --> YFS
     INT --> ADB[(analysis_results.db)]
+
+    NSV --> NMC
+    NSV --> NIU
+    NSV --> NPR
+    SET --> NSV
 ```
 
 ## シーケンス図: 日次処理フロー（チェーン実行）
@@ -307,6 +338,79 @@ sequenceDiagram
     end
 
     RWT-->>Launchd: 完了
+```
+
+## シーケンス図: Notion 投入フロー（`/sync-notion`）
+
+```mermaid
+sequenceDiagram
+    participant User as ユーザー
+    participant Skill as /sync-notion スキル
+    participant CLI as scripts/sync_notion.py
+    participant Svc as SyncService
+    participant MD as markdown_converter
+    participant IU as ImageUploader
+    participant Repo as RestNotionPageRepository
+    participant Notion as Notion REST API
+
+    User->>Skill: /sync-notion 7804
+    Skill->>CLI: python scripts/sync_notion.py 7804
+    CLI->>Svc: build_sync_service(...).run()
+
+    Svc->>Svc: reports_root を走査し<br/>*-7804-analysis の最新を選択
+    Svc->>Svc: base_report.md / deep_research_report.md / chart.png を読み込み
+    Svc->>Svc: master.db から銘柄名解決
+
+    alt chart.png 存在
+        Svc->>IU: upload(chart.png)
+        IU->>Notion: POST /v1/file_uploads
+        Notion-->>IU: upload_url + file_id
+        IU->>Notion: POST {upload_url} (multipart)
+        Notion-->>IU: 200 OK
+        IU-->>Svc: file_id
+    end
+
+    Svc->>MD: convert(base_report.md, image_resolver)
+    MD-->>Svc: blocks[]
+    Svc->>MD: convert(deep_research_report.md, wrap_in_toggle="Deep Research")
+    MD-->>Svc: deep_blocks[]
+    Svc->>Svc: blocks.extend(deep_blocks)
+
+    alt --dry-run
+        Svc->>CLI: stdout に blocks JSON + SyncResult
+    else 通常実行
+        Svc->>Repo: fetch_parent(parent_id)
+        Repo->>Notion: GET /v1/pages/{parent_id}
+        Notion-->>Repo: 200 OK
+        Svc->>Repo: search_children_by_title_prefix(parent_id, "{銘柄名}（7804）")
+        Repo->>Notion: POST /v1/search
+        Notion-->>Repo: results
+
+        alt 既存 3 件以上
+            Svc-->>CLI: TooManyExistingPagesError
+        else 既存 1〜2 件
+            loop 各既存ページ
+                Svc->>Repo: archive_page(page_id)
+                Repo->>Notion: PATCH /v1/pages/{id} {"archived": true}
+            end
+        end
+
+        Svc->>Repo: create_page(parent_id, title, blocks[:100])
+        Repo->>Notion: POST /v1/pages
+        Notion-->>Repo: new_page_id
+
+        opt blocks > 100
+            loop 100 件ずつチャンク
+                Svc->>Repo: append_blocks(page_id, chunk)
+                Repo->>Notion: PATCH /v1/blocks/{id}/children
+                Note over Repo: 各呼び出し後 throttle_seconds で sleep
+            end
+        end
+    end
+
+    Svc-->>CLI: SyncResult
+    CLI-->>Skill: SyncResult JSON (stdout)
+    Skill-->>User: 結果整形
 ```
 
 ## データベースER図
@@ -418,6 +522,7 @@ classDiagram
         +DatabaseSettings database
         +LoggingSettings logging
         +SlackSettings slack
+        +NotionSettings notion
         +Optional~int~ n_workers
         +int batch_size
     }
@@ -480,6 +585,16 @@ classDiagram
         +bool is_configured
     }
 
+    class NotionSettings {
+        +str parent_page_id
+        +str api_token
+        +bool enabled
+        +int api_timeout_seconds
+        +float api_throttle_seconds
+        +bool upload_chart_image
+        +str api_version
+    }
+
     class LoggingSettings {
         +str level
         +str format
@@ -493,6 +608,7 @@ classDiagram
     Settings *-- DatabaseSettings
     Settings *-- LoggingSettings
     Settings *-- SlackSettings
+    Settings *-- NotionSettings
 ```
 
 ## デプロイメント図
@@ -535,7 +651,6 @@ graph TB
     end
 
     C1 --> PY
-    C2 --> PY
     C3 --> PY
     C4 --> PY
 

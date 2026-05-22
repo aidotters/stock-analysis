@@ -278,7 +278,7 @@ def build_sync_service(
     from notion_export.page_repository import RestNotionPageRepository
 
     repo = RestNotionPageRepository(
-        api_token=api_token or "<dry-run>" if dry_run else api_token,
+        api_token=((api_token or "<dry-run>") if dry_run else api_token),
         timeout_seconds=timeout_seconds,
         api_version=api_version,
         throttle_seconds=throttle_seconds,

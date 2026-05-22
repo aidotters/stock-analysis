@@ -154,7 +154,7 @@ class RestNotionPageRepository:
                     return resp.json()
                 except Exception:
                     return {}
-            if status == 404 and path.startswith("/v1/pages/"):
+            if status == 404 and method == "GET" and path.startswith("/v1/pages/"):
                 raise ParentPageNotFoundError(f"Notion page not found: {path}")
             last_status = status
             last_body = _safe_body(resp)

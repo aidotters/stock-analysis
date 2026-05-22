@@ -4,7 +4,7 @@
 
 ## [Unreleased]
 
-> このセクションは `feature/exexutive-communication-analysis` ブランチで進行中の作業をまとめたもの。main にマージされた時点で次バージョン（[0.10.0]）として切り出し予定。最終更新: 2026-05-08。
+> 現在の作業ブランチは `feature/notion-export`。`feature/exexutive-communication-analysis`（PR #22）および `feature/daily-news-watcher-for-stocks`（PR #23）は既に main にマージ済みで、次のリリース候補（[0.10.0]）に含まれる。最終更新: 2026-05-22。
 
 ### Added
 - Notion 投入モジュール (`src/notion_export/`) — 投資分析レポート(`output/reports/stocks/`)を Notion 親ページ配下にページ投入
