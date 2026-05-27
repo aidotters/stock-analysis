@@ -1,198 +1,178 @@
-"""
-Tests for J-Quants Statements Processor.
+"""JQuantsStatementsProcessor (V2) の単体テスト。
+
+V2 移行に伴い、認証は `JQuantsClient` 側に集約されたため、本テストでは
+processor に MagicMock の `JQuantsClient` を DI してレスポンスを制御する。
 """
 
+from __future__ import annotations
+
 import os
-import pytest
 import sqlite3
 import tempfile
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from market_pipeline.jquants.statements_processor import JQuantsStatementsProcessor
 
-# テスト用の固定値を設定
-TEST_REFRESH_TOKEN = "test_refresh_token"
-TEST_ID_TOKEN = "test_id_token"
+
+# V2 サンプル(短縮カラム名)
+SAMPLE_V2_STATEMENTS = [
+    {
+        "Code": "72030",
+        "DiscDate": "2024-05-10",
+        "CurPerType": "FY",
+        "DocType": "有価証券報告書",
+        "Sales": 45000000000000,
+        "OP": 3000000000000,
+        "OdP": 3200000000000,
+        "NP": 2500000000000,
+        "EPS": 180.5,
+        "TA": 80000000000000,
+        "Eq": 35000000000000,
+        "EqAR": 43.75,
+        "BPS": 2500.0,
+        "CFO": 5000000000000,
+        "CFI": -2000000000000,
+        "CFF": -1000000000000,
+        "DivAnn": 60.0,
+        "ShOutFY": 14000000000,
+    },
+    {
+        "Code": "99840",
+        "DiscDate": "2024-05-15",
+        "CurPerType": "FY",
+        "DocType": "有価証券報告書",
+        "Sales": 6000000000000,
+        "OP": 500000000000,
+        "NP": 400000000000,
+        "EPS": 450.0,
+        "TA": 12000000000000,
+        "Eq": 5000000000000,
+        "BPS": 5600.0,
+        "DivAnn": 44.0,
+    },
+]
 
 
 @pytest.fixture
-def mock_api_responses():
-    """Mock API responses for statements tests."""
-    return {
-        "statements": [
-            {
-                "LocalCode": "72030",
-                "DisclosedDate": "2024-05-10",
-                "TypeOfCurrentPeriod": "FY",
-                "TypeOfDocument": "有価証券報告書",
-                "NetSales": 45000000000000,
-                "OperatingProfit": 3000000000000,
-                "OrdinaryProfit": 3200000000000,
-                "Profit": 2500000000000,
-                "EarningsPerShare": 180.5,
-                "TotalAssets": 80000000000000,
-                "Equity": 35000000000000,
-                "EquityToAssetRatio": 43.75,
-                "BookValuePerShare": 2500.0,
-                "CashFlowsFromOperatingActivities": 5000000000000,
-                "CashFlowsFromInvestingActivities": -2000000000000,
-                "CashFlowsFromFinancingActivities": -1000000000000,
-                "ResultDividendPerShareAnnual": 60.0,
-                "NumberOfIssuedAndOutstandingSharesAtTheEndOfFiscalYearIncludingTreasuryStock": 14000000000,
-            },
-            {
-                "LocalCode": "99840",
-                "DisclosedDate": "2024-05-15",
-                "TypeOfCurrentPeriod": "FY",
-                "TypeOfDocument": "有価証券報告書",
-                "NetSales": 6000000000000,
-                "OperatingProfit": 500000000000,
-                "Profit": 400000000000,
-                "EarningsPerShare": 450.0,
-                "TotalAssets": 12000000000000,
-                "Equity": 5000000000000,
-                "BookValuePerShare": 5600.0,
-                "ResultDividendPerShareAnnual": 44.0,
-            },
-        ]
-    }
+def fake_client():
+    client = MagicMock()
+    # 銘柄一覧は V2 形式
+    master_rows = [
+        {
+            "Date": "2024-01-01",
+            "Code": "72030",
+            "CoName": "トヨタ自動車",
+            "CoNameEn": "",
+            "S17": "10",
+            "S17Nm": "自動車",
+            "S33": "3700",
+            "S33Nm": "輸送用機器",
+            "ScaleCat": "TOPIX Core30",
+            "Mkt": "0111",
+            "MktNm": "プライム",
+            "Mrgn": "1",
+            "MrgnNm": "信用",
+        },
+        {
+            "Date": "2024-01-01",
+            "Code": "99840",
+            "CoName": "ソフトバンクグループ",
+            "CoNameEn": "",
+            "S17": "5",
+            "S17Nm": "情報",
+            "S33": "5250",
+            "S33Nm": "情報・通信業",
+            "ScaleCat": "TOPIX Large70",
+            "Mkt": "0111",
+            "MktNm": "プライム",
+            "Mrgn": "1",
+            "MrgnNm": "信用",
+        },
+    ]
+
+    def paginate(path, params=None):
+        if path == "/v2/equities/master":
+            yield master_rows
+        else:
+            yield []
+
+    client.paginate.side_effect = paginate
+    return client
 
 
 @pytest.fixture
-def mock_requests():
-    """Mock requests.post and requests.get for authentication."""
-    with (
-        patch(
-            "market_pipeline.jquants.statements_processor.requests.post"
-        ) as mock_post,
-        patch("market_pipeline.jquants.statements_processor.requests.get") as mock_get,
-    ):
-        # auth_user のレスポンス
-        def post_side_effect(url, data=None, params=None, headers=None):
-            if "auth_user" in url:
-                return MagicMock(
-                    status_code=200, json=lambda: {"refreshToken": TEST_REFRESH_TOKEN}
-                )
-            elif "auth_refresh" in url:
-                return MagicMock(
-                    status_code=200, json=lambda: {"idToken": TEST_ID_TOKEN}
-                )
-            return MagicMock(status_code=404)
-
-        mock_post.side_effect = post_side_effect
-
-        # listed/info のレスポンス
-        def get_side_effect(url, params=None, headers=None):
-            if "listed/info" in url:
-                return MagicMock(
-                    status_code=200,
-                    json=lambda: {
-                        "info": [
-                            {
-                                "Code": "72030",
-                                "CompanyName": "トヨタ自動車",
-                                "Sector33CodeName": "輸送用機器",
-                            },
-                            {
-                                "Code": "99840",
-                                "CompanyName": "ソフトバンクグループ",
-                                "Sector33CodeName": "情報・通信業",
-                            },
-                        ]
-                    },
-                )
-            return MagicMock(status_code=404)
-
-        mock_get.side_effect = get_side_effect
-        yield mock_post, mock_get
-
-
-@pytest.fixture
-def mock_env_vars():
-    """Set up required environment variables."""
-    original_email = os.environ.get("EMAIL")
-    original_password = os.environ.get("PASSWORD")
-
-    os.environ["EMAIL"] = "test@example.com"
-    os.environ["PASSWORD"] = "test_password"
-
-    yield
-
-    # Cleanup
-    if original_email:
-        os.environ["EMAIL"] = original_email
-    else:
-        os.environ.pop("EMAIL", None)
-    if original_password:
-        os.environ["PASSWORD"] = original_password
-    else:
-        os.environ.pop("PASSWORD", None)
-
-
-@pytest.fixture
-def processor(mock_requests, mock_env_vars):
-    """Create a JQuantsStatementsProcessor instance for testing."""
-    return JQuantsStatementsProcessor(
-        max_concurrent_requests=2, batch_size=10, request_delay=0.01
+def processor(fake_client):
+    p = JQuantsStatementsProcessor(
+        client=fake_client,
+        max_concurrent_requests=2,
+        batch_size=10,
+        request_delay=0.0,
     )
+    p.cache.clear_all()
+    yield p
+    p.cache.clear_all()
 
 
 @pytest.fixture
 def temp_db():
-    """Create a temporary database for testing."""
     with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as f:
         db_path = f.name
-
     yield db_path
-
-    # Cleanup
     if os.path.exists(db_path):
         os.unlink(db_path)
 
 
-class TestJQuantsStatementsProcessor:
-    """Test class for JQuantsStatementsProcessor."""
+class TestInit:
+    def test_default_creates_client(self):
+        with patch(
+            "market_pipeline.jquants.statements_processor.JQuantsClient"
+        ) as mock_cls:
+            JQuantsStatementsProcessor()
+            mock_cls.assert_called_once()
 
-    def test_init_success(self, processor):
-        """Test that processor initializes successfully."""
-        assert processor._refresh_token == TEST_REFRESH_TOKEN
-        assert processor._id_token == TEST_ID_TOKEN
+    def test_di_uses_passed_client(self, fake_client):
+        p = JQuantsStatementsProcessor(client=fake_client)
+        assert p.client is fake_client
+
+    def test_config_values(self, processor):
         assert processor.max_concurrent_requests == 2
         assert processor.batch_size == 10
 
-    def test_headers_property(self, processor):
-        """Test that headers property returns correct authorization header."""
-        headers = processor._headers
-        assert "Authorization" in headers
-        assert headers["Authorization"] == f"Bearer {TEST_ID_TOKEN}"
 
+class TestDBInit:
     def test_initialize_database(self, processor, temp_db):
-        """Test database initialization creates required tables."""
         processor._initialize_database(temp_db)
 
         with sqlite3.connect(temp_db) as conn:
-            # Check financial_statements table exists
             cursor = conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name='financial_statements'"
+                "SELECT name FROM sqlite_master "
+                "WHERE type='table' AND name='financial_statements'"
             )
             assert cursor.fetchone() is not None
 
-            # Check calculated_fundamentals table exists
             cursor = conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name='calculated_fundamentals'"
+                "SELECT name FROM sqlite_master "
+                "WHERE type='table' AND name='calculated_fundamentals'"
             )
             assert cursor.fetchone() is not None
 
-            # Check indexes exist
             cursor = conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_statements_code'"
+                "SELECT name FROM sqlite_master "
+                "WHERE type='index' AND name='idx_statements_code'"
             )
             assert cursor.fetchone() is not None
 
-    def test_map_statement_to_record(self, processor, mock_api_responses):
-        """Test mapping API response to database record."""
-        statement = mock_api_responses["statements"][0]
-        record = processor._map_statement_to_record(statement)
+
+class TestMapping:
+    def test_map_after_normalize(self, processor):
+        """V2 サンプルを normalize_statements 経由でマップ可能なこと。"""
+        from market_pipeline.jquants._v2_translator import normalize_statements
+
+        df = normalize_statements(SAMPLE_V2_STATEMENTS)
+        v1_row = df.iloc[0].to_dict()
+        record = processor._map_statement_to_record(v1_row)
 
         assert record["local_code"] == "72030"
         assert record["disclosed_date"] == "2024-05-10"
@@ -200,90 +180,128 @@ class TestJQuantsStatementsProcessor:
         assert record["net_sales"] == 45000000000000
         assert record["earnings_per_share"] == 180.5
         assert record["book_value_per_share"] == 2500.0
+        assert record["cf_operating"] == 5000000000000
+        assert record["cf_investing"] == -2000000000000
+        assert record["number_of_shares"] == 14000000000
 
-    def test_save_statements_batch(self, processor, temp_db, mock_api_responses):
-        """Test batch saving of statements to database."""
+
+class TestSave:
+    def test_save_statements_batch(self, processor, temp_db):
+        from market_pipeline.jquants._v2_translator import normalize_statements
+
         processor._initialize_database(temp_db)
-
+        df = normalize_statements(SAMPLE_V2_STATEMENTS)
         statements_data = [
-            ("72030", mock_api_responses["statements"][:1]),
-            ("99840", mock_api_responses["statements"][1:2]),
+            ("72030", [df.iloc[0].to_dict()]),
+            ("99840", [df.iloc[1].to_dict()]),
         ]
-
         records_saved = processor.save_statements_batch(temp_db, statements_data)
         assert records_saved == 2
 
-        # Verify data was saved
         with sqlite3.connect(temp_db) as conn:
             cursor = conn.execute("SELECT COUNT(*) FROM financial_statements")
-            count = cursor.fetchone()[0]
-            assert count == 2
+            assert cursor.fetchone()[0] == 2
 
-    def test_get_listed_info_cached(self, processor, mock_requests):
-        """Test that listed info is fetched and returns a DataFrame."""
+
+class TestListedInfo:
+    def test_returns_v1_columns(self, processor):
+        processor.cache.clear_all()
         df = processor.get_listed_info_cached()
-
         assert not df.empty
-        # Verify expected columns exist
         assert "Code" in df.columns
-
-    def test_database_stats(self, processor, temp_db, mock_api_responses):
-        """Test getting database statistics."""
-        processor._initialize_database(temp_db)
-
-        statements_data = [
-            ("72030", mock_api_responses["statements"][:1]),
-        ]
-        processor.save_statements_batch(temp_db, statements_data)
-
-        stats = processor.get_database_stats(temp_db)
-        assert "statement_record_count" in stats
-        assert stats["statement_record_count"] == 1
+        assert "CompanyName" in df.columns
 
 
-class TestStatementMapping:
-    """Test statement field mapping."""
+class TestAsyncFetch:
+    def test_get_statements_async_normalizes(self, processor):
+        """paginate_async の出力が V2 形式でも、戻り値レコードは V1 ロング名キーを持つ。"""
+        import asyncio
 
-    def test_all_fields_mapped(self, processor):
-        """Test that all expected fields are mapped."""
-        full_statement = {
-            "LocalCode": "12345",
-            "DisclosedDate": "2024-01-01",
-            "TypeOfCurrentPeriod": "FY",
-            "DisclosureNumber": "12345",
-            "TypeOfDocument": "有価証券報告書",
-            "NetSales": 1000000,
-            "OperatingProfit": 100000,
-            "OrdinaryProfit": 110000,
-            "Profit": 80000,
-            "EarningsPerShare": 100.0,
-            "TotalAssets": 5000000,
-            "Equity": 2000000,
-            "BookValuePerShare": 500.0,
-            "CashFlowsFromOperatingActivities": 200000,
-            "CashFlowsFromInvestingActivities": -100000,
-            "CashFlowsFromFinancingActivities": -50000,
-            "ResultDividendPerShareAnnual": 20.0,
-        }
+        async def fake_paginate(session, path, params=None):
+            yield SAMPLE_V2_STATEMENTS[:1]
 
-        record = processor._map_statement_to_record(full_statement)
+        processor.client.paginate_async = fake_paginate
 
-        assert record["local_code"] == "12345"
-        assert record["net_sales"] == 1000000
-        assert record["profit"] == 80000
-        assert record["cf_operating"] == 200000
-        assert record["cf_investing"] == -100000
+        async def run():
+            return await processor.get_statements_async(session=None, code="72030")
 
-    def test_missing_fields_return_none(self, processor):
-        """Test that missing fields are handled gracefully."""
-        partial_statement = {
-            "LocalCode": "12345",
-            "DisclosedDate": "2024-01-01",
-            "TypeOfCurrentPeriod": "FY",
-        }
+        code, records = asyncio.run(run())
+        assert code == "72030"
+        assert len(records) == 1
+        rec = records[0]
+        # V1 ロング名
+        assert rec["LocalCode"] == "72030"
+        assert rec["NetSales"] == 45000000000000
+        assert rec["TypeOfCurrentPeriod"] == "FY"
 
-        record = processor._map_statement_to_record(partial_statement)
+    def test_get_statements_async_handles_error(self, processor):
+        import asyncio
 
-        assert record["local_code"] == "12345"
-        assert record["net_sales"] is None
-        assert record["earnings_per_share"] is None
+        async def boom(session, path, params=None):
+            raise RuntimeError("boom")
+            yield
+
+        processor.client.paginate_async = boom
+
+        async def run():
+            return await processor.get_statements_async(session=None, code="72030")
+
+        code, records = asyncio.run(run())
+        assert code == "72030"
+        assert records == []
+
+
+class TestOrchestrationGetAllStatements:
+    """get_all_statements の fetch → save 経路を end-to-end でカバー。"""
+
+    def test_persists_and_counts(self, processor, temp_db):
+        processor.cache.clear_all()
+
+        # process_codes_batch の戻り値を制御: 1 件目は 1 レコード、2 件目は空
+        from market_pipeline.jquants._v2_translator import normalize_statements
+
+        df = normalize_statements(SAMPLE_V2_STATEMENTS)
+        records_72030 = [{str(k): v for k, v in df.iloc[0].to_dict().items()}]
+
+        async def fake_batch(codes):
+            results: list[tuple[str, list[dict]]] = []
+            for code in codes:
+                if code == "72030":
+                    results.append(("72030", records_72030))
+                else:
+                    results.append((code, []))
+            return results
+
+        processor.process_codes_batch = fake_batch  # type: ignore[method-assign]
+
+        # 例外なく完走、DB に成功銘柄のレコードが入っていること
+        processor.get_all_statements(temp_db)
+
+        with sqlite3.connect(temp_db) as conn:
+            count = conn.execute(
+                "SELECT COUNT(*) FROM financial_statements"
+            ).fetchone()[0]
+            assert count == 1
+            row = conn.execute(
+                "SELECT local_code, net_sales FROM financial_statements"
+            ).fetchone()
+            assert row[0] == "72030"
+            assert row[1] == 45000000000000
+
+    def test_continues_on_batch_exception(self, processor, temp_db):
+        processor.cache.clear_all()
+
+        async def boom(codes):
+            raise RuntimeError("batch failure")
+
+        processor.process_codes_batch = boom  # type: ignore[method-assign]
+
+        # 例外が発生してもプロセス全体は完走する(failed に計上され続行)
+        processor.get_all_statements(temp_db)
+
+        # 1 レコードも入らない
+        with sqlite3.connect(temp_db) as conn:
+            count = conn.execute(
+                "SELECT COUNT(*) FROM financial_statements"
+            ).fetchone()[0]
+            assert count == 0

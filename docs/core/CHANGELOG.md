@@ -4,9 +4,36 @@
 
 ## [Unreleased]
 
-> 現在の作業ブランチは `feature/notion-export`。`feature/exexutive-communication-analysis`（PR #22）および `feature/daily-news-watcher-for-stocks`（PR #23）は既に main にマージ済みで、次のリリース候補（[0.10.0]）に含まれる。最終更新: 2026-05-22。
+> 現在の作業ブランチは `feature/notion-export`。`feature/exexutive-communication-analysis`（PR #22）および `feature/daily-news-watcher-for-stocks`（PR #23）は既に main にマージ済みで、次のリリース候補（[0.10.0]）に含まれる。最終更新: 2026-05-27。
 
 ### Added
+- **J-Quants API V2 移行**(2026-05-31 V1 廃止対応、`feature/jquants-v2-migration`)
+  - `src/market_pipeline/jquants/exceptions.py`: `JQuantsError` 基底クラスと派生例外(`JQuantsAuthError` / `JQuantsRateLimitError` / `JQuantsServerError` / `JQuantsResponseError`)
+  - `src/market_pipeline/jquants/client.py`: `JQuantsClient`(x-api-key 認証、トークンバケット式レート制限、`pagination_key` 自動追跡、指数バックオフリトライ、同期/非同期両系統、`health_check()`)
+  - `src/market_pipeline/jquants/_v2_translator.py`: V2 短縮カラム名 → V1 ロング名への純粋関数群(`normalize_daily_quotes` / `normalize_listed_info` / `normalize_statements`)、本プロジェクトで未使用の V2 フィールドは射影で落とす
+  - `src/market_pipeline/jquants/data_processor.py` / `statements_processor.py`: `JQuantsClient` を DI で受け取り、V2 エンドポイント(`/v2/equities/master`、`/v2/equities/bars/daily`、`/v2/fins/summary`)を呼び出す。外向け関数シグネチャ・戻り値構造・DB スキーマは V1 から変更なし
+  - 旧 V1 実装は `_old/v1_data_processor.py` / `_old/v1_statements_processor.py` に退避(import 対象外)
+  - `JQuantsAPISettings`: `api_key` / `rate_limit_per_minute` / `max_retries` / `retry_initial_seconds` / `retry_max_seconds` を追加、`email` / `password` を削除
+  - `.env.example`: `JQUANTS_API_KEY` を追加、`EMAIL` / `PASSWORD` を削除
+  - `scripts/run_daily_jquants.py` / `run_weekly_tasks.py`: 起動直後に `client.health_check()` を実行、失敗時は Slack エラー通知後 exit 1
+  - 関連テスト: `test_jquants_client.py`(27 件)、`test_jquants_v2_translator.py`(14 件)、`test_jquants_data_processor.py` と `test_statements_processor.py` を V2 mock に差し替え
+  - **不変だったもの**: DB スキーマ(`daily_quotes` / `financial_statements` / `calculated_fundamentals`)、分析モジュール(`minervini` / `relative_strength` / `high_low_ratio` / `chart_classification` / `integrated_analysis*`)、`market_reader` / `technical_tools` 各パッケージ、`fundamentals_calculator`
+- **J-Quants V2 orchestration テスト追加 + sustained smoke test スクリプト** (2026-05-27〜28、validation-report フォローアップ)
+  - `tests/test_jquants_data_processor.py::TestOrchestrationUpdate`(2 件): `update_prices_to_db_optimized` の fetch+save 経路と batch 例外時の failed カウントを mock 経由でカバー
+  - `tests/test_statements_processor.py::TestOrchestrationGetAllStatements`(2 件): `get_all_statements` の DB 投入と batch 例外時の継続動作をカバー
+  - `scripts/check_jquants_v2_sustained.py`: `JQuantsClient` で `/v2/equities/master` を一定時間 sustain 呼び出しし 429 検出回数を exit code で通知する手動実行ツール(`--duration` / `--rate` / `--dry-run`、CI 対象外)。実機検証実績: 2026-05-28 60.6 秒 sustain / 実効 39.6 req/min / 429 ゼロ
+  - 副次修正: smoke スクリプトでの `.env` 読み込み漏れ(`load_dotenv()` 不在)を発見・修正
+
+### Changed
+- **J-Quants リトライ挙動の強化** (V2 移行に伴い): V1 では `get_daily_quotes_async` がタイムアウト時のみ最大 1 回リトライしていたが、V2 では `JQuantsClient` が 429/5xx/ネットワークエラーすべてに対して指数バックオフで最大 3 回(初期 1s → 上限 8s)リトライする。レート制限超過時の堅牢性が向上した一方、最悪ケースで 1 リクエストあたり最大 4 回の HTTP 発行となるため、稀に `run_daily_jquants.py` のランタイムが延びる可能性がある(launchd は平日 18:00 起動なので時間制約は緩い)。
+
+### Fixed
+- **J-Quants V2 トークンバケットの burst 抑制 + sliding window 安全マージン** (2026-05-27): V2 サーバーは過去 60 秒の sliding window でレート制限を判定するため、複数段階の対策を実施:
+  - `_TokenBucket.capacity` を `rate_limit_per_minute`(=60)から `1` に変更 — 並列ワーカー数に関係なく持続レート 1req/sec を厳密に保証(初期実装の 60 件バースト → 60 秒以内 120 件で 429 量産を回避)
+  - `_TokenBucket` に `initial_tokens` パラメータを追加し、`JQuantsClient` で `initial_tokens=0` を指定 — 起動時の "free token" による 60 秒以内 61 件問題(capacity=1 + 初期 token 1 + 補充 60 = 61)を解消
+  - デフォルトレートを `60 → 55 req/min` に下げ、sliding window 判定のクロックずれ・並列ジッタへの安全マージンを確保(spec 60 ピッタリだと実機で 81 秒経過時に 429 を踏むことを確認済み)
+  - 実機検証(2026-05-27): 80 銘柄を `max_concurrent_requests=3` で 87 秒間動作させて **429 ゼロ**、実効レート 54.9 req/min を確認
+
 - Notion 投入モジュール (`src/notion_export/`) — 投資分析レポート(`output/reports/stocks/`)を Notion 親ページ配下にページ投入
   - `markdown_converter`: Markdown → Notion blocks 変換(インライン bold/italic/code/strikethrough/link、表セル内も保持。2000 文字超の段落と 100 blocks 超の自動分割対応)
   - `image_uploader`: Notion File Upload API(2-step)+ 5xx 指数バックオフ(1秒→2秒→4秒)+ `DryRunImageUploader`

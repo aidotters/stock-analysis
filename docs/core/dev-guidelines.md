@@ -66,8 +66,7 @@ sma_period = settings.analysis.sma_short
 
 ```bash
 # .envファイル
-EMAIL=your_email@example.com
-PASSWORD=your_password
+JQUANTS_API_KEY=your-jquants-api-key
 JQUANTS_MAX_CONCURRENT_REQUESTS=3
 ```
 

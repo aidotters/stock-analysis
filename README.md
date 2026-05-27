@@ -179,10 +179,10 @@
     ```
 
 4.  **環境変数の設定:**
-    J-Quants APIを利用するために、認証情報の設定が必要です。プロジェクトルートに `.env` ファイルを作成し、以下の内容を記述してください。
+    J-Quants API を利用するために、認証情報の設定が必要です。プロジェクトルートに `.env` ファイルを作成し、以下の内容を記述してください。V1 の EMAIL/PASSWORD 認証は 2026-05-31 に廃止済みで、V2 の `x-api-key` ヘッダ認証に移行しています。EDINET API キーは `/research-executives` および月次の役員マスター更新で使用します。
     ```
-    EMAIL="your_jquants_email@example.com"
-    PASSWORD="your_jquants_password"
+    JQUANTS_API_KEY="your-jquants-api-key"
+    EDINET_API_KEY="your-edinet-api-key"
     ```
 
 ## 使用方法

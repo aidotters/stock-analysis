@@ -151,9 +151,35 @@ mypy .
 - `master.db`: Stock master data
 
 ### J-Quants Modules (src/market_pipeline/jquants/)
-- `data_processor.py`: Daily price data fetcher with async processing. `get_all_prices_for_past_5_years_to_db_optimized()` / `update_prices_to_db_optimized()` は `Dict[str, int]` を返却（total_listed, codes_to_update, codes_updated, records_inserted, codes_failed）。`get_listed_info_cached()` にMIN_EXPECTED_COMPANIES（100）検証を追加（異常に少ない結果はキャッシュしない）
-- `statements_processor.py`: Financial statements API fetcher
-- `fundamentals_calculator.py`: Calculates PER, PBR, ROE, ROA, etc. from raw statements
+
+**V2 移行(2026-05-31)済み**: V1 認証(EMAIL/PASSWORD + IDトークンリフレッシュ)は廃止。V2 は `x-api-key` ヘッダ認証。アダプタ層パターンで、`JQuantsClient` (HTTP) と `_v2_translator` (V2→V1 カラム翻訳) を経由し、DB スキーマ・分析モジュール・テストへの波及をゼロに抑えている。
+
+- `exceptions.py`: `JQuantsError` 基底クラスと派生例外(`JQuantsAuthError` 401/403、`JQuantsRateLimitError` 429、`JQuantsServerError` 5xx、`JQuantsResponseError` 形式異常)
+- `client.py`: `JQuantsClient` クラス。`x-api-key` 認証、トークンバケット式レート制限(デフォルト 55req/min、`capacity=1`+`initial_tokens=0` で sliding window 制約に対応、spec 60 に対する安全マージン)、`pagination_key` 自動追跡、指数バックオフリトライ(429/5xx 最大 3 回、1s→2s→4s 上限 8s)、401/403 即時失敗。`get()` / `get_async()` / `paginate()` / `paginate_async()` / `health_check()` を提供
+- `_v2_translator.py`: V2 短縮カラム名(`O`/`H`/`L`/`C`/`Vo`/`AdjC` 等)を V1 ロング名(`Open`/`High`/.../`AdjustmentClose`)へ rename し、本プロジェクトで未使用の V2 フィールド(前場/後場・ストップ高フラグ・翌期予想等)は射影で落とす純粋関数群(`normalize_daily_quotes` / `normalize_listed_info` / `normalize_statements`)
+- `data_processor.py`: Daily price data fetcher with async processing. **`JQuantsClient` を DI** で受け取り、内部で `/v2/equities/master` / `/v2/equities/bars/daily` を呼び出す。`get_all_prices_for_past_5_years_to_db_optimized()` / `update_prices_to_db_optimized()` は `Dict[str, int]` を返却（total_listed, codes_to_update, codes_updated, records_inserted, codes_failed）。`get_listed_info_cached()` にMIN_EXPECTED_COMPANIES（100）検証あり
+- `statements_processor.py`: Financial statements API fetcher。`/v2/fins/summary` を呼び出し、`_v2_translator.normalize_statements` で V1 カラム名へ変換してから `_map_statement_to_record` で DB 列名にマップ
+- `fundamentals_calculator.py`: Calculates PER, PBR, ROE, ROA, etc. from raw statements。DB 列名(snake_case)を参照しているため V2 移行による変更なし
+- `_old/`: V1 実装の退避先(`v1_data_processor.py` / `v1_statements_processor.py`)。import 対象外
+
+**認証設定**: `.env` に `JQUANTS_API_KEY=<key>` を記載。`settings.jquants.api_key` から参照される。`JQuantsClient(api_key=None)` は環境変数を自動参照し、未設定時は API 呼び出し時に `JQuantsAuthError` を raise。
+
+**ヘルスチェック**: launchd エントリスクリプト(`run_daily_jquants.py` / `run_weekly_tasks.py`)起動直後に `client.health_check()` を実行。失敗時は Slack エラー通知後に `exit 1`。
+
+**Sustained smoke test**: rate limit 設定変更時や本番事故調査用に `scripts/check_jquants_v2_sustained.py` を提供。`JQuantsClient` で `/v2/equities/master` を一定時間 sustain 呼び出しし、429 検出回数を exit code で通知する手動実行ツール(CI 対象外)。実機検証実績: 2026-05-28 60.6 秒 sustain / 実効 39.6 req/min / 429 ゼロ。
+
+```bash
+# デフォルト(60 秒、rate=55)
+python scripts/check_jquants_v2_sustained.py
+
+# 期間・レート指定
+python scripts/check_jquants_v2_sustained.py --duration 120 --rate 60
+
+# Dry-run(設定だけ表示)
+python scripts/check_jquants_v2_sustained.py --dry-run
+```
+
+**スコープ外(アダプタ層は恒久的に残す方針)**: DB スキーマの V2 短縮カラム名化、分析モジュール(`minervini` / `relative_strength` / `high_low_ratio` / `chart_classification` / `integrated_analysis*`) と `market_reader` / `technical_tools` のカラム名追従。これらは V1 カラム名のまま維持される。
 
 ### yfinance Modules (src/market_pipeline/yfinance/)
 - `valuation_fetcher.py`: `ValuationFetcher` class for rolling yfinance BS data collection
@@ -1011,7 +1037,7 @@ settings = reload_settings()
 - `settings.executives`: Executive analysis settings (cache_ttl_days, max_parallel_fetch, doc_scan_fallback_months, doc_scan_narrow_days)
 
 **Environment variables:** See `.env.example` for all options. Key settings:
-- `EMAIL`, `PASSWORD`: J-Quants API credentials (required)
+- `JQUANTS_API_KEY`: J-Quants API V2 credential (required, `x-api-key` ヘッダ認証)
 - `EDINET_API_KEY`: EDINET API key (required for `/research-executives` and `run_executive_master_update.py`)
 
 ## Testing
@@ -1026,7 +1052,9 @@ settings = reload_settings()
   - `tests/test_integrated_analysis.py`: 統合分析テスト
   - `tests/test_integrated_scores.py`: IntegratedScoresRepositoryテスト
   - `tests/test_stock_screener.py`: StockScreenerクラステスト
-  - `tests/test_jquants_data_processor.py`: J-Quants APIテスト
+  - `tests/test_jquants_client.py`: JQuantsClient (V2) テスト(x-api-key 認証、トークンバケット、ページネーション、リトライ、health_check)
+  - `tests/test_jquants_v2_translator.py`: _v2_translator テスト(V2 → V1 カラム rename、未使用フィールド射影、不明フィールド warning)
+  - `tests/test_jquants_data_processor.py`: J-Quants APIテスト(V2 client DI、V1 互換カラム出力)
   - `tests/test_statements_processor.py`: Statements API processor tests
   - `tests/test_fundamentals_calculator.py`: Financial metric calculation tests
   - `tests/test_stock_reader.py`: market_readerパッケージテスト（DataReaderクラス）
