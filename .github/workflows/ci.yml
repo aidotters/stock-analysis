@@ -42,6 +42,15 @@ jobs:
       - name: mypy
         run: uv run mypy src
 
+      - name: Prepare empty DB files for tests
+        # DataReader / VirtualPortfolio / Backtester のテストは default DB パス
+        # (data/*.db) の存在チェックを通過させる必要があるため、空の SQLite を用意。
+        run: |
+          mkdir -p data
+          for db in jquants.db statements.db analysis_results.db master.db; do
+            uv run python -c "import sqlite3; sqlite3.connect('data/$db').close()"
+          done
+
       - name: pytest
         run: uv run pytest
 

@@ -1831,43 +1831,91 @@ class MySignal(BaseSignal):
 
 ## J-Quants モジュール (`src/market_pipeline/jquants/`)
 
+> **V2 移行(2026-05-31)**: V1 EMAIL/PASSWORD 認証は廃止。V2 は `x-api-key` ヘッダ認証。
+> アダプタ層: `JQuantsClient`(HTTP) + `_v2_translator`(V2→V1 カラム翻訳) を経由する。
+
+### JQuantsClient
+
+V2 API への HTTP 通信を集約するクライアント。
+
+```python
+from market_pipeline.jquants.client import JQuantsClient
+
+# api_key 未指定時は環境変数 JQUANTS_API_KEY を参照
+client = JQuantsClient(
+    api_key=None,
+    rate_limit_per_minute=55,  # spec=60 に対する 8.3% 安全マージン
+    max_retries=3,
+    retry_initial_seconds=1.0,
+    retry_max_seconds=8.0,
+    timeout_seconds=30,
+)
+client.health_check()  # /v2/equities/master を 1 件取得して疎通確認
+
+# 同期 GET (1 ページ)
+payload = client.get("/v2/equities/master")
+
+# ページネーション自動追跡(同期)
+for page in client.paginate("/v2/equities/bars/daily", params={"code": "72030"}):
+    process(page)
+
+# 非同期(aiohttp.ClientSession を渡す)
+async with aiohttp.ClientSession() as session:
+    async for page in client.paginate_async(session, "/v2/fins/summary", params={"code": "72030"}):
+        process(page)
+```
+
+**例外**(`exceptions.py`):
+- `JQuantsAuthError` (401/403, 即時失敗)
+- `JQuantsRateLimitError` (429, リトライ後失敗)
+- `JQuantsServerError` (5xx, リトライ後失敗)
+- `JQuantsResponseError` (`data` キー欠落、JSON デコード失敗)
+
+### _v2_translator
+
+V2 短縮カラム名 → V1 ロング名への純粋関数群。本プロジェクトで未使用の V2 フィールドは射影で落とす。
+
+```python
+from market_pipeline.jquants._v2_translator import (
+    normalize_daily_quotes,    # /v2/equities/bars/daily → V1 daily_quotes 列
+    normalize_listed_info,      # /v2/equities/master    → V1 listed_info 列
+    normalize_statements,       # /v2/fins/summary       → V1 statements 列
+)
+df = normalize_daily_quotes(payload["data"])
+```
+
 ### JQuantsDataProcessor
 
-日次株価データの取得と保存を担当。
+日次株価データの取得と保存を担当。`JQuantsClient` を DI で受け取り、未指定時は内部で生成する。
 
 ```python
 from market_pipeline.jquants.data_processor import JQuantsDataProcessor
+from market_pipeline.jquants.client import JQuantsClient
 
-processor = JQuantsDataProcessor()
-await processor.fetch_and_store_daily_quotes(stock_codes, start_date, end_date)
+client = JQuantsClient()  # JQUANTS_API_KEY を環境変数から取得
+processor = JQuantsDataProcessor(client=client)
+
+# 初回: 過去 5 年分の全銘柄取得
+result = processor.get_all_prices_for_past_5_years_to_db_optimized(db_path)
+# 差分更新
+result = processor.update_prices_to_db_optimized(db_path)
+# 戻り値: {"total_listed", "codes_to_update", "codes_updated", "records_inserted", "codes_failed"}
 ```
-
-#### メソッド
-
-##### `async fetch_and_store_daily_quotes(stock_codes, start_date, end_date)`
-
-複数銘柄の日次株価データを非同期で取得し、データベースに保存。
-
-**パラメータ**:
-- `stock_codes` (`list[str]`): 銘柄コードリスト
-- `start_date` (`str`): 開始日 (YYYY-MM-DD)
-- `end_date` (`str`): 終了日 (YYYY-MM-DD)
-
-##### `get_refresh_token() -> str`
-
-J-Quants APIのリフレッシュトークンを取得。
 
 ### JQuantsStatementsProcessor
 
-財務諸表データの取得を担当。
+財務諸表データの取得を担当。`JQuantsClient` を DI で受け取り、`/v2/fins/summary` を呼び出して `_v2_translator.normalize_statements` で V1 互換に変換した上で DB に投入する。
 
 ```python
 from market_pipeline.jquants.statements_processor import JQuantsStatementsProcessor
+from market_pipeline.jquants.client import JQuantsClient
 
+client = JQuantsClient()
 processor = JQuantsStatementsProcessor(
+    client=client,
     max_concurrent_requests=3,
     batch_size=100,
-    request_delay=0.1
+    request_delay=0.1,
 )
 processor.get_all_statements(db_path)
 ```
@@ -1876,16 +1924,18 @@ processor.get_all_statements(db_path)
 
 ```python
 JQuantsStatementsProcessor(
+    client: JQuantsClient | None = None,    # None なら内部生成
     max_concurrent_requests: int = 3,
     batch_size: int = 100,
-    request_delay: float = 0.1
+    request_delay: float = 0.1,
 )
 ```
 
 **パラメータ**:
+- `client`: 既存の `JQuantsClient` を注入(テスト・複数 processor 間でのレート制限共有)
 - `max_concurrent_requests`: 同時リクエスト数上限
 - `batch_size`: バッチサイズ
-- `request_delay`: リクエスト間隔（秒）
+- `request_delay`: リクエスト間隔（秒、トークンバケットが主、これは補助)
 
 #### メソッド
 

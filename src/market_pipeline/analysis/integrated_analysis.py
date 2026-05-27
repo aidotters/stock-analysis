@@ -6,8 +6,11 @@ import pandas as pd
 from typing import Optional, Dict, Union
 
 # --- Constants ---
-DATA_DIR = "/Users/tak/Markets/Stocks/Stock-Analysis/data"
-LOGS_DIR = "/Users/tak/Markets/Stocks/Stock-Analysis/logs"
+_PROJECT_ROOT = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
+DATA_DIR = os.path.join(_PROJECT_ROOT, "data")
+LOGS_DIR = os.path.join(_PROJECT_ROOT, "logs")
 RESULTS_DB_PATH = os.path.join(DATA_DIR, "analysis_results.db")
 
 

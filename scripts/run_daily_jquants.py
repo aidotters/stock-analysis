@@ -10,6 +10,7 @@ from datetime import datetime
 from pathlib import Path
 
 from market_pipeline.config import get_settings
+from market_pipeline.jquants.client import JQuantsClient
 from market_pipeline.jquants.data_processor import JQuantsDataProcessor
 from market_pipeline.utils.slack_notifier import JobContext
 
@@ -57,7 +58,21 @@ def main(chain: bool = True):
                 f"timeout={settings.jquants.timeout_seconds}s"
             )
 
+            # V2 クライアントを生成し、起動直後にヘルスチェックを実行
+            client = JQuantsClient(
+                api_key=settings.jquants.api_key or None,
+                rate_limit_per_minute=settings.jquants.rate_limit_per_minute,
+                max_retries=settings.jquants.max_retries,
+                retry_initial_seconds=settings.jquants.retry_initial_seconds,
+                retry_max_seconds=settings.jquants.retry_max_seconds,
+                timeout_seconds=settings.jquants.timeout_seconds,
+            )
+            logger.info("J-Quants V2 ヘルスチェック実行中...")
+            client.health_check()
+            logger.info("J-Quants V2 ヘルスチェック OK")
+
             processor = JQuantsDataProcessor(
+                client=client,
                 max_concurrent_requests=settings.jquants.max_concurrent_requests,
                 batch_size=settings.jquants.batch_size,
                 request_delay=settings.jquants.request_delay,
@@ -128,7 +143,7 @@ def main(chain: bool = True):
     except Exception as e:
         logger.error(f"エラーが発生しました: {e}", exc_info=True)
         logger.error(
-            "環境変数 EMAIL, PASSWORD が正しく設定されているか確認してください"
+            "環境変数 JQUANTS_API_KEY が正しく設定されているか確認してください"
         )
         sys.exit(1)
 

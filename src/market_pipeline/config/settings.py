@@ -69,21 +69,28 @@ class PathSettings(BaseSettings):
 
 
 class JQuantsAPISettings(BaseSettings):
-    """J-Quants API configuration."""
+    """J-Quants API V2 configuration."""
 
     model_config = SettingsConfigDict(
         env_prefix="JQUANTS_", env_file=_ENV_FILE, extra="ignore"
     )
 
-    # Credentials (from environment)
-    email: str = Field(default="", validation_alias="EMAIL")
-    password: str = Field(default="", validation_alias="PASSWORD")
+    # V2 credentials (x-api-key authentication)
+    api_key: str = Field(default="", validation_alias="JQUANTS_API_KEY")
 
-    # Rate limiting
+    # Rate limiting (V2 Light plan: spec=60 req/min)
+    # 55 にしてサーバーの sliding window 判定に対する安全マージンを確保
+    # (60 ピッタリだとクロックずれ・並列ワーカーの僅かなジッタで超過することがある)
+    rate_limit_per_minute: int = 55
+    max_retries: int = 3
+    retry_initial_seconds: float = 1.0
+    retry_max_seconds: float = 8.0
     max_concurrent_requests: int = 10
     batch_size: int = 100
-    request_delay: float = 0.05  # seconds between requests
-    timeout_seconds: int = 10  # per-request timeout
+    request_delay: float = (
+        0.05  # seconds between requests (補助的、トークンバケットが主)
+    )
+    timeout_seconds: int = 30  # per-request timeout
 
     # Caching
     cache_ttl_hours: int = 24

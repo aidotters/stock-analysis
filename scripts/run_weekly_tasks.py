@@ -13,6 +13,7 @@ import sys
 from datetime import datetime
 
 from market_pipeline.config import get_settings
+from market_pipeline.jquants.client import JQuantsClient
 from market_pipeline.utils.slack_notifier import JobContext
 
 
@@ -80,12 +81,25 @@ def main():
                     f"request_delay={settings.jquants.request_delay}s"
                 )
 
-                # 1. 財務諸表データを取得
+                # 1. V2 クライアントを生成し、ヘルスチェック
+                client = JQuantsClient(
+                    api_key=settings.jquants.api_key or None,
+                    rate_limit_per_minute=settings.jquants.rate_limit_per_minute,
+                    max_retries=settings.jquants.max_retries,
+                    retry_initial_seconds=settings.jquants.retry_initial_seconds,
+                    retry_max_seconds=settings.jquants.retry_max_seconds,
+                    timeout_seconds=settings.jquants.timeout_seconds,
+                )
+                print(f"=== J-Quants V2 ヘルスチェック {datetime.now()} ===")
+                client.health_check()
+
+                # 2. 財務諸表データを取得
                 from market_pipeline.jquants.statements_processor import (
                     JQuantsStatementsProcessor,
                 )
 
                 processor = JQuantsStatementsProcessor(
+                    client=client,
                     max_concurrent_requests=settings.jquants.max_concurrent_requests,
                     batch_size=settings.jquants.batch_size,
                     request_delay=settings.jquants.request_delay,
@@ -94,7 +108,7 @@ def main():
                 job.add_metric("財務データ取得", "完了")
                 print(f"=== 財務諸表データ取得完了 {datetime.now()} ===")
 
-                # 2. 財務指標を計算
+                # 3. 財務指標を計算
                 print(f"=== 財務指標計算開始 {datetime.now()} ===")
                 from market_pipeline.jquants.fundamentals_calculator import (
                     FundamentalsCalculator,

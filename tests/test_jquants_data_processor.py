@@ -1,209 +1,326 @@
-import os
+"""JQuantsDataProcessor (V2) の単体テスト。
+
+V2 移行に伴い、認証は `JQuantsClient` 側に集約されたため、本テストでは
+processor に MagicMock の `JQuantsClient` を DI してレスポンスを制御する。
+"""
+
+from __future__ import annotations
+
+from unittest.mock import MagicMock, patch
+
 import pytest
-import pandas as pd
-from unittest.mock import patch, MagicMock
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
-import tempfile
 
 from market_pipeline.jquants.data_processor import JQuantsDataProcessor
 
-# テスト用の固定値を設定
-TEST_REFRESH_TOKEN = "test_refresh_token"
-TEST_ID_TOKEN = "test_id_token"
+
+@pytest.fixture
+def fake_client():
+    """JQuantsClient のフェイク。paginate は V2 形式の `data` 配列を返す。
+
+    上場銘柄一覧は 100 件以上必要(MIN_EXPECTED_COMPANIES バリデーション)。
+    """
+    client = MagicMock()
+    # 100 件以上のダミー銘柄を生成
+    master_rows = [
+        {
+            "Date": "2024-01-01",
+            "Code": f"{1000 + i:04d}0",
+            "CoName": f"Company {i}",
+            "CoNameEn": f"Company {i} Inc",
+            "S17": "16",
+            "S17Nm": "金融",
+            "S33": "7200",
+            "S33Nm": "その他金融業",
+            "ScaleCat": "TOPIX Small",
+            "Mkt": "0111",
+            "MktNm": "プライム",
+            "Mrgn": "1",
+            "MrgnNm": "信用",
+            "ProdCat": "011",
+        }
+        for i in range(100)
+    ]
+
+    def paginate(path, params=None):
+        if path == "/v2/equities/master":
+            yield master_rows
+        else:
+            yield []
+
+    client.paginate.side_effect = paginate
+    return client
 
 
 @pytest.fixture
-def mock_requests():
-    """requests.post と requests.get をモック化する fixture"""
-    with (
-        patch("market_pipeline.jquants.data_processor.requests.post") as mock_post,
-        patch("market_pipeline.jquants.data_processor.requests.get") as mock_get,
-    ):
-        # auth_user の最初の呼び出しは refreshToken を返す
-        # auth_refresh の2回目の呼び出しは idToken を返す
-        def post_side_effect(url, *args, **kwargs):
-            if "auth_user" in url:
-                return MagicMock(
-                    status_code=200, json=lambda: {"refreshToken": TEST_REFRESH_TOKEN}
-                )
-            elif "auth_refresh" in url:
-                return MagicMock(
-                    status_code=200, json=lambda: {"idToken": TEST_ID_TOKEN}
-                )
-            return MagicMock(status_code=404, json=lambda: {"message": "Not Found"})
+def processor(fake_client):
+    p = JQuantsDataProcessor(client=fake_client)
+    # テスト分離のためキャッシュを毎回クリア
+    p.cache.clear_all()
+    yield p
+    p.cache.clear_all()
 
-        mock_post.side_effect = post_side_effect
 
-        # APIエンドポイントごとに異なるレスポンスを返すように設定
-        def get_side_effect(url, params=None, headers=None):
-            if "listed/info" in url:
-                return MagicMock(
-                    status_code=200,
-                    json=lambda: {
-                        "info": [
-                            {"Code": "1301", "CompanyName": "極洋"},
+class TestInit:
+    def test_default_creates_client(self):
+        """client 未指定時は内部で生成される。"""
+        with patch("market_pipeline.jquants.data_processor.JQuantsClient") as mock_cls:
+            JQuantsDataProcessor()
+            mock_cls.assert_called_once()
+
+    def test_di_uses_passed_client(self, fake_client):
+        p = JQuantsDataProcessor(client=fake_client)
+        assert p.client is fake_client
+
+
+class TestListedInfo:
+    def test_fetch_returns_v1_columns(self, processor):
+        # cache をクリア
+        processor.cache.clear_all()
+        df = processor.get_listed_info_cached()
+        assert not df.empty
+        # V2 短縮名は無く V1 ロング名のみ
+        assert "CompanyName" in df.columns
+        assert "Sector33CodeName" in df.columns
+        assert "MarketCodeName" in df.columns
+        assert "CoName" not in df.columns
+        assert "S33Nm" not in df.columns
+        assert len(df) >= JQuantsDataProcessor.MIN_EXPECTED_COMPANIES
+
+    def test_below_threshold_not_cached(self, fake_client):
+        # 50 件しか返さないようにする
+        fake_client.paginate.side_effect = lambda path, params=None: iter(
+            [
+                [
+                    {
+                        "Date": "2024-01-01",
+                        "Code": f"{i:05d}",
+                        "CoName": f"X{i}",
+                        "CoNameEn": "",
+                        "S17": "1",
+                        "S17Nm": "x",
+                        "S33": "1",
+                        "S33Nm": "x",
+                        "ScaleCat": "",
+                        "Mkt": "0111",
+                        "MktNm": "プライム",
+                        "Mrgn": "",
+                        "MrgnNm": "",
+                    }
+                    for i in range(50)
+                ]
+            ]
+        )
+        proc = JQuantsDataProcessor(client=fake_client)
+        proc.cache.clear_all()
+        processor = proc
+        df = processor.get_listed_info_cached()
+        # 取得は返るがキャッシュには載らない
+        assert len(df) == 50
+        assert processor.cache.get("jquants_listed_info") is None
+
+
+class TestDailyQuotes:
+    def test_async_quotes_rename_to_v1(self, processor):
+        """get_daily_quotes_async は V1 ロング名カラムを返す。"""
+        import asyncio
+
+        # paginate_async が V2 形式の data を 1 ページ返すように差し替え
+        async def fake_paginate_async(session, path, params=None):
+            yield [
+                {
+                    "Date": "2024-01-01",
+                    "Code": "13010",
+                    "O": 100.0,
+                    "H": 110.0,
+                    "L": 95.0,
+                    "C": 105.0,
+                    "Vo": 10000.0,
+                    "Va": 1_050_000.0,
+                    "AdjFactor": 1.0,
+                    "AdjO": 100.0,
+                    "AdjH": 110.0,
+                    "AdjL": 95.0,
+                    "AdjC": 105.0,
+                    "AdjVo": 10000.0,
+                    "UL": "0",
+                    "LL": "0",
+                }
+            ]
+
+        processor.client.paginate_async = fake_paginate_async
+
+        async def run():
+            # session は実際には使用されない(fake_paginate_async が無視)
+            return await processor.get_daily_quotes_async(
+                session=None, code="13010", from_date="2024-01-01", to_date="2024-01-01"
+            )
+
+        code, df = asyncio.run(run())
+        assert code == "13010"
+        assert not df.empty
+        assert df.iloc[0]["Open"] == 100.0
+        assert df.iloc[0]["Close"] == 105.0
+        assert df.iloc[0]["Volume"] == 10000.0
+        assert df.iloc[0]["AdjustmentClose"] == 105.0
+        # ストップ高フラグは落とされる
+        assert "UL" not in df.columns
+
+    def test_async_quotes_empty_on_exception(self, processor):
+        import asyncio
+
+        async def boom(session, path, params=None):
+            raise RuntimeError("boom")
+            yield  # never reached
+
+        processor.client.paginate_async = boom
+
+        async def run():
+            return await processor.get_daily_quotes_async(
+                session=None, code="13010", from_date="2024-01-01", to_date="2024-01-01"
+            )
+
+        code, df = asyncio.run(run())
+        assert code == "13010"
+        assert df.empty
+
+
+class TestReturnValueShape:
+    """戻り値のキーが V1 と同一であることを確認。"""
+
+    def test_all_up_to_date_returns_expected_keys(self, processor, tmp_path):
+        processor.cache.clear_all()
+        db_path = str(tmp_path / "test.db")
+        # 各銘柄の最終日付を今日にして全件「最新」扱いにする
+        from datetime import datetime
+
+        today = datetime.now().strftime("%Y-%m-%d")
+
+        def fake_last_dates(db, codes):
+            return {c: today for c in codes}
+
+        processor.get_last_dates_batch = fake_last_dates  # type: ignore[method-assign]
+        result = processor.update_prices_to_db_optimized(db_path)
+        assert set(result.keys()) == {
+            "total_listed",
+            "codes_to_update",
+            "codes_updated",
+            "records_inserted",
+            "codes_failed",
+        }
+        assert result["codes_to_update"] == 0
+
+
+class TestOrchestrationUpdate:
+    """update_prices_to_db_optimized の fetch → save 経路を end-to-end でカバー。
+
+    `process_codes_batch` をモック化して、戻り値集計と DB 投入が正しく動くことを確認。
+    """
+
+    def test_update_with_mocked_fetch_persists_and_counts(self, processor, tmp_path):
+        import sqlite3
+
+        import pandas as pd
+
+        processor.cache.clear_all()
+        db_path = str(tmp_path / "update.db")
+
+        # 全銘柄を「2024-01-01 以降」更新対象にする
+        def fake_last_dates(db, codes):
+            return {c: "2024-01-01" for c in codes}
+
+        processor.get_last_dates_batch = fake_last_dates  # type: ignore[method-assign]
+
+        # process_codes_batch の戻り値を制御:
+        # - 各 batch の最初の 60% が成功(各 2 行)、残り 40% は空 DataFrame
+        # - 全体で 60 件成功 / 40 件「データなし」になる構成
+        async def fake_batch(codes, from_date, to_date):
+            results: list[tuple[str, pd.DataFrame]] = []
+            for offset, code in enumerate(codes):
+                if offset < int(len(codes) * 0.6):
+                    df = pd.DataFrame(
+                        [
                             {
-                                "Code": "1305",
-                                "CompanyName": "ダイワ上場投信－トピックス",
+                                "Date": "2024-01-02",
+                                "Code": code,
+                                "Open": 100.0,
+                                "High": 101.0,
+                                "Low": 99.0,
+                                "Close": 100.5,
+                                "Volume": 1000,
+                                "TurnoverValue": 100500.0,
+                                "AdjustmentFactor": 1.0,
+                                "AdjustmentOpen": 100.0,
+                                "AdjustmentHigh": 101.0,
+                                "AdjustmentLow": 99.0,
+                                "AdjustmentClose": 100.5,
+                                "AdjustmentVolume": 1000,
+                            },
+                            {
+                                "Date": "2024-01-03",
+                                "Code": code,
+                                "Open": 101.0,
+                                "High": 102.0,
+                                "Low": 100.0,
+                                "Close": 101.5,
+                                "Volume": 1100,
+                                "TurnoverValue": 111650.0,
+                                "AdjustmentFactor": 1.0,
+                                "AdjustmentOpen": 101.0,
+                                "AdjustmentHigh": 102.0,
+                                "AdjustmentLow": 100.0,
+                                "AdjustmentClose": 101.5,
+                                "AdjustmentVolume": 1100,
                             },
                         ]
-                    },
-                )
-            elif "prices/daily_quotes" in url:
-                code = params.get("code")
-                if code == "1301":
-                    return MagicMock(
-                        status_code=200,
-                        json=lambda: {
-                            "daily_quotes": [
-                                {
-                                    "Date": "2020-07-08",
-                                    "Code": "1301",
-                                    "Open": 1000,
-                                    "High": 1100,
-                                    "Low": 900,
-                                    "Close": 1050,
-                                    "Volume": 10000,
-                                },
-                            ]
-                        },
                     )
-                elif code == "1305":
-                    return MagicMock(
-                        status_code=200,
-                        json=lambda: {
-                            "daily_quotes": [
-                                {
-                                    "Date": "2020-07-08",
-                                    "Code": "1305",
-                                    "Open": 2000,
-                                    "High": 2100,
-                                    "Low": 1900,
-                                    "Close": 2050,
-                                    "Volume": 20000,
-                                },
-                            ]
-                        },
-                    )
-            return MagicMock(status_code=404, json=lambda: {"message": "Not Found"})
+                    results.append((code, df))
+                else:
+                    results.append((code, pd.DataFrame()))
+            return results
 
-        mock_get.side_effect = get_side_effect
-        yield mock_post, mock_get
+        async def call_fake(codes, from_date, to_date):
+            return await fake_batch(codes, from_date, to_date)
 
+        processor.process_codes_batch = call_fake  # type: ignore[method-assign]
 
-@pytest.fixture
-def processor(mock_requests):
-    """テスト用の JQuantsDataProcessor インスタンスを作成する fixture"""
-    # 環境変数を設定
-    os.environ["JQUANTS_REFRESH_TOKEN"] = TEST_REFRESH_TOKEN
-    processor = JQuantsDataProcessor()
-    # テスト終了後に環境変数を削除
-    del os.environ["JQUANTS_REFRESH_TOKEN"]
-    return processor
+        result = processor.update_prices_to_db_optimized(db_path)
 
+        # 戻り値: fixture が 100 件を返す → 全件更新対象 → 60 件成功 + 40 件空
+        assert result["total_listed"] == 100
+        assert result["codes_to_update"] == 100
+        # codes_updated は「実際にレコードが入った銘柄数」のみカウント
+        assert result["codes_updated"] == 60
+        assert result["records_inserted"] == 60 * 2  # 各 2 行
 
-def test_init_success(processor):
-    """JQuantsDataProcessor の初期化が成功することをテストする"""
-    assert processor._refresh_token == TEST_REFRESH_TOKEN
-    assert processor._id_token == TEST_ID_TOKEN
+        # DB に source='jquants' 付きで投入されていること
+        with sqlite3.connect(db_path) as con:
+            count = con.execute(
+                "SELECT COUNT(*) FROM daily_quotes WHERE source='jquants'"
+            ).fetchone()[0]
+            assert count == 120
 
+    def test_update_collects_failed_when_batch_raises(self, processor, tmp_path):
+        processor.cache.clear_all()
+        db_path = str(tmp_path / "fail.db")
 
-def test_init_no_token():
-    """認証に失敗した場合に Exception が発生することをテストする"""
-    # Mock the requests to return an error response
-    with patch("market_pipeline.jquants.data_processor.requests.post") as mock_post:
-        mock_post.return_value = MagicMock(
-            status_code=401, json=lambda: {"message": "Authentication failed"}
-        )
-        with pytest.raises(Exception, match="Failed to get refresh token"):
-            JQuantsDataProcessor()
+        def fake_last_dates(db, codes):
+            return {c: "2024-01-01" for c in codes}
 
+        processor.get_last_dates_batch = fake_last_dates  # type: ignore[method-assign]
 
-def test_get_listed_info_cached(processor, mock_requests):
-    """上場銘柄一覧の取得をテストする（キャッシュ経由）"""
-    # This test verifies that get_listed_info_cached returns data from cache
-    df = processor.get_listed_info_cached()
-    assert not df.empty
-    # The cached data contains many stocks, just verify it's not empty and has Code column
-    assert "Code" in df.columns
+        async def boom(codes, from_date, to_date):
+            raise RuntimeError("batch failure")
 
+        processor.process_codes_batch = boom  # type: ignore[method-assign]
 
-@pytest.mark.skip(reason="get_daily_quotes is now async (get_daily_quotes_async)")
-def test_get_daily_quotes(processor, mock_requests):
-    """株価四本値の取得をテストする"""
-    to_date = datetime.now().strftime("%Y-%m-%d")
-    from_date = (datetime.now() - relativedelta(years=5)).strftime("%Y-%m-%d")
-    df = processor.get_daily_quotes("1301", from_date, to_date)
-    assert not df.empty
-    assert len(df) == 1
-    assert df.iloc[0]["Code"] == "1301"
-
-
-@pytest.mark.skip(
-    reason="get_all_prices_for_past_5_years_to_db renamed to get_all_prices_for_past_5_years_to_db_optimized"
-)
-@patch("time.sleep", return_value=None)
-def test_get_all_prices_for_past_5_years(mock_sleep, processor, mock_requests):
-    """全銘柄の過去5年分の株価取得をテストする"""
-    # This method saves to DB and doesn't return a dataframe
-    with tempfile.TemporaryDirectory() as temp_dir:
-        temp_db = os.path.join(temp_dir, "test.db")
-        processor.get_all_prices_for_past_5_years_to_db(temp_db)
-        # Verify the database was created
-        assert os.path.exists(temp_db)
-
-
-@pytest.mark.skip(
-    reason="Implementation has changed significantly, test needs to be rewritten"
-)
-@patch("time.sleep", return_value=None)
-def test_main_saves_to_db(mock_sleep, processor, mock_requests):
-    """main関数がデータベースにデータを保存することをテストする"""
-    with patch(
-        "market_pipeline.jquants.data_processor.JQuantsDataProcessor"
-    ) as mock_processor_class:
-        # JQuantsDataProcessor のインスタンスをモック化
-        mock_instance = MagicMock()
-        mock_processor_class.return_value = mock_instance
-
-        # get_all_prices_for_past_5_years の戻り値を設定
-        mock_df = pd.DataFrame(
-            {
-                "Date": ["2020-07-08", "2020-07-08"],
-                "Code": ["1301", "1305"],
-                "Open": [1000, 2000],
-                "High": [1100, 2100],
-                "Low": [900, 1900],
-                "Close": [1050, 2050],
-                "Volume": [10000, 20000],
-            }
-        )
-        mock_instance.get_all_prices_for_past_5_years.return_value = mock_df
-
-        # 一時的なデータベースパスを使用
-        with tempfile.TemporaryDirectory() as temp_dir:
-            # dataディレクトリを一時ディレクトリ内に作成
-            data_dir = os.path.join(temp_dir, "data")
-            os.makedirs(data_dir)
-            db_path = os.path.join(data_dir, "test.db")
-
-            # os.path.join が常に正しいパスを返すようにモック化
-            def mock_path_join(*args):
-                # backend/jquants/data_processor.py からの呼び出しを想定
-                if args[-1] == "data":
-                    return data_dir
-                if args[-1] == "jquants.db":
-                    return db_path
-                return os.path.join(*args)
-
-            with patch(
-                "market_pipeline.jquants.data_processor.os.path.join",
-                side_effect=mock_path_join,
-            ):
-                from market_pipeline.jquants.data_processor import main
-
-                main()
-
-                # データベースが作成されたか確認
-                assert os.path.exists(db_path)
+        result = processor.update_prices_to_db_optimized(db_path)
+        # 例外でも戻り値構造は維持し、failed に全件計上
+        assert set(result.keys()) == {
+            "total_listed",
+            "codes_to_update",
+            "codes_updated",
+            "records_inserted",
+            "codes_failed",
+        }
+        assert result["codes_failed"] == 100
+        assert result["records_inserted"] == 0

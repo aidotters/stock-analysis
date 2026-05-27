@@ -156,14 +156,23 @@ Stock-Analysisは、日本株式市場データの自動収集・分析システ
 | `migrate_add_source_column.py` | 手動（初回） | daily_quotesにsourceカラムを追加するマイグレーション |
 | `migrate_refetch_yfinance.py` | 手動（必要時） | yfinanceデータを削除してauto_adjust=Falseで再取得 |
 | `migrate_rescale_yfinance.py` | 手動（必要時） | yfinanceデータをJ-Quants境界比率でリスケール |
+| `check_jquants_v2_sustained.py` | 手動（必要時） | J-Quants V2 のレート制限 sustained smoke test（CI 対象外） |
 
 ### 2. API連携レイヤー (`src/market_pipeline/jquants/`)
 
+J-Quants API V2 (2026-05-31 V1廃止) へ移行済み。**アダプタ層パターン**により HTTP 通信と V2→V1 カラム翻訳を新規モジュールに集約し、既存 processor は外向け関数シグネチャ・DataFrame カラム名・DB スキーマを維持している。
+
 | モジュール | 機能 |
 |-----------|------|
-| `data_processor.py` | 非同期処理による日次株価データ取得 |
-| `statements_processor.py` | 財務諸表APIフェッチャー |
-| `fundamentals_calculator.py` | PER, PBR, ROE, ROA等の財務指標計算 |
+| `exceptions.py` | `JQuantsError` 基底クラスと派生例外(認証/レート制限/サーバー/形式異常) |
+| `client.py` | `JQuantsClient`: x-api-key 認証、トークンバケット式レート制限(デフォルト 55req/min、`capacity=1`+`initial_tokens=0` で sliding window 制約に対応)、`pagination_key` 自動追跡、指数バックオフリトライ(429/5xx)、同期/非同期両系統、`health_check()` |
+| `_v2_translator.py` | V2 短縮カラム名 → V1 ロング名への純粋関数群(`normalize_daily_quotes` / `normalize_listed_info` / `normalize_statements`) |
+| `data_processor.py` | 非同期処理による日次株価データ取得(`JQuantsClient` を DI、V2 経由) |
+| `statements_processor.py` | 財務諸表 API フェッチャー(`/v2/fins/summary` 経由) |
+| `fundamentals_calculator.py` | PER, PBR, ROE, ROA等の財務指標計算(DB 列名を参照、V2 移行による変更なし) |
+| `_old/` | V1 実装の退避先(import 対象外) |
+
+**認証**: `.env` の `JQUANTS_API_KEY` を `settings.jquants.api_key` 経由で `JQuantsClient` に注入。launchd エントリスクリプトは起動直後に `client.health_check()` を実行。
 
 ### 2.5 yfinance連携 (`src/market_pipeline/yfinance/`)
 

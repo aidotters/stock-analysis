@@ -276,7 +276,8 @@ def get_cache() -> CacheManager:
     """Get the global cache instance."""
     global _global_cache
     if _global_cache is None:
-        cache_dir = "/Users/tak/Markets/Stocks/Stock-Analysis/data/cache"
+        project_root = Path(__file__).resolve().parents[3]
+        cache_dir = str(project_root / "data" / "cache")
         _global_cache = CacheManager(cache_dir=cache_dir)
     return _global_cache
 

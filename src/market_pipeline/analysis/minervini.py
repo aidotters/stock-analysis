@@ -38,7 +38,7 @@ class MinerviniConfig:
 
     def __init__(self, base_dir: Optional[Path] = None):
         if base_dir is None:
-            base_dir = Path("/Users/tak/Markets/Stocks/Stock-Analysis")
+            base_dir = Path(__file__).resolve().parents[3]
 
         self.base_dir = Path(base_dir)
         self.data_dir = self.base_dir / "data"
