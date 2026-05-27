@@ -20,10 +20,13 @@ from market_pipeline.utils.parallel_processor import (  # noqa: E402
 )
 
 # --- Constants ---
-JQUANTS_DB_PATH = "/Users/tak/Markets/Stocks/Stock-Analysis/data/jquants.db"
-DATA_DIR = "/Users/tak/Markets/Stocks/Stock-Analysis/data"
-LOGS_DIR = "/Users/tak/Markets/Stocks/Stock-Analysis/logs"
-OUTPUT_DIR = "/Users/tak/Markets/Stocks/Stock-Analysis/output"
+_PROJECT_ROOT = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
+JQUANTS_DB_PATH = os.path.join(_PROJECT_ROOT, "data", "jquants.db")
+DATA_DIR = os.path.join(_PROJECT_ROOT, "data")
+LOGS_DIR = os.path.join(_PROJECT_ROOT, "logs")
+OUTPUT_DIR = os.path.join(_PROJECT_ROOT, "output")
 RESULTS_DB_PATH = os.path.join(DATA_DIR, "analysis_results.db")
 
 

@@ -34,6 +34,7 @@ import logging
 import os
 import sqlite3
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Dict, List, Tuple, Optional, Union
 import time
 
@@ -63,11 +64,12 @@ def trading_to_calendar_days(trading_days: int) -> int:
 _MAX_SLICE_END = 4800
 
 # --- Constants ---
-JQUANTS_DB_PATH = "/Users/tak/Markets/Stocks/Stock-Analysis/data/jquants.db"
-MASTER_DB_PATH = "/Users/tak/Markets/Stocks/Stock-Analysis/data/master.db"  # Assumes master.db is in the data directory
-OUTPUT_DIR = "/Users/tak/Markets/Stocks/Stock-Analysis/output"
-DATA_DIR = "/Users/tak/Markets/Stocks/Stock-Analysis/data"
-LOGS_DIR = "/Users/tak/Markets/Stocks/Stock-Analysis/logs"
+_PROJECT_ROOT = Path(__file__).resolve().parents[3]
+JQUANTS_DB_PATH = str(_PROJECT_ROOT / "data" / "jquants.db")
+MASTER_DB_PATH = str(_PROJECT_ROOT / "data" / "master.db")
+OUTPUT_DIR = str(_PROJECT_ROOT / "output")
+DATA_DIR = str(_PROJECT_ROOT / "data")
+LOGS_DIR = str(_PROJECT_ROOT / "logs")
 RESULTS_DB_PATH = os.path.join(DATA_DIR, "analysis_results.db")
 
 
