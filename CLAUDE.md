@@ -4,1091 +4,130 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Japanese stock market data collection and analysis system using J-Quants API. Collects daily prices, financial statements, and master data into SQLite databases, then runs various analysis strategies (Minervini, HL ratio, relative strength, chart pattern classification).
+Japanese stock market data collection and analysis system using J-Quants API. Collects daily prices, financial statements, and master data into SQLite databases, then runs various analysis strategies (Minervini, HL ratio, relative strength, chart pattern classification). yfinance バリュエーション指標、EDINET 有報ベースの経営陣6軸評価、ウォッチリストのニュースSlack配信、Notion へのレポート投入も統合している。
+
+## ドキュメント索引（詳細は必ずこちらを参照）
+
+- `docs/core/architecture.md`: アーキテクチャ設計書（システム全体像・レイヤー構成・DB設計・設計原則）
+- `docs/core/repo-structure.md`: リポジトリ構造・ファイル一覧（テストファイル一覧含む）
+- `docs/core/api-reference.md`: モジュール別API仕様（config / jquants / yfinance / executives / news_delivery / market_reader / technical_tools / notion_export / scripts の全クラス・関数・環境変数）
+- `docs/core/dev-guidelines.md`: 開発ガイドライン（コーディング規約・DB/並列/非同期/キャッシュパターン・コミット規約・チェックリスト）
+- `docs/core/skills.md`: Claude Code スキルガイド（全スキル索引と `/discover-stocks` `/analyze-stock` `/research-stock-news` `/research-executives` `/watch` `/sync-notion` の詳細）
+- `docs/core/launchd-operations.md`: launchd運用ガイド（ジョブ一覧・plist登録・チェーン実行・トラブルシューティング）
+- `docs/core/diagrams.md`: データフロー図・コンポーネント図（Mermaid）
+- `docs/core/CHANGELOG.md`: 変更履歴（V2移行・レート制限調整等の経緯と実機検証記録）
 
 ## Commands
 
-### Running Tests
+### Tests / Lint
 ```bash
-# Run all tests
-pytest
-
-# Run specific test file
-pytest tests/test_minervini.py
-
-# Run tests with verbose output
+pytest                          # 全テスト
+pytest tests/test_minervini.py  # 個別ファイル
 pytest -v
-```
 
-### Daily Operations (launchd-scheduled)
-```bash
-# Daily pipeline: J-Quants取得 → Daily Analysis → Integrated Analysis (weekdays 18:00, チェーン実行)
-python scripts/run_daily_jquants.py
-
-# J-Quantsデータ取得のみ（後続ジョブなし）
-python scripts/run_daily_jquants.py --no-chain
-
-# Run daily analysis standalone (後続のIntegrated Analysisも自動実行)
-python scripts/run_daily_analysis.py
-
-# Run daily analysis without chained integrated analysis
-python scripts/run_daily_analysis.py --no-chain
-
-# Run specific analysis modules only (no chain)
-python scripts/run_daily_analysis.py --modules hl_ratio rsp --no-chain
-
-# Run yfinance valuation rolling update only
-python scripts/run_daily_analysis.py --modules yfinance_valuation --no-chain
-
-# Run adhoc integrated analysis (standalone)
-python scripts/run_adhoc_integrated_analysis.py
-
-# Weekly tasks: financial statements data + integrated analysis (Saturday 06:00)
-python scripts/run_weekly_tasks.py
-
-# Weekly tasks options
-python scripts/run_weekly_tasks.py --statements-only  # Fetch financial data only
-python scripts/run_weekly_tasks.py --analysis-only    # Run integrated analysis only
-
-# Monthly master data update (1st of month 20:30)
-python scripts/run_monthly_master.py
-
-# Fetch historical prices from yfinance (one-time, up to 20 years)
-python scripts/run_historical_prices.py
-
-# Historical prices options
-python scripts/run_historical_prices.py --dry-run              # DB書き込みなしで確認
-python scripts/run_historical_prices.py --symbols 7203 9984    # 指定銘柄のみ
-python scripts/run_historical_prices.py --years 10             # 過去10年分
-
-# Migration: add source column to daily_quotes (run before historical prices)
-python scripts/migrate_add_source_column.py
-
-# Migration: yfinanceデータを削除してauto_adjust=Falseで再取得
-python scripts/migrate_refetch_yfinance.py
-python scripts/migrate_refetch_yfinance.py --dry-run
-python scripts/migrate_refetch_yfinance.py --symbols 7203 9984
-
-# Migration: yfinanceデータをJ-Quants基準にリスケール（境界比率）
-python scripts/migrate_rescale_yfinance.py
-python scripts/migrate_rescale_yfinance.py --dry-run
-python scripts/migrate_rescale_yfinance.py --symbols 7203 9984
-
-# 役員マスター月次更新（EDINET 有価証券報告書から法定役員情報を取得）
-python scripts/run_executive_master_update.py
-python scripts/run_executive_master_update.py --codes 7203 9984
-python scripts/run_executive_master_update.py --limit 10 --dry-run
-
-# Migration: executives テーブルに career_summary カラムを追加
-python scripts/migrate_executives_add_career_column.py
-
-# Migration: executive_evaluations テーブルに growth_ambition カラムを追加
-python scripts/migrate_executives_add_growth_axis.py
-
-# ウォッチリストCRUD (Phase 1)
-python scripts/watchlist.py add 7203 --tag holding --priority high --note "押し目検討"
-python scripts/watchlist.py list
-python scripts/watchlist.py list --tag holding
-python scripts/watchlist.py update 7203 --priority mid
-python scripts/watchlist.py remove 7203
-
-# ウォッチリストニュース配信 (launchd: morning 08:00 / noon 12:30 / evening 19:30 — 平日のみ)
-python scripts/run_news_delivery.py --slot evening
-python scripts/run_news_delivery.py --slot evening --dry-run
-python scripts/run_news_delivery.py --slot morning --lookback-days 1
-python scripts/run_news_delivery.py --slot evening --sources disclosure,ir_release,stock_news
-
-# 重複排除DB (delivered_news) のクリーンアップ (デフォルト90日)
-python scripts/cleanup_news_db.py
-python scripts/cleanup_news_db.py --days 60
-```
-
-### Chart Classification
-```bash
-# Sample run with adaptive windows
-python src/market_pipeline/analysis/chart_classification.py --mode sample-adaptive
-
-# Full optimized analysis for all stocks
-python src/market_pipeline/analysis/chart_classification.py --mode full-optimized
-```
-
-### Database Setup
-```bash
-# Create database indexes (run once for performance)
-python scripts/create_database_indexes.py
-```
-
-### Linting/Formatting
-```bash
 ruff check .
 black .
 mypy .
 ```
 
+### Daily Operations (launchd-scheduled)
+```bash
+# Daily pipeline: J-Quants取得 → Daily Analysis → Integrated Analysis (平日18:00, チェーン実行)
+python scripts/run_daily_jquants.py            # --no-chain で取得のみ
+python scripts/run_daily_analysis.py           # --no-chain / --modules hl_ratio rsp 等
+python scripts/run_adhoc_integrated_analysis.py
+
+# Weekly (土曜06:00): 財務諸表 + 統合分析
+python scripts/run_weekly_tasks.py             # --statements-only / --analysis-only
+
+# Monthly (毎月1日20:30): マスターデータ更新
+python scripts/run_monthly_master.py
+
+# 役員マスター月次更新（EDINET）
+python scripts/run_executive_master_update.py  # --codes 7203 9984 / --limit N / --dry-run
+
+# ウォッチリストCRUD / ニュース配信 (平日 08:00 / 12:30 / 19:30)
+python scripts/watchlist.py {add|list|update|remove} ...
+python scripts/run_news_delivery.py --slot {morning|noon|evening}  # --dry-run / --lookback-days / --sources
+python scripts/cleanup_news_db.py              # delivered_news クリーンアップ（デフォルト90日）
+```
+
+### One-time / Migration
+```bash
+python scripts/create_database_indexes.py      # DBインデックス作成（初回）
+python scripts/run_historical_prices.py        # yfinance過去株価（--dry-run / --symbols / --years）
+python scripts/migrate_add_source_column.py    # daily_quotesにsourceカラム追加（historical prices前に実行）
+python scripts/migrate_refetch_yfinance.py     # yfinance再取得（auto_adjust=False化）
+python scripts/migrate_rescale_yfinance.py     # yfinanceをJ-Quants基準にリスケール
+python scripts/migrate_executives_add_career_column.py
+python scripts/migrate_executives_add_growth_axis.py
+python scripts/check_jquants_v2_sustained.py   # レート制限smoke test（--duration / --rate / --dry-run）
+```
+
+### Chart Classification
+```bash
+python src/market_pipeline/analysis/chart_classification.py --mode sample-adaptive   # サンプル実行
+python src/market_pipeline/analysis/chart_classification.py --mode full-optimized    # 全銘柄
+```
+
 ## Architecture
-
-### 関連ドキュメント
-
-- `docs/core/architecture.md`: アーキテクチャ設計書（全体像・レイヤー構成）
-- `docs/core/repo-structure.md`: リポジトリ構造・ファイル一覧
-- `docs/core/api-reference.md`: モジュール別API仕様
-- `docs/core/dev-guidelines.md`: 開発ガイドライン
-- `docs/core/diagrams.md`: データフロー図・コンポーネント図（Mermaid）
-- `docs/core/launchd-operations.md`: launchd運用ガイド（ジョブ一覧・チェーン実行・トラブルシューティング）
-- `docs/core/CHANGELOG.md`: 変更履歴
 
 ### Data Flow
 1. **Price Collection** (scripts/run_daily_jquants.py) -> J-Quants API -> data/jquants.db
-2. **Historical Prices** (scripts/run_historical_prices.py) -> yfinance -> data/jquants.db (daily_quotes, source='yfinance') ⚠ 品質問題あり（後述）
+2. **Historical Prices** (scripts/run_historical_prices.py) -> yfinance -> data/jquants.db (daily_quotes, source='yfinance') ⚠ 品質問題あり（下記「重要な制約」）
 3. **Financial Data** (scripts/run_weekly_tasks.py) -> J-Quants Statements API -> data/statements.db
 4. **Analysis** (scripts/run_daily_analysis.py) -> reads jquants.db -> writes to data/analysis_results.db (includes integrated_scores daily)
 5. **Integration** (src/market_pipeline/analysis/integrated_analysis2.py) -> reads analysis_results.db + statements.db -> outputs to DB/CSV/Excel
 
 ### Key Databases (data/)
-- `jquants.db`: Daily stock prices (daily_quotes table, sourceカラムで'jquants'/'yfinance'を区別)
-- `statements.db`: Financial statements, calculated fundamentals, yfinance valuation, **executives / executive_communications / executive_evaluations**
-- `analysis_results.db`: Analysis outputs (minervini, hl_ratio, relative_strength, classification_results, integrated_scores tables)
+- `jquants.db`: Daily stock prices (daily_quotes、sourceカラムで'jquants'/'yfinance'を区別)
+- `statements.db`: Financial statements, calculated fundamentals, yfinance_valuation, executives / executive_communications / executive_evaluations
+- `analysis_results.db`: minervini, hl_ratio, relative_strength, classification_results, integrated_scores
 - `master.db`: Stock master data
-
-### J-Quants Modules (src/market_pipeline/jquants/)
-
-**V2 移行(2026-05-31)済み**: V1 認証(EMAIL/PASSWORD + IDトークンリフレッシュ)は廃止。V2 は `x-api-key` ヘッダ認証。アダプタ層パターンで、`JQuantsClient` (HTTP) と `_v2_translator` (V2→V1 カラム翻訳) を経由し、DB スキーマ・分析モジュール・テストへの波及をゼロに抑えている。
-
-- `exceptions.py`: `JQuantsError` 基底クラスと派生例外(`JQuantsAuthError` 401/403、`JQuantsRateLimitError` 429、`JQuantsServerError` 5xx、`JQuantsResponseError` 形式異常)
-- `client.py`: `JQuantsClient` クラス。`x-api-key` 認証、トークンバケット式レート制限(デフォルト 55req/min、`capacity=1`+`initial_tokens=0` で sliding window 制約に対応、spec 60 に対する安全マージン)、`pagination_key` 自動追跡、指数バックオフリトライ(429/5xx 最大 3 回、1s→2s→4s 上限 8s)、401/403 即時失敗。`get()` / `get_async()` / `paginate()` / `paginate_async()` / `health_check()` を提供
-- `_v2_translator.py`: V2 短縮カラム名(`O`/`H`/`L`/`C`/`Vo`/`AdjC` 等)を V1 ロング名(`Open`/`High`/.../`AdjustmentClose`)へ rename し、本プロジェクトで未使用の V2 フィールド(前場/後場・ストップ高フラグ・翌期予想等)は射影で落とす純粋関数群(`normalize_daily_quotes` / `normalize_listed_info` / `normalize_statements`)
-- `data_processor.py`: Daily price data fetcher with async processing. **`JQuantsClient` を DI** で受け取り、内部で `/v2/equities/master` / `/v2/equities/bars/daily` を呼び出す。`get_all_prices_for_past_5_years_to_db_optimized()` / `update_prices_to_db_optimized()` は `Dict[str, int]` を返却（total_listed, codes_to_update, codes_updated, records_inserted, codes_failed）。`get_listed_info_cached()` にMIN_EXPECTED_COMPANIES（100）検証あり
-- `statements_processor.py`: Financial statements API fetcher。`/v2/fins/summary` を呼び出し、`_v2_translator.normalize_statements` で V1 カラム名へ変換してから `_map_statement_to_record` で DB 列名にマップ
-- `fundamentals_calculator.py`: Calculates PER, PBR, ROE, ROA, etc. from raw statements。DB 列名(snake_case)を参照しているため V2 移行による変更なし
-- `_old/`: V1 実装の退避先(`v1_data_processor.py` / `v1_statements_processor.py`)。import 対象外
-
-**認証設定**: `.env` に `JQUANTS_API_KEY=<key>` を記載。`settings.jquants.api_key` から参照される。`JQuantsClient(api_key=None)` は環境変数を自動参照し、未設定時は API 呼び出し時に `JQuantsAuthError` を raise。
-
-**ヘルスチェック**: launchd エントリスクリプト(`run_daily_jquants.py` / `run_weekly_tasks.py`)起動直後に `client.health_check()` を実行。失敗時は Slack エラー通知後に `exit 1`。
-
-**Sustained smoke test**: rate limit 設定変更時や本番事故調査用に `scripts/check_jquants_v2_sustained.py` を提供。`JQuantsClient` で `/v2/equities/master` を一定時間 sustain 呼び出しし、429 検出回数を exit code で通知する手動実行ツール(CI 対象外)。実機検証実績: 2026-05-28 60.6 秒 sustain / 実効 39.6 req/min / 429 ゼロ。
-
-```bash
-# デフォルト(60 秒、rate=55)
-python scripts/check_jquants_v2_sustained.py
-
-# 期間・レート指定
-python scripts/check_jquants_v2_sustained.py --duration 120 --rate 60
-
-# Dry-run(設定だけ表示)
-python scripts/check_jquants_v2_sustained.py --dry-run
-```
-
-**スコープ外(アダプタ層は恒久的に残す方針)**: DB スキーマの V2 短縮カラム名化、分析モジュール(`minervini` / `relative_strength` / `high_low_ratio` / `chart_classification` / `integrated_analysis*`) と `market_reader` / `technical_tools` のカラム名追従。これらは V1 カラム名のまま維持される。
-
-### yfinance Modules (src/market_pipeline/yfinance/)
-- `valuation_fetcher.py`: `ValuationFetcher` class for rolling yfinance BS data collection
-  - Fetches cash & equivalents, total debt, market cap, PER from yfinance
-  - Calculates net_cash_ratio and cash_neutral_per
-  - Rolling update: processes N stocks/day (default 150), prioritizing stale/missing data
-- `historical_price_fetcher.py`: `HistoricalPriceFetcher` class for fetching up to 20 years of daily prices from yfinance
-  - Fills historical price gaps before J-Quants data range (J-Quants Light = 5 years)
-  - Uses `auto_adjust=False`: raw OHLCV in Open/High/Low/Close/Volume, Adj Close/Close比率で調整済み価格をAdjustmentOpen/High/Low/Closeに格納
-  - INSERT OR IGNORE preserves existing J-Quants data (no overlap)
-  - ThreadPoolExecutor + retry (max 3, 1s interval) for rate limiting
-  - `--dry-run`, `--symbols`, `--years` options via run_historical_prices.py
-  - **⚠ 既知の品質問題**: 旧バージョン（auto_adjust=True）で取得済みのyfinance価格は配当+分割の遡及調整済みで、J-QuantsのAdjustmentClose（分割のみ調整）と調整基準が異なる。マイグレーションスクリプト（`migrate_refetch_yfinance.py`, `migrate_rescale_yfinance.py`）で修正可能
-  - Data stored in `statements.db` → `yfinance_valuation` table
-  - Integrated into `run_daily_analysis.py` as `yfinance_valuation` module
-
-### Master Modules (src/market_pipeline/master/)
-- `master_db.py`: `StockMasterDB` class for managing stock master data (TSE listed stocks)
-  - Downloads and parses TSE stock list Excel files
-  - Manages `stocks_master` table (code, name, sector, market, yfinance_symbol, jquants_code, is_active)
-  - Query methods: `get_all_stocks()`, `get_stock_by_code()`, `get_stocks_by_sector()`, `get_stocks_by_market()`, `get_statistics()`
-
-### Analysis Modules (src/market_pipeline/analysis/)
-- `minervini.py`: Minervini trend screening strategy
-- `high_low_ratio.py`: 52-week high/low position ratio
-- `relative_strength.py`: RSP (relative strength percentage) and RSI calculations
-- `chart_classification.py`: ML-based chart pattern classification with adaptive window selection
-  - Cumulative windows: 20/60/120/240 days (直近N日)
-  - Slice windows: (240,480)/(480,1200)/(1200,2400)/(2400,4800) (期間スライス)
-  - Log normalization to reduce distortion from sharp price spikes
-  - NaN handling (dropna + 50% minimum data threshold)
-  - Low confidence scores (r < 0.3) still return best-match label (no "不明" override)
-- `integrated_analysis.py`: Combines analysis results for multi-factor stock screening
-- `integrated_analysis2.py`: Outputs integrated analysis to DB, with optional CSV/Excel export
-- `integrated_scores_repository.py`: Repository for integrated_scores table CRUD operations
-
-### Performance Optimizations
-The codebase has been heavily optimized (5 hours -> 15-20 minutes):
-- Parallel processing via `src/market_pipeline/utils/parallel_processor.py`
-- Async API calls with aiohttp in `src/market_pipeline/jquants/data_processor.py`
-- Batch database operations
-- Vectorized calculations with NumPy/Pandas
-- Template caching for chart classification
-- Database indexes (run `scripts/create_database_indexes.py`)
-
-### Slack Notifications (src/market_pipeline/utils/slack_notifier.py)
-launchdスクリプトの実行結果をSlack Incoming Webhookで通知:
-
-```python
-from market_pipeline.utils import JobContext
-
-with JobContext("ジョブ名") as job:
-    # ジョブ処理
-    job.add_metric("レコード数", "1,000")
-    job.add_warning("一部データ欠損")
-# 正常終了時は成功通知、例外時はエラー通知を自動送信
-```
-
-**設定（環境変数）:**
-- `SLACK_WEBHOOK_URL`: Webhook URL（未設定時は通知スキップ）
-- `SLACK_ERROR_WEBHOOK_URL`: エラー専用チャンネル（オプション）
-- `SLACK_ENABLED`: 通知有効/無効（デフォルト: true）
-- `SLACK_TIMEOUT_SECONDS`: HTTPタイムアウト（デフォルト: 10秒）
-- `SLACK_MAX_RETRIES`: リトライ回数（デフォルト: 3回）
-
-**特徴:**
-- 通知失敗がジョブの処理結果に影響しない
-- リトライロジック（最大3回、1秒間隔）
-- 4つのlaunchdスクリプト全てに統合済み
-
-### Claude Code スキル一覧
-
-本プロジェクトで利用可能な全スキルの索引（各スキルの詳細は後続セクションを参照）:
-
-| カテゴリ | スキル | 用途 |
-|---------|--------|------|
-| 投資分析 | `/discover-stocks` | ニュースドリブン銘柄発見（巡回・抽出・裏付け・リスク分析） |
-| 投資分析 | `/analyze-stock` | 銘柄詳細分析（企業・財務・テクニカル統合レポート） |
-| 投資分析 | `/research-stock-news` | 特定銘柄のニュース・適時開示・IR情報の包括調査 |
-| 投資分析 | `/research-executives` | 経営陣6軸スコアリング（独立した executive_report.md 生成） |
-| 投資分析 | `/watch` | ウォッチリストCRUD（add / list / update / remove） |
-| 投資分析 | `/sync-notion` | 投資分析レポートを Notion 親ページ配下にページ投入（同銘柄再投入は自動アーカイブ） |
-| ドキュメント作成 | `/architecture-design` | アーキテクチャ設計書の作成 |
-| ドキュメント作成 | `/functional-design` | 機能設計書の作成 |
-| ドキュメント作成 | `/development-guidelines` | 開発ガイドラインの作成 |
-| ドキュメント作成 | `/repository-structure` | リポジトリ構造定義書の作成 |
-| ドキュメント作成 | `/prd-writing` | PRD（製品要件定義書）の作成 |
-| ドキュメント作成 | `/glossary-creation` | 用語集の作成 |
-| 開発フロー | `/brainstorm` | アイデア壁打ち → docs/ideas/ に保存 |
-| 開発フロー | `/plan-feature` | 機能の計画ドキュメント作成 |
-| 開発フロー | `/implement-feature` | 計画に基づく機能実装 |
-| 開発フロー | `/initial-setup` | プロジェクト初期セットアップ |
-| 品質管理 | `/steering` | 作業計画・タスクリスト管理 |
-| 品質管理 | `/validation` | コード品質検証と受け入れテスト |
-| 品質管理 | `/validate-code` | コード品質・設計整合性検証 |
-| 品質管理 | `/acceptance-test` | 受け入れ条件の検証 |
-| 品質管理 | `/review-docs` | ドキュメント品質レビュー |
-| 品質管理 | `/update-docs` | 実装済みコードとドキュメントの同期 |
-| 品質管理 | `/gen-all-docs` | 全ドキュメント一括生成 |
-
-**表記ルール:** ドキュメント本文ではスキル名は単純表記（例: `/watch`）に統一する。引数や使用例は別途コードブロックや本文で記載する（`/watch add 7203 --tag holding` のように本文中で説明形式は混在させない）。
-
-**構成ファイル:** `.claude/skills/<skill-name>/SKILL.md`
-
-### News Discovery Skill (`/discover-stocks`)
-ニュースや分析記事から有望銘柄を抽出するClaude Codeスキル。Playwright MCPでサイトを巡回し、銘柄コード・推奨理由を抽出、裏付け情報収集とリスク分析を経てレポートを生成する。
-
-```bash
-# 基本実行（直近7日間、全カテゴリ）
-/discover-stocks
-
-# テーマ絞り込み
-/discover-stocks --theme "AI"
-
-# カテゴリ・期間指定
-/discover-stocks --category analysis --from 2026-02-20 --to 2026-02-28
-
-# 適時開示のみの巡回
-/discover-stocks --category disclosure
-```
-
-**構成ファイル:**
-- `config/news_sources.yaml`: 巡回先サイト設定（カテゴリ別）
-- `.claude/skills/discover-stocks/SKILL.md`: スキル定義
-- `src/market_pipeline/news/config_parser.py`: YAML設定パーサー
-- `docs/reports/adhoc/`: レポート出力先
-
-**巡回先カテゴリ:**
-- `news`: ニュースサイト（日経電子版, Reuters Japan）
-- `analysis`: 分析サイト（トウシル, 会社四季報オンライン）
-- `disclosure`: 適時開示情報（会社四季報、`filter_keywords`によるフィルタリング）
-- `general_news`: 一般ニュース（Google News RSS、銘柄名+コードで検索）
-- `ir_release`: TDnet 適時開示（yanoshin Atom）
-- `stock_news`: 四季報銘柄ページの「この銘柄の関連記事」（CDP経由、ログイン不要）
-
-**認証方式:**
-- `auth: cdp` — Chrome DevTools Protocol経由（要: `open -a 'Google Chrome' --args --remote-debugging-port=9222`）
-- `auth: none` — Playwright MCPで直接アクセス
-
-### Stock News Research Skill (`/research-stock-news`)
-特定銘柄のニュース・適時開示・IR情報を包括的に調査し、レポートを生成する。
-
-```bash
-# 銘柄コード指定
-/research-stock-news 4443
-
-# 複数銘柄
-/research-stock-news 4443 7203
-
-# 期間指定
-/research-stock-news 4443 --from 2026-02-01 --to 2026-02-28
-```
-
-**構成ファイル:**
-- `.claude/skills/research-stock-news/SKILL.md`: スキル定義
-- `docs/reports/stocks/`: レポート出力先（`{code}-news.md`）
-
-**情報ソース:**
-- 四季報適時開示ページ（`auth: none`、`?qtext={code}`で銘柄絞り込み）
-- 四季報銘柄ページのニュースタブ（CDP経由）
-- WebSearchによる企業IR・一般ニュース
-
-### Stock Analysis Skill (`/analyze-stock`)
-銘柄コードまたはPhase 1候補リストから、企業分析・財務分析・テクニカル分析を統合した投資判断レポートを生成する。
-
-```bash
-# 銘柄コード直接指定
-/analyze-stock 7203
-
-# 複数銘柄の一括分析
-/analyze-stock 7203 9984
-
-# Phase 1候補リストから全銘柄を分析
-/analyze-stock --from-report docs/reports/adhoc/2026-02-28-candidates.md
-
-# Phase 1候補リストから特定銘柄のみ分析
-/analyze-stock --from-report docs/reports/adhoc/2026-02-28-candidates.md 7203 9984
-
-# Deep Researchも含めて即実行（確認プロンプトをスキップ）
-/analyze-stock 7203 --deep-research
-
-# 既存レポートにDeep Research結果を後から統合
-/analyze-stock 7203 --merge-deep-research
-```
-
-**構成ファイル:**
-- `.claude/skills/analyze-stock/SKILL.md`: スキル定義
-- `config/news_sources.yaml`: `stock_news` / `disclosure` カテゴリの銘柄ページ設定
-- `output/reports/stocks/`: レポート出力先（タイムスタンプ付きディレクトリ）
-
-**出力ディレクトリ構成:**
-```
-output/reports/stocks/YYYYMMDD-HHMM-{code}-analysis/
-├── base_report.md              # Phase 1レポート
-├── deep_research_report.md     # Deep Research結果（--deep-research実行時のみ）
-└── chart.png                   # 株価チャート（kaleido利用可能時のみ）
-```
-
-**情報ソース:**
-- 会社四季報銘柄ページ（CDP経由、フォールバック: WebSearch）
-- 企業IR・業界分析・セグメント分析・SWOT分析（gemini CLI、フォールバック: WebSearch）
-- 既存テクニカルツール（StockScreener, TechnicalAnalyzer, DataReader）
-- Gemini Advanced Deep Research（`--deep-research`オプション時、Playwright MCP + CDP経由）
-
-**Deep Research前提条件:**
-- Gemini Advanced有料会員であること
-- Chrome が `--remote-debugging-port=9222` で起動中であること（CDP接続）
-- Deep Researchは5〜15分の実行時間を要する（タイムアウト: 1500秒）
-- Deep Research失敗時もPhase 1レポートは保持される
-
-**レポート内容（8セクション構成）:**
-- 1. 企業概要
-- 2. 事業構造・セグメント分析（セグメント別売上・利益構成、成長性・競争力、CAGR）
-- 3. 財務分析（PER/PBR/ROE等、財務状況、キャッシュフロー、ネットキャッシュ分析、業績推移）
-- 4. テクニカル分析（統合スコア/Minervini/RSP、株価チャートPNG）
-- 5. 業界・競合分析（業界動向、四季報ライバル比較テーブル、SWOT分析）
-- 6. 直近の適時開示・ニュース（`/research-stock-news`相当の情報を自動統合）
-- 7. リスク要因
-- 8. 投資判断サマリー（5段階評価、セグメント分析・成長性を含む判断根拠）
-
-**チャート生成依存:** `kaleido`（オプショナル）。未インストール時はチャート生成をスキップし、テキストのみのレポートを生成する。
-
-### Executive Communication Analysis (src/market_pipeline/executives/)
-EDINET有価証券報告書から法定役員（取締役・監査役・執行役）と略歴を取得し、外部発信を WebSearch で収集して Claude LLM で6軸スコアリング（ビジョン一貫性・実行力・市場認識・リスク開示誠実性・コミュニケーション能力・成長志向）する経営陣評価モジュール:
-
-```python
-from market_pipeline.executives import (
-    EdinetExecutiveFetcher,
-    EdinetDocResolver,
-    ExecutiveRepository,
-    CommunicationCollector,
-    ExecutiveEvaluator,
-)
-
-repo = ExecutiveRepository()
-repo.initialize_tables()
-
-# 1) EDINETから役員リスト取得（月次バッチで実行）
-resolver = EdinetDocResolver(repository=repo)
-fetcher = EdinetExecutiveFetcher()
-doc_id = resolver.resolve("7203", fiscal_year_end_month=3)
-if doc_id:
-    execs, _ = fetcher.fetch_from_doc_id(doc_id, code="7203")
-    repo.upsert_executives(execs, replace_for_code="7203")
-
-# 2) 発信収集（WebSearch注入）
-def web_search(query: str) -> list[dict]:
-    # Claude Code WebSearch ツールを呼び出す
-    return [...]
-
-collector = CommunicationCollector(web_search_fn=web_search)
-collector.collect("佐藤恒治", "トヨタ自動車", code="7203")
-
-# 3) LLMスコアリング
-def claude_llm(prompt: str) -> str:
-    return "..."  # JSON
-
-evaluator = ExecutiveEvaluator(llm_fn=claude_llm)
-evaluator.evaluate_and_persist(
-    name="佐藤恒治", company="トヨタ自動車",
-    communications=[...], code="7203",
-)
-```
-
-**モジュール構成:**
-- `edinet_executive_fetcher.py`: EDINET APIから有報をダウンロードし、`0104010_*_ixbrl.htm` の役員情報（取締役系＋執行役系の両タグ系統、略歴含む）をパース
-- `edinet_doc_resolver.py`: `executives.edinet_source_doc_id` キャッシュによるバッチ高速化（2回目以降は期末月前後30日のみスキャン）
-- `repository.py`: 3テーブル（`executives` / `executive_communications` / `executive_evaluations`）のCRUD
-- `communication_collector.py`: WebSearch + 30日キャッシュで発信を収集、URLからの発信日抽出もDIで注入可能
-- `published_date_extractor.py`: URL HTMLから JSON-LD/meta/time/URLパスで発信日を抽出
-- `evaluator.py`: Claude LLMで6軸スコアリング（成長志向含む）、スキーマ違反時は最大3回リトライ
-- `exceptions.py`: `ExecutiveError` 基底クラスと派生例外
-
-**スコープ（Phase 0 PoC で確定）:**
-- 対象は **法定役員のみ**（取締役・監査役・執行役）
-- 執行役員（社内職位）専任者は XBRL 構造化データに含まれないため対象外
-- 取締役兼任の執行役員は役職文字列に兼任情報が含まれるため自然に取得される
-
-**関連スキル:**
-- `/analyze-stock --with-executive-research`: 既存の投資判断レポートに経営陣評価セクションを追加
-- `/research-executives`: 経営陣評価のみの独立レポート生成
-
-**月次バッチ:**
-```bash
-# 全アクティブ銘柄の役員マスターを更新
-python scripts/run_executive_master_update.py
-
-# 特定銘柄のみ
-python scripts/run_executive_master_update.py --codes 7203 9984
-
-# dry-run でDB書き込みなし
-python scripts/run_executive_master_update.py --codes 7203 --dry-run
-```
-
-**環境変数:** `.env` に `EDINET_API_KEY` を設定（`.env.example` 参照）
-
-### Executive Research Skill (`/research-executives`)
-特定銘柄の法定役員（取締役・監査役・執行役）について、外部発信を Claude LLM で6軸スコアリング（ビジョン一貫性・実行力・市場認識・リスク開示誠実性・コミュニケーション能力・**成長志向**）し、独立した `executive_report.md` を生成する。
-
-```bash
-/research-executives 7203
-/research-executives 7203 9984
-/research-executives 7203 --include-directors
-/research-executives 6758 --include-executive-officers
-/research-executives 7203 --persons "佐藤恒治,豊田章男"
-/research-executives 7203 --force-refresh
-
-# 期間指定（既定: 過去3年対象／直近1年ハイライト）
-python scripts/run_research_executives.py build-report 7203 --lookback-days 1095 --highlight-days 365
-```
-
-**構成ファイル:**
-- `.claude/skills/research-executives/SKILL.md`: スキル定義
-- `scripts/run_research_executives.py`: CLIエントリ（list-executives / build-report サブコマンド）
-- 出力先: `output/reports/stocks/YYYYMMDD-HHMM-{code}-analysis/executive_report.md`
-
-**レポート構成（4セクション）:**
-1. 役員サマリー（表形式、総合スコア＋軸ハイライト）
-2. 役員別評価（EDINET XBRL 略歴＋6軸スコア＋各軸rationale）
-3. タイムライン（発信日降順、対象は過去3年、直近1年は🆕＋太字でハイライト、発信日不明は末尾に `—` でまとめ表示）
-4. 主要発信引用集（直近1年を優先、不足時は1〜3年の新しい順にフォールバック、各役員最大5件）
-
-**期間・キーワード定数:** `src/market_pipeline/executives/__init__.py` に `LOOKBACK_DAYS_TOTAL=1095`（過去3年）、`HIGHLIGHT_DAYS_RECENT=365`（直近1年）。検索キーワードは `SEARCH_KEYWORDS`（10語: インタビュー／講演／対談／コラム／ブログ／記事／寄稿／note／メッセージ／登壇）。
-
-**月次バッチ DL スキップ最適化（Phase F）:** `documents.json` から取得した `docID` を `executives.edinet_source_doc_id` と比較し、一致すれば XBRL ZIP の DL・パース・upsert を全てスキップ（`status=unchanged`）。Slack 通知のメトリクス「スキップ（有報未更新）」に集計される。
-
-### News Delivery Module (src/market_pipeline/news_delivery/)
-ウォッチリスト(`data/watchlists/*.json`)に登録した銘柄について、適時開示・一般ニュース・TDnet適時開示・銘柄関連記事を取得しSlack配信するモジュール (Phase 1〜3 完了):
-
-```python
-from market_pipeline.news_delivery import WatchListEntry, NewsItem
-from market_pipeline.news_delivery.watchlist import WatchList, make_entry
-from market_pipeline.news_delivery.deduplicator import Deduplicator
-from market_pipeline.news_delivery.fetchers import (
-    CdpDisclosureFetcher,       # 四季報適時開示 (Playwright/CDP)
-    GoogleNewsRssFetcher,       # 一般ニュース (Google News RSS)
-    TdnetRssFetcher,            # TDnet適時開示 (yanoshin Atom)
-    ShikihoStockNewsFetcher,    # 四季報銘柄ページ「この銘柄の関連記事」(Playwright/CDP)
-    DisclosureFetcher,          # 旧HTTP版 (テスト/レガシー用)
-)
-from market_pipeline.news_delivery.formatter import SlackFormatter
-from market_pipeline.news_delivery.rate_limiter import RateLimiter, RateLimitError
-from market_pipeline.news_delivery.delivery_service import (
-    DeliveryService, build_default_service,
-)
-```
-
-**モジュール構成:**
-- `models.py`: `NewsItem` (frozen dataclass + `url_hash` プロパティ) と `WatchListEntry` (pydantic, `Literal` で値域限定)
-- `watchlist.py`: `WatchList` クラス (アトミック書込・CRUD・filter_by_tag/priority・`master.db` メタ解決)
-- `deduplicator.py`: `Deduplicator` (`delivered_news` テーブル + 2インデックス自動作成、URL SHA256ハッシュPKでUPSERT、90日クリーンアップ)
-- `formatter.py`: `SlackFormatter` (Block Kit、銘柄ごとセクション、38000文字しきい値で分割、メトリクス行は最終メッセージのみ)
-- `rate_limiter.py`: トークンバケット式レート制限 + `RateLimitError`
-- `fetchers/cdp_disclosure_fetcher.py`: 四季報適時開示 (Playwright + 専用Chromiumプロファイル `~/.stock-news/chrome-profile`、SPA対応)
-- `fetchers/google_news_rss_fetcher.py`: Google News RSS (銘柄名+コードで検索、`max_items_per_code`/`exclude` フィルタ、レート制限統合)
-- `fetchers/tdnet_rss_fetcher.py`: yanoshin TDnet (Atom、銘柄プレフィックス自動削除)
-- `fetchers/shikiho_stock_news_fetcher.py`: 四季報銘柄ページの「この銘柄の関連記事」(Playwright、ログイン不要、有料記事は本文未取得)
-- `fetchers/disclosure_fetcher.py`: 旧HTTP版 (BS4)、テスト用に保持
-- `delivery_service.py`: オーケストレーター。`build_default_service(sources=("disclosure","general_news","ir_release","stock_news"))` で fetcher 合成。`RateLimitError` 発生時 priority=high のみ自動再試行、`warnings`/`metrics` 記録。`STOCK_NEWS_QUIET_WHEN_EMPTY` / `STOCK_NEWS_SLACK_WEBHOOK_URL` → `SLACK_WEBHOOK_URL` フォールバック対応
-
-**設定 (`.env` または `settings`):**
-- `STOCK_NEWS_LOOKBACK_DAYS=7`: 取得対象期間（CLI `--lookback-days` で上書き可能）
-- `STOCK_NEWS_QUIET_WHEN_EMPTY=false`: 新規0件時のSlack送信スキップ
-- `STOCK_NEWS_SLACK_WEBHOOK_URL=`: 専用 webhook（未設定時は `SLACK_WEBHOOK_URL` にフォールバック）
-
-**CLI:**
-```bash
-python scripts/run_news_delivery.py --slot {morning|noon|evening} \
-    [--dry-run] [--lookback-days N] [--sources disclosure,general_news,ir_release]
-```
-
-**スキル:** `/watch` (`scripts/watchlist.py` を呼ぶラッパー。サブコマンド: `add` / `list` / `update` / `remove`)
-
-**launchd plist テンプレート:** `launchd/com.stock-analysis.news-delivery-{morning,noon,evening}.plist.template`
-- morning: 平日 08:00（寄り付き前の前日夜〜早朝のまとめ）
-- noon:    平日 12:30（前場引け後）— 必要時のみ load
-- evening: 平日 19:30（場中・引け後の発表）
-
-すべて `RunAtLoad=false`、書込先は `data/news_delivery.db` のみで他ジョブと競合しない。
-
-### Document Creation & Quality Assurance Skills
-Claude Codeスキルとして、ドキュメント作成と品質管理のためのスキルも提供:
-
-**ドキュメント作成スキル:**
-- `/architecture-design`: アーキテクチャ設計書の作成
-- `/functional-design`: 機能設計書の作成
-- `/development-guidelines`: 開発ガイドラインの作成
-- `/repository-structure`: リポジトリ構造定義書の作成
-- `/prd-writing`: PRD（製品要件定義書）の作成
-- `/glossary-creation`: 用語集の作成
-
-**開発フロースキル:**
-- `/brainstorm`: アイデア壁打ち → docs/ideas/に保存
-- `/plan-feature`: 機能の計画ドキュメント作成
-- `/implement-feature`: 計画に基づく機能実装
-- `/initial-setup`: プロジェクト初期セットアップ
-
-**品質管理スキル:**
-- `/steering`: 作業計画・タスクリスト管理（実装フローの全体管理）
-- `/validation`: コード品質検証と受け入れテスト
-- `/validate-code`: コード品質・設計整合性検証
-- `/acceptance-test`: 受け入れ条件の検証
-- `/review-docs`: ドキュメント品質レビュー
-- `/update-docs`: 実装済みコードとドキュメントの同期
-- `/gen-all-docs`: 全ドキュメント一括生成
-
-**投資分析スキル:**
-- `/discover-stocks`: ニュースドリブン銘柄発見（巡回 → 銘柄抽出 → 裏付け → リスク分析）
-- `/analyze-stock`: 銘柄詳細分析（企業・財務・テクニカル統合レポート）
-- `/research-stock-news`: 特定銘柄のニュース・適時開示・IR情報の包括調査
-- `/research-executives`: 経営陣6軸スコアリング（独立した executive_report.md 生成）
-- `/watch`: ウォッチリストCRUD（`scripts/watchlist.py` を呼ぶラッパー、add / list / update / remove）
-- `/sync-notion`: 投資分析レポートを Notion 親ページ配下にページ投入（同銘柄再投入時は既存ページを自動アーカイブ）
-
-**構成ファイル:** `.claude/skills/<skill-name>/SKILL.md`
-
-### Notion Export (`/sync-notion`)
-`/analyze-stock` が生成する `output/reports/stocks/YYYYMMDD-HHMM-{code}-analysis/` 配下のレポート(`base_report.md` + `deep_research_report.md` + `chart.png`)を Notion 親ページ配下に 1 銘柄=1 ページの階層型構造で投入する。
-
-```bash
-# 通常投入（最新タイムスタンプのディレクトリを自動選択）
-python scripts/sync_notion.py 7804
-
-# Dry-run（API を呼ばず blocks JSON を標準出力）
-python scripts/sync_notion.py 7804 --dry-run
-
-# ディレクトリを明示指定
-python scripts/sync_notion.py --report-dir output/reports/stocks/20260413-2244-7804-analysis
-
-# Deep Research をスキップ
-python scripts/sync_notion.py 7804 --skip-deep-research
-```
-
-**前提条件:**
-- `.env` に `NOTION_PARENT_PAGE_ID`（投入先の親ページID）と `NOTION_API_TOKEN`（Internal Integration Token）を設定
-- 親ページの「Connections」から Integration に編集権限を付与
-- **セキュリティ注意:** 投資分析レポートは個人運用前提のため、Notion 親ページの共有設定は **ワークスペース内限定** を推奨（Web 公開・外部ゲスト招待を避ける）
-
-**特徴:**
-- Markdown → Notion blocks 変換（インライン bold/italic/code/strikethrough/link 対応、表セル内も保持）
-- 2000 文字超の段落と 100 blocks 超のページ投入を自動分割
-- 同銘柄の再投入時は既存ページを自動アーカイブ。3 件以上見つかった場合は安全のため停止
-- `chart.png` は Notion File Upload API でアップロードして image block に埋め込む
-- Deep Research セクションは `toggle` block 内にネスト
-
-**構成ファイル:**
-- `src/notion_export/`: 変換 / アップロード / API クライアント / オーケストレーション
-- `scripts/sync_notion.py`: CLI エントリ
-- `.claude/skills/sync-notion/SKILL.md`: スキル定義
-
-### Technical Tools Package (src/technical_tools/)
-Jupyter Notebook用のテクニカル分析ツール。日本株(J-Quants)と米国株(yfinance)の統一インターフェースを提供:
-
-```python
-from technical_tools import TechnicalAnalyzer
-
-# 日本株（J-Quants）
-analyzer = TechnicalAnalyzer(source="jquants")
-fig = analyzer.plot_chart("7203", show_sma=[25, 75], show_rsi=True, show_macd=True)
-fig.show()
-
-# 米国株（yfinance）
-analyzer = TechnicalAnalyzer(source="yfinance")
-fig = analyzer.plot_chart("AAPL", show_sma=[50, 200], show_bb=True, period="1y")
-fig.show()
-
-# クロスシグナル検出
-signals = analyzer.detect_crosses("7203", patterns=[(5, 25), (25, 75)])
-
-# 既存分析結果との連携
-existing = analyzer.load_existing_analysis("7203")
-```
-
-**機能:**
-- データソース統一（J-Quants via market_reader, yfinance）
-- 株式分割考慮済みの調整後価格を使用（AdjustmentOpen/High/Low/Close/Volume）
-- テクニカル指標計算（SMA, EMA, RSI, MACD, Bollinger Bands）
-- ゴールデンクロス/デッドクロス自動検出
-- plotlyによるインタラクティブチャート
-- 既存分析結果（Minervini, RSP）との連携
-
-### StockScreener (src/technical_tools/screener.py)
-Jupyter Notebook用の銘柄スクリーニングツール。統合分析結果をDBから取得し、柔軟にフィルタリング:
-
-```python
-from technical_tools import StockScreener, ScreenerFilter
-
-screener = StockScreener()
-
-# テクニカル指標でフィルタリング
-results = screener.filter(
-    composite_score_min=70.0,
-    hl_ratio_min=80.0,
-    rsi_max=70.0
-)
-
-# 財務指標と組み合わせ
-results = screener.filter(
-    composite_score_min=70.0,
-    market_cap_min=100000000000,  # 1000億円以上
-    per_max=15.0,
-    roe_min=15.0,
-    equity_ratio_min=40.0,       # 自己資本比率40%以上
-    roa_min=5.0,                 # ROA 5%以上
-)
-
-# ScreenerFilterオブジェクトを使用（パラメータの構造化）
-config = ScreenerFilter(
-    composite_score_min=70.0,
-    market_cap_min=100_000_000_000,
-    per_max=15.0,
-)
-results = screener.filter(config)
-
-# バリュエーション指標でフィルタリング（yfinance_valuation連携）
-results = screener.filter(
-    net_cash_ratio_min=0.3,
-    cash_neutral_per_max=10.0,
-    composite_score_min=70.0,
-)
-
-# includeでカラムグループを追加（フィルタ未使用でもグループ全カラムを返却）
-results = screener.filter(include=["fundamentals"])              # 基本5 + fundamentals全6カラム
-results = screener.filter(composite_score_min=70.0, include=["fundamentals"])  # + composite_score
-results = screener.filter(include=["fundamentals", "valuation"]) # 複数グループ
-results = screener.filter(include="all")                         # 全22カラム
-
-# チャートパターンでフィルタリング（単一ウィンドウ）
-results = screener.filter(
-    pattern_window=60,
-    pattern_labels=["上昇", "急上昇"]
-)
-
-# スライスウィンドウ（tuple, str等も対応）
-results = screener.filter(
-    pattern_window=(240, 480),           # tuple形式
-    pattern_labels=["上昇"]
-)
-results = screener.filter(
-    pattern_window="240-480",            # str形式（"240_480", "w240_480"も可）
-    pattern_labels=["上昇"]
-)
-
-# 全ウィンドウANDフィルタ（存在する全ウィンドウが条件を満たす銘柄のみ、NaN無視）
-results = screener.filter(
-    pattern_window="all",
-    pattern_labels=["上昇", "急上昇"]
-)
-
-# 複数ウィンドウ指定（指定した全ウィンドウでAND条件）
-results = screener.filter(
-    pattern_window=[60, 120, (240, 480)],
-    pattern_labels=["上昇", "急上昇"]
-)
-
-# 順位変動が大きい銘柄を取得
-movers = screener.rank_changes(days=7, direction="up", min_change=50)
-
-# 特定銘柄の履歴
-history = screener.history("7203", days=30)
-```
-
-**機能:**
-- 統合スコア（composite_score）と順位の日次蓄積
-- テクニカル指標（hl_ratio, rsi）でのフィルタリング
-- 財務指標（時価総額、PER、PBR、ROE、ROA、自己資本比率、配当利回り）でのフィルタリング
-- バリュエーション指標（net_cash_ratio, cash_neutral_per）でのフィルタリング（yfinance_valuation連携）
-- `include`パラメータによるカラムグループ制御（"scores", "fundamentals", "valuation", "all"）
-- デフォルトでフィルタ使用項目のみ返却（常時5カラム: date, code, long_name, sector, market_cap）
-- 出力カラム名は全てsnake_case（例: trailing_pe, return_on_equity, hl_ratio, rsp, rsi）
-- market_capはyfinance_valuation優先のCOALESCE（フォールバック: calculated_fundamentals）
-- チャートパターン（累積: 60日/120日等、スライス: 2400480/4801200等）でのフィルタリング
-- `STANDARD_CHART_WINDOWS`（`screener.py`内定義）: [20, 60, 120, 240, 2400480, 4801200, 12002400, 24004800]
-- `PATTERN_LABELS`（パッケージエクスポート済み）: 上昇ストップ, 上昇, 急上昇, 調整, もみ合い, リバウンド, 急落, 下落, 下げとまった, 不明
-- 順位変動分析（rank_changes）：metricバリデーション対応
-- 銘柄別時系列データ取得（history）
-- ScreenerFilterクラスによる構造化されたパラメータ指定（`available_filters()`, `available_categories()`, `filters_by_category()` classmethodで利用可能フィルタを確認可能）
-- TechnicalAnalyzerとのシームレスな連携
-
-### Backtester (src/technical_tools/backtester.py)
-シグナルベースのバックテストを実行し、投資戦略の有効性を評価:
-
-```python
-from technical_tools import Backtester
-
-bt = Backtester(cash=1_000_000)
-
-# シグナル追加
-bt.add_signal("golden_cross", short=5, long=25)
-bt.add_signal("rsi_oversold", threshold=30)
-
-# エグジットルール追加
-bt.add_exit_rule("stop_loss", threshold=-0.10)
-bt.add_exit_rule("take_profit", threshold=0.20)
-
-# バックテスト実行
-results = bt.run(symbols=["7203", "9984"], start="2023-01-01", end="2024-12-31")
-
-# 結果確認
-print(results.summary())  # 勝率、平均リターン、シャープレシオ等
-results.plot().show()     # 資産推移チャート
-trades_df = results.trades()  # 個別取引一覧
-```
-
-**対応シグナル:**
-- `golden_cross`: ゴールデンクロス（短期MAが長期MAを上抜け）
-- `dead_cross`: デッドクロス（短期MAが長期MAを下抜け）
-- `rsi_oversold`: RSI売られすぎ（RSIがthreshold以下）
-- `rsi_overbought`: RSI買われすぎ（RSIがthreshold以上）
-- `macd_cross`: MACDクロス（MACD線がシグナル線を上抜け）
-- `bollinger_breakout`: ボリンジャーバンドブレイクアウト（価格がバンドを突破）
-- `bollinger_squeeze`: ボリンジャースクイーズ（バンド収縮後の拡大）
-- `volume_spike`: 出来高急増（出来高が移動平均のN倍超）
-- `volume_breakout`: 出来高確認付きブレイクアウト（高値更新+出来高増）
-
-**対応ルール:**
-- `stop_loss`: 損切り（threshold: 負の値、例: -0.10）
-- `take_profit`: 利確（threshold: 正の値、例: 0.20）
-- `max_holding_days`: 最大保有日数
-- `trailing_stop`: トレーリングストップ
-
-**StockScreener連携バックテスト:**
-```python
-# スクリーナー条件でバックテスト
-results = bt.run_with_screener(
-    screener_filter={"composite_score_min": 70, "hl_ratio_min": 80},
-    start="2023-01-01",
-    end="2024-12-31",
-    exit_rules={"stop_loss": -0.10, "take_profit": 0.20}
-)
-```
-
-**レポート出力:**
-```python
-results.export("report.xlsx")  # Excel出力（Summary, Trades, By Symbol, Monthly Returns シート）
-results.export("report.csv")   # CSV出力
-results.export("report.html")  # HTML出力
-
-# 詳細分析
-results.by_symbol()        # 銘柄別パフォーマンス
-results.by_sector(map)     # セクター別パフォーマンス（セクターマップ必要）
-results.monthly_returns()  # 月次リターン
-results.yearly_returns()   # 年次リターン
-```
-
-### StrategyOptimizer (src/technical_tools/optimizer.py)
-投資戦略のパラメータを自動最適化し、最適な戦略を発見:
-
-```python
-from technical_tools import StrategyOptimizer
-
-optimizer = StrategyOptimizer(cash=1_000_000)
-
-# 探索空間の定義
-optimizer.add_search_space("ma_short", [5, 10, 20, 25])
-optimizer.add_search_space("ma_long", [50, 75, 100, 200])
-optimizer.add_search_space("stop_loss", [-0.05, -0.10, -0.15])
-
-# 制約条件の追加
-optimizer.add_constraint(lambda p: p["ma_short"] < p["ma_long"])
-
-# グリッドサーチで最適化
-results = optimizer.run(
-    symbols=["7203", "9984"],
-    start="2023-01-01",
-    end="2024-12-31",
-    method="grid",        # "grid" or "random"
-    metric="sharpe_ratio" # 最適化対象指標
-)
-
-# 結果分析
-best = results.best()           # 最良の戦略
-print(best.params)              # {'ma_short': 10, 'ma_long': 75, 'stop_loss': -0.10}
-print(best.metrics)             # {'sharpe_ratio': 1.5, 'win_rate': 0.6, ...}
-
-top10 = results.top(10)         # 上位10件をDataFrameで取得
-
-# 可視化
-fig = results.plot_heatmap("ma_short", "ma_long", metric="sharpe_ratio")
-fig.show()
-
-# 結果の保存・読み込み
-results.save("optimization_results.json")
-loaded = OptimizationResults.load("optimization_results.json")
-```
-
-**探索手法:**
-- `grid`: グリッドサーチ（全組み合わせ探索）
-- `random`: ランダムサーチ（n_trials回のサンプリング）
-
-**対応パラメータ:**
-- MAクロス: `ma_short`, `ma_long`
-- RSI: `rsi_threshold`
-- MACD: `macd_fast`, `macd_slow`, `macd_signal`
-- エグジット: `stop_loss`, `take_profit`
-
-**評価指標:**
-- `total_return`: トータルリターン
-- `sharpe_ratio`: シャープレシオ
-- `max_drawdown`: 最大ドローダウン（最小化）
-- `win_rate`: 勝率
-- `profit_factor`: プロフィットファクター
-
-**複合評価（重み付け）:**
-```python
-results = optimizer.run(
-    ...,
-    metric={
-        "sharpe_ratio": 0.5,
-        "max_drawdown": 0.3,
-        "win_rate": 0.2
-    }
-)
-```
-
-**ウォークフォワード分析（過学習対策）:**
-```python
-results = optimizer.run(
-    ...,
-    validation="walk_forward",
-    train_ratio=0.7,
-    n_splits=5
-)
-print(results.best().oos_metrics)  # アウトオブサンプル評価
-```
-
-**タイムアウト設定:**
-```python
-from technical_tools import OptimizationTimeoutError
-
-try:
-    results = optimizer.run(
-        ...,
-        timeout=60.0  # 60秒でタイムアウト
-    )
-except OptimizationTimeoutError as e:
-    print(f"タイムアウト: {e.completed}/{e.total}件完了")
-```
-
-**ストリーミング保存（大量試行時のメモリ効率化）:**
-```python
-# 試行結果を逐次JSONL形式で保存
-results = optimizer.run(
-    ...,
-    streaming_output="results.jsonl"
-)
-
-# JONLファイルから結果を読み込み
-from technical_tools import OptimizationResults
-loaded = OptimizationResults.load_streaming("results.jsonl", metric="sharpe_ratio")
-```
-
-### VirtualPortfolio (src/technical_tools/virtual_portfolio.py)
-仮想ポートフォリオを作成し、パフォーマンスを追跡:
-
-```python
-from technical_tools import VirtualPortfolio
-
-# ポートフォリオ作成（data/portfolios/に永続化）
-vp = VirtualPortfolio("my_strategy_2025")
-
-# 銘柄購入
-vp.buy("7203", shares=100, price=2500)  # 株数指定
-vp.buy("9984", amount=500000)           # 金額指定（現在価格で株数計算）
-
-# サマリー確認
-print(vp.summary())  # 投資額、評価額、損益、リターン率
-
-# 保有銘柄一覧
-holdings = vp.holdings()  # DataFrame
-
-# パフォーマンス推移
-perf = vp.performance(days=30)  # 日次評価額推移
-
-# チャート表示
-vp.plot().show()
-
-# 売却
-vp.sell("7203", shares=50)  # 一部売却
-vp.sell_all("9984")         # 全売却
-```
-
-**スクリーナー連携:**
-```python
-# スクリーナー結果から一括購入
-vp.buy_from_screener(
-    screener_filter={"composite_score_min": 80},
-    amount_per_stock=100000,  # 各銘柄10万円
-    max_stocks=10
-)
-
-# ScreenerFilterオブジェクトも使用可能
-from technical_tools import ScreenerFilter
-config = ScreenerFilter(composite_score_min=80, hl_ratio_min=75)
-vp.buy_from_screener(screener_filter=config)
-```
-
-**機能:**
-- JSON永続化（data/portfolios/*.json）
-- 平均取得単価の自動計算
-- スクリーナー結果からの一括銘柄追加
-- 現在価格はmarket_readerから自動取得
-- 取引履歴の記録
-- plotlyによるインタラクティブチャート
-
-### Market Reader Package (src/market_reader/)
-pandas_datareader-like interface for accessing J-Quants price data:
-
-```python
-from market_reader import DataReader
-
-reader = DataReader()  # Uses default DB path from settings
-# Or with explicit path and strict mode
-reader = DataReader(db_path="data/jquants.db", strict=True)
-
-# Single stock (returns DataFrame with Date index)
-df = reader.get_prices("7203", start="2024-01-01", end="2024-12-31")
-
-# Multiple stocks (returns MultiIndex DataFrame with (Date, Code) index)
-df = reader.get_prices(["7203", "9984"], start="2024-01-01", end="2024-12-31")
-
-# Column selection: "simple" (default), "full", or list
-df = reader.get_prices("7203", columns=["Open", "Close"])
-```
-
-**機能:**
-- Automatic date defaults (end=latest in DB, start=5 years before end)
-- 4/5-digit code normalization (output always 4-digit)
-- `strict=True` raises exceptions, `strict=False` (default) returns empty DataFrame with warning
-- PRAGMA optimizations for read performance (WAL mode, cache settings)
-
-### Configuration (src/market_pipeline/config/)
-Centralized Pydantic Settings-based configuration system:
-
-```python
-from market_pipeline.config import get_settings, reload_settings
-
-settings = get_settings()
-db_path = settings.paths.jquants_db
-statements_db = settings.paths.statements_db
-
-# 設定をキャッシュクリアして再読み込み
-settings = reload_settings()
-```
-
-**Configuration categories:**
-- `settings.paths`: Database and directory paths (jquants_db, statements_db, analysis_db, etc.)
-- `settings.jquants`: J-Quants API settings (rate limits, batch size)
-- `settings.analysis`: Technical analysis parameters (SMA periods, thresholds)
-- `settings.database`: SQLite PRAGMA settings
-- `settings.slack`: Slack notification settings (webhook_url, enabled, timeout, retries)
-- `settings.yfinance`: yfinance API settings (legacy)
-- `settings.logging`: Logging configuration (level, format)
-- `settings.edinet`: EDINET API settings (api_key, base_url, timeout_list, timeout_download, max_retries)
-- `settings.executives`: Executive analysis settings (cache_ttl_days, max_parallel_fetch, doc_scan_fallback_months, doc_scan_narrow_days)
-
-**Environment variables:** See `.env.example` for all options. Key settings:
-- `JQUANTS_API_KEY`: J-Quants API V2 credential (required, `x-api-key` ヘッダ認証)
-- `EDINET_API_KEY`: EDINET API key (required for `/research-executives` and `run_executive_master_update.py`)
-
-## Testing
-- Tests use pytest with fixtures defined in `tests/conftest.py`
-- Mock databases are created in memory/temp files for isolation
-- `pythonpath = ["src", "."]` is set in pyproject.toml for imports
-- Key test files:
-  - `tests/test_minervini.py`: Minervini分析テスト
-  - `tests/test_high_low_ratio.py`: HL比率計算テスト
-  - `tests/test_relative_strength.py`: RSP/RSI計算テスト
-  - `tests/test_chart_classification.py`: チャートパターン分類テスト
-  - `tests/test_integrated_analysis.py`: 統合分析テスト
-  - `tests/test_integrated_scores.py`: IntegratedScoresRepositoryテスト
-  - `tests/test_stock_screener.py`: StockScreenerクラステスト
-  - `tests/test_jquants_client.py`: JQuantsClient (V2) テスト(x-api-key 認証、トークンバケット、ページネーション、リトライ、health_check)
-  - `tests/test_jquants_v2_translator.py`: _v2_translator テスト(V2 → V1 カラム rename、未使用フィールド射影、不明フィールド warning)
-  - `tests/test_jquants_data_processor.py`: J-Quants APIテスト(V2 client DI、V1 互換カラム出力)
-  - `tests/test_statements_processor.py`: Statements API processor tests
-  - `tests/test_fundamentals_calculator.py`: Financial metric calculation tests
-  - `tests/test_stock_reader.py`: market_readerパッケージテスト（DataReaderクラス）
-  - `tests/test_technical_tools.py`: technical_toolsパッケージテスト（TechnicalAnalyzerクラス）
-  - `tests/test_backtester.py`: Backtesterクラステスト
-  - `tests/test_backtest_results.py`: BacktestResultsクラステスト
-  - `tests/test_backtest_signals.py`: バックテストシグナルテスト
-  - `tests/test_virtual_portfolio.py`: VirtualPortfolioクラステスト
-  - `tests/test_optimizer.py`: StrategyOptimizerクラステスト
-  - `tests/test_optimization_results.py`: OptimizationResultsクラステスト
-  - `tests/test_slack_notifier.py`: SlackNotifier/JobContext/JobResultテスト
-  - `tests/test_news_config.py`: ニュース巡回先設定パーサーテスト
-  - `tests/test_analysis_integration.py`: 分析統合テスト
-  - `tests/test_data_processor.py`: データプロセッサテスト
-  - `tests/test_valuation_fetcher.py`: ValuationFetcherテスト（yfinance BS取得・バリュエーション計算）
-  - `tests/test_historical_price_fetcher.py`: HistoricalPriceFetcherテスト（yfinance過去データ取得・カラムマッピング・マイグレーション）
-  - `tests/test_edinet_executive_fetcher.py`: EdinetExecutiveFetcherテスト（iXBRLパース・正規化・両タグ系統）
-  - `tests/test_executive_repository.py`: ExecutiveRepositoryテスト（3テーブルCRUD・UPSERT・フィルタ）
-  - `tests/test_executive_batch.py`: 月次バッチ（docID比較・スキップ最適化・Slack通知メトリクス）
-  - `tests/test_communication_collector.py`: CommunicationCollectorテスト（WebSearchモック・30日キャッシュ・URL重複排除）
-  - `tests/test_executive_evaluator.py`: ExecutiveEvaluatorテスト（JSON抽出・スキーマ検証・リトライ・前回差分警告）
-  - `tests/test_executive_integration.py`: 経営陣評価E2E統合テスト（EDINET→収集→LLM→DB）
-  - `tests/test_published_date_extractor.py`: 発信日抽出テスト（JSON-LD / meta / time / URLパス）
-  - `tests/test_notion_markdown_converter.py`: NotionExport Markdown→blocks変換テスト（インラインリッチ・表セル・段落分割）
-  - `tests/test_notion_image_uploader.py`: NotionExport 画像アップロードテスト（File Upload API 2-step・5xxリトライ・DryRun）
-  - `tests/test_notion_page_repository.py`: NotionExport REST/Fakeリポジトリテスト（fetch_parent / search / create / archive / append）
-  - `tests/test_notion_sync_service.py`: NotionExport オーケストレーションE2Eテスト（ディレクトリ解決→変換→アーカイブ→投入）
-  - `tests/test_watchlist.py`: WatchList CRUD・filter・master.db メタ解決テスト
-  - `tests/test_news_delivery_dedupe.py`: Deduplicator URL SHA256 UPSERT・90日クリーンアップテスト
-  - `tests/test_news_delivery_integration.py`: DeliveryService E2E統合テスト（fetcher合成・rate limit再試行）
-  - `tests/test_news_formatter.py`: SlackFormatter Block Kit分割・38000文字しきい値テスト
-  - `tests/test_rate_limiter.py`: トークンバケット式レート制限・RateLimitErrorテスト
-  - `tests/test_cdp_disclosure_fetcher.py`: 四季報適時開示 CDP fetcher テスト（Playwright経由）
-  - `tests/test_disclosure_fetcher.py`: 旧HTTP版適時開示 fetcher テスト（BS4、レガシー）
-  - `tests/test_google_news_rss_fetcher.py`: Google News RSS fetcher テスト（銘柄名検索・excludeフィルタ）
-  - `tests/test_tdnet_rss_fetcher.py`: yanoshin TDnet Atom fetcher テスト
-  - `tests/test_shikiho_stock_news_fetcher.py`: 四季報銘柄ページ関連記事 fetcher テスト
+- `news_delivery.db`: delivered_news（ニュース配信の重複排除）
+
+### Packages (src/)
+- `market_pipeline/jquants/`: J-Quants API V2 連携（`JQuantsClient` + `_v2_translator` アダプタ層、data_processor / statements_processor / fundamentals_calculator）
+- `market_pipeline/yfinance/`: `ValuationFetcher`（ネットキャッシュ比率・cash_neutral_per のローリング取得）、`HistoricalPriceFetcher`（最大20年の過去日足）
+- `market_pipeline/master/`: `StockMasterDB`（東証銘柄マスター）
+- `market_pipeline/analysis/`: minervini / high_low_ratio / relative_strength / chart_classification / integrated_analysis(2) / integrated_scores_repository
+- `market_pipeline/executives/`: EDINET有報から法定役員取得 + WebSearch発信収集 + Claude LLM 6軸スコアリング
+- `market_pipeline/news/`: ニュース巡回先YAML設定パーサー（config/news_sources.yaml）
+- `market_pipeline/news_delivery/`: ウォッチリスト銘柄のニュース取得・重複排除・Slack配信（fetchers: 四季報CDP / Google News RSS / TDnet Atom / 四季報関連記事）
+- `market_pipeline/config/`: Pydantic Settings 一元設定（`get_settings()`。paths / jquants / analysis / database / slack / edinet / executives 等）
+- `market_pipeline/utils/`: parallel_processor, slack_notifier（`JobContext` コンテキストマネージャで launchd ジョブの成功/エラーをSlack通知）ほか
+- `market_reader/`: `DataReader` — pandas_datareader風の株価読み出し（4/5桁コード正規化、strict モード）
+- `technical_tools/`: Jupyter向け — `TechnicalAnalyzer`（チャート/指標/クロス検出）、`StockScreener`+`ScreenerFilter`、`Backtester`、`StrategyOptimizer`、`VirtualPortfolio`
+- `notion_export/`: `/analyze-stock` レポートの Notion 投入（Markdown→blocks変換、File Upload API、既存ページ自動アーカイブ）
+
+各クラスの使用例・シグネチャ・オプションは `docs/core/api-reference.md` を参照。
+
+### Performance
+コードベースは大幅に最適化済み（5時間 → 15-20分）: 並列処理（parallel_processor）、aiohttp非同期API、バッチDB操作、NumPy/Pandasベクトル化、テンプレートキャッシュ、DBインデックス。詳細は `docs/refs/OPTIMIZATION_TECHNIQUES_GUIDE.md` 等。
+
+## 重要な制約・規約
+
+### J-Quants API V2（2026-05-31 V1廃止）
+- 認証は `x-api-key` ヘッダ。`.env` に `JQUANTS_API_KEY` を設定（`settings.jquants.api_key`）。
+- アダプタ層パターン: `JQuantsClient`（HTTP、トークンバケット式レート制限 デフォルト55req/min、指数バックオフリトライ）+ `_v2_translator`（V2短縮カラム名→V1ロング名 rename）。
+- **スコープ外（アダプタ層は恒久的に残す方針）**: DBスキーマ・分析モジュール・`market_reader`/`technical_tools` は **V1カラム名（Open/High/Low/Close/AdjustmentClose等）のまま維持**する。V2カラム名を下流に波及させないこと。
+- launchdエントリスクリプトは起動直後に `client.health_check()` を実行、失敗時はSlackエラー通知後 exit 1。
+
+### yfinance 過去株価の既知の品質問題
+旧バージョン（auto_adjust=True）で取得済みのyfinance価格は配当+分割の遡及調整済みで、J-QuantsのAdjustmentClose（分割のみ調整）と調整基準が異なる。`migrate_refetch_yfinance.py` / `migrate_rescale_yfinance.py` で修正可能。INSERT OR IGNORE により既存J-Quantsデータは上書きされない。
+
+### 環境変数（`.env` / `.env.example` 参照）
+- `JQUANTS_API_KEY`（必須）、`EDINET_API_KEY`（executives系で必須）
+- `SLACK_WEBHOOK_URL` / `SLACK_ERROR_WEBHOOK_URL` / `SLACK_ENABLED` ほかSlack設定
+- `NOTION_PARENT_PAGE_ID` / `NOTION_API_TOKEN`（/sync-notion）
+- `STOCK_NEWS_LOOKBACK_DAYS` / `STOCK_NEWS_QUIET_WHEN_EMPTY` / `STOCK_NEWS_SLACK_WEBHOOK_URL`（ニュース配信）
+
+### Testing
+- pytest + `tests/conftest.py` の fixtures。モックDBはメモリ/一時ファイルで分離。
+- `pythonpath = ["src", "."]` が pyproject.toml に設定済み（import 用）。
+- テストファイル一覧と対応モジュールは `docs/core/repo-structure.md` を参照。
+
+### Claude Code スキル
+投資分析（`/discover-stocks` `/analyze-stock` `/research-stock-news` `/research-executives` `/watch` `/sync-notion`）、ドキュメント作成、開発フロー、品質管理の各スキルを提供。索引・使用例・オプション・前提条件（CDP接続等）は **`docs/core/skills.md`** を参照。定義は `.claude/skills/<skill-name>/SKILL.md`。
+
+**表記ルール:** ドキュメント本文ではスキル名は単純表記（例: `/watch`）に統一する。
