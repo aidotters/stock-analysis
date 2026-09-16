@@ -131,6 +131,13 @@ class DeliveryService:
                             f"(skipped={e2.skipped_count})"
                         )
                         items, errors = [], {}
+            except Exception as e:  # noqa: BLE001
+                # 1ソースの致命的失敗（ブラウザ未インストール等）で他ソースの配信まで
+                # 止めない。全ソース失敗時は下の "all fetchers failed" で異常終了する。
+                logger.exception("%s: fetcher全体が失敗", fetcher.source_name)
+                self._warn(f"{fetcher.source_name}: ソース全体の取得失敗 ({e})")
+                per_fetcher_failures += 1
+                continue
             all_items.extend(items)
             for code, exc in errors.items():
                 self._warn(f"{code}: {fetcher.source_name} 取得失敗 ({exc})")

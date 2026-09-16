@@ -305,6 +305,25 @@ tail -50 logs/daily_jquants.log
 
 スクリプトはエラー時に `sys.exit(1)` で終了し、Slack通知も送信される。
 
+### ニュース配信が `Executable doesn't exist at .../ms-playwright/...` で失敗する
+
+過去の事例（2026-09-11〜09-17）: 別プロジェクト（chart-atelier の Node 版 Playwright）が
+`playwright install` を実行した際、Playwright 共有キャッシュ（`~/Library/Caches/ms-playwright/`）の
+ガベージコレクションで、本プロジェクトの Python 版 Playwright が使う `chromium_headless_shell-1217` が削除された。
+GC は `.links/` に登録されたインストールが参照するブラウザだけを残すため、本プロジェクトの登録が無いと消される。
+
+```bash
+# 復旧（ブラウザ再取得 + .links への登録）
+unset VIRTUAL_ENV && uv run playwright install chromium
+cat ~/Library/Caches/ms-playwright/.links/*   # stock-analysis/.venv/.../playwright/driver/package があること
+uv run scripts/run_news_delivery.py --slot morning --dry-run
+```
+
+- 四季報系ソース（`disclosure` / `stock_news`）の失敗は、他ソース（Google News / TDnet）の配信を止めない。
+  Slack の成功通知に「ソース全体の取得失敗」警告が付くので、それを見たらこの手順で復旧する。
+  全ソースが失敗した場合のみ exit 1 + エラー通知になる。
+- `.venv` を作り直した後や Playwright のバージョンを上げた後も `uv run playwright install chromium` を実行する。
+
 ## ジョブの追加手順
 
 1. 実行スクリプトを `scripts/` に作成
