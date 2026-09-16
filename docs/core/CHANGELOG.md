@@ -28,6 +28,7 @@
 - **J-Quants リトライ挙動の強化** (V2 移行に伴い): V1 では `get_daily_quotes_async` がタイムアウト時のみ最大 1 回リトライしていたが、V2 では `JQuantsClient` が 429/5xx/ネットワークエラーすべてに対して指数バックオフで最大 3 回(初期 1s → 上限 8s)リトライする。レート制限超過時の堅牢性が向上した一方、最悪ケースで 1 リクエストあたり最大 4 回の HTTP 発行となるため、稀に `run_daily_jquants.py` のランタイムが延びる可能性がある(launchd は平日 18:00 起動なので時間制約は緩い)。
 
 ### Fixed
+- **ニュース配信: 1ソースの例外で配信全体が止まる問題** (2026-09-17): `DeliveryService.run` が fetcher 単位の想定外例外を捕捉し、警告に記録して残りのソースを続行するよう変更。全ソース失敗時のみ `RuntimeError("all fetchers failed")`。発端は 2026-09-11 夜〜09-17 朝の配信停止で、別プロジェクトの `playwright install` による共有キャッシュ GC で `chromium_headless_shell-1217` が削除され、`shikiho_disclosure` が落ちて Google News / TDnet 分も配信されなかった（`uv run playwright install chromium` で復旧）。テスト: `test_crashing_fetcher_does_not_block_other_sources` / `test_all_fetchers_crashing_raises`
 - **J-Quants V2 トークンバケットの burst 抑制 + sliding window 安全マージン** (2026-05-27): V2 サーバーは過去 60 秒の sliding window でレート制限を判定するため、複数段階の対策を実施:
   - `_TokenBucket.capacity` を `rate_limit_per_minute`(=60)から `1` に変更 — 並列ワーカー数に関係なく持続レート 1req/sec を厳密に保証(初期実装の 60 件バースト → 60 秒以内 120 件で 429 量産を回避)
   - `_TokenBucket` に `initial_tokens` パラメータを追加し、`JQuantsClient` で `initial_tokens=0` を指定 — 起動時の "free token" による 60 秒以内 61 件問題(capacity=1 + 初期 token 1 + 補充 60 = 61)を解消

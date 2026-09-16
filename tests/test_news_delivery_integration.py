@@ -277,3 +277,57 @@ def test_dry_run_does_not_send_or_mark(integration_env: dict) -> None:
     assert sent == []
     dedup = Deduplicator(db_path=integration_env["news_db"])
     assert dedup.count() == 0
+
+
+class _CrashingFetcher(BaseFetcher):
+    """ソース全体で例外を投げる fetcher（例: Playwright ブラウザ未インストール）。"""
+
+    source_name = "crash"
+    category = "disclosure"
+
+    def fetch_for_codes(self, codes: list[str]) -> list[NewsItem]:
+        raise RuntimeError("Executable doesn't exist")
+
+
+def _build_multi_service(
+    env: dict, fetchers: list[BaseFetcher], sent: list, warnings: list[str]
+) -> DeliveryService:
+    wl = WatchList.load(
+        "default", watchlists_dir=env["watchlist_dir"], master_db_path=env["master_db"]
+    )
+    return DeliveryService(
+        watchlist=wl,
+        fetchers=fetchers,
+        deduplicator=Deduplicator(db_path=env["news_db"]),
+        formatter=SlackFormatter(),
+        slack_post=lambda u, b: sent.append(b),
+        webhook_url="https://hooks.example/test",
+        warning_handler=warnings.append,
+        quiet_when_empty=False,
+    )
+
+
+def test_crashing_fetcher_does_not_block_other_sources(integration_env: dict) -> None:
+    """1ソースが例外で落ちても、他ソースのニュースは配信される。"""
+    ok = FakeFetcher({"7203": [_item("7203", "https://example.com/7203/ok")]})
+    sent: list[list[dict]] = []
+    warnings: list[str] = []
+    svc = _build_multi_service(
+        integration_env, [_CrashingFetcher(), ok], sent, warnings
+    )
+
+    result = svc.run("morning")
+
+    assert result["new_items"] == 1
+    assert len(sent) >= 1
+    assert any("crash" in w and "Executable" in w for w in warnings)
+
+
+def test_all_fetchers_crashing_raises(integration_env: dict) -> None:
+    """全ソースが例外で落ちた場合は異常終了（launchd/Slack にエラーを通知させる）。"""
+    sent: list[list[dict]] = []
+    svc = _build_multi_service(integration_env, [_CrashingFetcher()], sent, [])
+
+    with pytest.raises(RuntimeError, match="all fetchers failed"):
+        svc.run("morning")
+    assert sent == []
