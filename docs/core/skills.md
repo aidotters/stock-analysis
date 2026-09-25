@@ -136,12 +136,12 @@ output/reports/stocks/YYYYMMDD-HHMM-{code}-analysis/
 
 **情報ソース:**
 - 会社四季報銘柄ページ（CDP経由、フォールバック: WebSearch）
-- 企業IR・業界分析・セグメント分析・SWOT分析（gemini CLI、フォールバック: WebSearch）
+- 企業IR・業界分析・セグメント分析・SWOT分析（WebSearch + Claude の分析。gemini CLI は廃止）
 - 既存テクニカルツール（StockScreener, TechnicalAnalyzer, DataReader）
 - Gemini Advanced Deep Research（`--deep-research`オプション時、Playwright MCP + CDP経由）
 
 **Deep Research前提条件:**
-- Gemini Advanced有料会員であること
+- aidotters の Google Workspace 契約アカウントで実行する。CDP接続のChromeにこのアカウントがログイン済みであること（`?authuser=<メールアドレス>` で明示的に切り替える。個人アカウントでは実行しない。アドレスはローカルの SKILL.md に記載）
 - Chrome が `--remote-debugging-port=9222` で起動中であること（CDP接続）
 - Deep Researchは5〜15分の実行時間を要する（タイムアウト: 1500秒）
 - Deep Research失敗時もPhase 1レポートは保持される
