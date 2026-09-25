@@ -363,13 +363,11 @@ dependencies = [
     "scikit-learn>=1.7.0",
     "yfinance>=0.2.65",
     "pyyaml>=6.0",
+    "kaleido>=1.0.0",  # チャートPNG画像エクスポート用（/analyze-stock が毎回使うため必須依存）
     # ...
 ]
 
 [project.optional-dependencies]
-chart-export = [
-    "kaleido>=1.0.0",  # チャートPNG画像エクスポート用（オプショナル）
-]
 dev = [
     "responses>=0.25",  # Notion REST API モック用（notion_export テスト）
 ]

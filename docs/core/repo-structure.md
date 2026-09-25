@@ -186,7 +186,7 @@ Stock-Analysis/
 │   │   └── YYYYMMDD-HHMM-{code}-analysis/  # タイムスタンプ付きディレクトリ
 │   │       ├── base_report.md        # Phase 1レポート
 │   │       ├── deep_research_report.md  # Deep Research結果（実行時のみ）
-│   │       └── chart.png             # 株価チャート（kaleido利用可能時のみ）
+│   │       └── chart.png             # 株価チャート（PNG書き出し成功時のみ）
 │   └── errors/                       # エラーログ
 │
 ├── logs/                             # 実行ログ

@@ -48,12 +48,10 @@ dependencies = [
     "playwright>=1.59.0",
     "feedparser>=6.0.12",
     "markdown-it-py>=3.0",
+    "kaleido>=1.0.0",
 ]
 
 [project.optional-dependencies]
-chart-export = [
-    "kaleido>=1.0.0",
-]
 dev = [
     "responses>=0.25",
 ]
