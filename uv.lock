@@ -3196,6 +3196,7 @@ dependencies = [
     { name = "ipykernel" },
     { name = "japanize-matplotlib" },
     { name = "joblib" },
+    { name = "kaleido" },
     { name = "markdown-it-py" },
     { name = "matplotlib" },
     { name = "mypy" },
@@ -3229,9 +3230,6 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-chart-export = [
-    { name = "kaleido" },
-]
 dev = [
     { name = "responses" },
 ]
@@ -3248,7 +3246,7 @@ requires-dist = [
     { name = "ipykernel", specifier = ">=6.29.5" },
     { name = "japanize-matplotlib", specifier = ">=1.1.3" },
     { name = "joblib", specifier = ">=1.5.1" },
-    { name = "kaleido", marker = "extra == 'chart-export'", specifier = ">=1.0.0" },
+    { name = "kaleido", specifier = ">=1.0.0" },
     { name = "markdown-it-py", specifier = ">=3.0" },
     { name = "matplotlib", specifier = ">=3.10.3" },
     { name = "mypy", specifier = ">=1.16.1" },
@@ -3280,7 +3278,7 @@ requires-dist = [
     { name = "xlrd", specifier = ">=2.0.2" },
     { name = "yfinance", specifier = ">=0.2.65" },
 ]
-provides-extras = ["chart-export", "dev"]
+provides-extras = ["dev"]
 
 [[package]]
 name = "ta-lib"

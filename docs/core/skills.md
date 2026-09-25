@@ -156,7 +156,7 @@ output/reports/stocks/YYYYMMDD-HHMM-{code}-analysis/
 7. リスク要因
 8. 投資判断サマリー（5段階評価、セグメント分析・成長性を含む判断根拠）
 
-**チャート生成依存:** `kaleido`（オプショナル）。未インストール時はチャート生成をスキップし、テキストのみのレポートを生成する。
+**チャート生成依存:** `kaleido`（必須依存。`uv sync` で入る。PNG書き出しにローカルの Chrome を使う）。書き出しに失敗した場合はチャート生成をスキップし、テキストのみのレポートを生成する。
 
 ## Executive Research Skill (`/research-executives`)
 

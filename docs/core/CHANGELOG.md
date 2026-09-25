@@ -25,6 +25,7 @@
   - 副次修正: smoke スクリプトでの `.env` 読み込み漏れ(`load_dotenv()` 不在)を発見・修正
 
 ### Changed
+- **`kaleido` を必須依存に変更**: オプショナル依存（`chart-export`）だったため、素の `uv sync` で環境から削除され、`/analyze-stock` のチャートPNG生成が黙ってスキップされていた。`dependencies` へ移し、`chart-export` extra は廃止した。
 - **J-Quants リトライ挙動の強化** (V2 移行に伴い): V1 では `get_daily_quotes_async` がタイムアウト時のみ最大 1 回リトライしていたが、V2 では `JQuantsClient` が 429/5xx/ネットワークエラーすべてに対して指数バックオフで最大 3 回(初期 1s → 上限 8s)リトライする。レート制限超過時の堅牢性が向上した一方、最悪ケースで 1 リクエストあたり最大 4 回の HTTP 発行となるため、稀に `run_daily_jquants.py` のランタイムが延びる可能性がある(launchd は平日 18:00 起動なので時間制約は緩い)。
 
 ### Fixed
