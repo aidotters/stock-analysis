@@ -33,12 +33,14 @@ def setup_logging(settings):
     return logging.getLogger(__name__)
 
 
-def main(chain: bool = True):
+def main(chain: bool = True, per_code: bool = False):
     """日次株価データ取得処理
 
     Args:
         chain: True の場合、完了後に Daily Analysis → Integrated Analysis を起動
+        per_code: True なら旧方式（銘柄ごと・約 4,650 コール）で取得する（切戻し用）
     """
+    fetch_failed = False
     settings = get_settings()
     logger = setup_logging(settings)
 
@@ -88,9 +90,34 @@ def main(chain: bool = True):
                 result = processor.get_all_prices_for_past_5_years_to_db_optimized(
                     str(db_path)
                 )
-            else:
-                logger.info("差分更新を実行します")
+            elif per_code:
+                logger.info("差分更新を実行します（旧方式: 銘柄ごと）")
                 result = processor.update_prices_to_db_optimized(str(db_path))
+            else:
+                logger.info("差分更新を実行します（日付メジャー）")
+                result = processor.update_prices_by_date(str(db_path))
+                job.add_metric(
+                    "取得日数",
+                    f"{result['dates_fetched']}/{result['dates_to_fetch']}",
+                )
+                job.add_metric("新規レコード数", str(result["records_inserted"]))
+                job.add_metric(
+                    "論理取得",
+                    f"カレンダー {result['logical_fetches']['calendar']}"
+                    f"・日次バー {result['logical_fetches']['daily_bars']}",
+                )
+                job.add_metric(
+                    "実HTTP／再試行",
+                    f"{result['http_requests']}／{result['retries']}",
+                )
+                if result["dates_failed"] > 0:
+                    fetch_failed = True
+                    job.add_metric("失敗日", ", ".join(result["failed_dates"]))
+                    job.add_warning(
+                        f"{result['dates_failed']}日の取得に失敗しました"
+                        "（記録済み・次回以降に取り直します）"
+                    )
+                result = None  # 旧方式のメトリクス表示を通さない
 
             # ジョブ実績メトリクスを通知に追加
             if result:
@@ -140,6 +167,11 @@ def main(chain: bool = True):
             except Exception as e:
                 logger.error(f"Daily Analysisでエラー: {e}", exc_info=True)
 
+        # 取得に落ちた日があれば、後段を走らせたうえで非ゼロで終える（別モデルレビュー T1）。
+        if fetch_failed:
+            logger.error("取得に失敗した日があります（失敗日は記録済み）")
+            sys.exit(1)
+
     except Exception as e:
         logger.error(f"エラーが発生しました: {e}", exc_info=True)
         logger.error(
@@ -157,6 +189,11 @@ if __name__ == "__main__":
         action="store_true",
         help="後続ジョブ（Daily Analysis, Integrated Analysis）を起動しない",
     )
+    parser.add_argument(
+        "--per-code",
+        action="store_true",
+        help="旧方式（銘柄ごと）で取得する（切戻し用）",
+    )
     args = parser.parse_args()
 
-    main(chain=not args.no_chain)
+    main(chain=not args.no_chain, per_code=args.per_code)

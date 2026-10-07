@@ -25,6 +25,14 @@
   - 副次修正: smoke スクリプトでの `.env` 読み込み漏れ(`load_dotenv()` 不在)を発見・修正
 
 ### Changed
+- **日次の株価取得を日付メジャーへ**（2026-10-07・ssp S2a の「橋」）: `run_daily_jquants.py` の差分更新を、銘柄ごと（約 4,650 コール・約 1 時間 20 分〜2 時間）から、営業日ごとに `/v2/equities/bars/daily?date=` を1論理取得する `JQuantsDataProcessor.update_prices_by_date()` に切り替えた。J-Quants の鍵を stock-screener-plus と共有しており、こちらの長時間の取得が向こうの日次と重なって 429 を起こしていたため。
+  - 取り直す日＝直近 7 平日 ∪ 全体の最終日より後の営業日 ∪ 記録された失敗日 ∪（補助）直近 30 営業日で行数が中央値の 90% 未満の日（行数 0 を含む・中央値 0 なら判定しない）。取引カレンダー（`/v2/markets/calendar`）で営業日に絞る。
+  - 1日は全ページを取り終えてから `save_day()` で保存し、`daily_quotes` の `INSERT OR REPLACE` と失敗日の削除を1トランザクションで確定する。落ちた日（途中のページを含む・過去の営業日の空応答・100 行未満）は保存せず `daily_quotes_failed_dates` へ記録し、成功するまで取り直す（窓を過ぎても残る）。当日分の空応答は公開前として失敗にしない。
+  - 1日でも落ちれば、後段（Daily Analysis）を走らせたうえで `run_daily_jquants.py` が終了コード 1 で終わる（以前は警告だけ）。
+  - ログと Slack 通知に論理取得数（カレンダー・日次バー）・ページ数・実 HTTP 数・再試行数を出す（`JQuantsClient.http_requests` / `retries`＝同期 `get` だけを数える）。
+  - 旧方式は `update_prices_to_db_optimized()` として残し、`run_daily_jquants.py --per-code` で使える（切戻し用）。`daily_quotes` の列・`source='jquants'`・後段の分析は不変。
+  - 検証（2026-10-07）: 2026-09-29 について標本 50 銘柄（調整係数 ≠ 1 が 25・Close が NULL が 5）を旧方式と新方式で取り、全列一致 50/50。同日の日次バー 4,446 銘柄と `/v2/equities/master` 4,446 銘柄のコード集合は差 0。本番 DB の末尾の欠け候補 28 銘柄はすべて 10/6 の master に居ない（上場廃止）。
+  - 関連テスト: `tests/test_jquants_date_major.py`（16 件）。
 - **ローカル実行環境を Python 3.12 に変更**（2026-10-05）: macOS 27.0.1 で scipy 1.15.3 の拡張モジュール（`scipy/sparse/linalg/_propack/_spropack*.so`）が dlopen に失敗し（`__DATA/__thread_bss` のセクション形式を dyld が拒否）、日次チェーンの Daily Analysis が `from scipy.stats import pearsonr` で停止した。同じ wheel は入れ直しても失敗し、scipy 1.16 以上では解消する。scipy 1.16 は Python 3.11 以上が必要なため、`.python-version` を 3.10 から 3.12（CI と同じ）へ上げた。`uv.lock` は変更なし（3.11 以上では scipy 1.16.0 がすでに解決済み）。
 - **`kaleido` を必須依存に変更**: オプショナル依存（`chart-export`）だったため、素の `uv sync` で環境から削除され、`/analyze-stock` のチャートPNG生成が黙ってスキップされていた。`dependencies` へ移し、`chart-export` extra は廃止した。
 - **J-Quants リトライ挙動の強化** (V2 移行に伴い): V1 では `get_daily_quotes_async` がタイムアウト時のみ最大 1 回リトライしていたが、V2 では `JQuantsClient` が 429/5xx/ネットワークエラーすべてに対して指数バックオフで最大 3 回(初期 1s → 上限 8s)リトライする。レート制限超過時の堅牢性が向上した一方、最悪ケースで 1 リクエストあたり最大 4 回の HTTP 発行となるため、稀に `run_daily_jquants.py` のランタイムが延びる可能性がある(launchd は平日 18:00 起動なので時間制約は緩い)。

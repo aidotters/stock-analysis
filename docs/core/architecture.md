@@ -167,7 +167,7 @@ J-Quants API V2 (2026-05-31 V1廃止) へ移行済み。**アダプタ層パタ�
 | `exceptions.py` | `JQuantsError` 基底クラスと派生例外(認証/レート制限/サーバー/形式異常) |
 | `client.py` | `JQuantsClient`: x-api-key 認証、トークンバケット式レート制限(デフォルト 55req/min、`capacity=1`+`initial_tokens=0` で sliding window 制約に対応)、`pagination_key` 自動追跡、指数バックオフリトライ(429/5xx)、同期/非同期両系統、`health_check()` |
 | `_v2_translator.py` | V2 短縮カラム名 → V1 ロング名への純粋関数群(`normalize_daily_quotes` / `normalize_listed_info` / `normalize_statements`) |
-| `data_processor.py` | 非同期処理による日次株価データ取得(`JQuantsClient` を DI、V2 経由) |
+| `data_processor.py` | 日次株価データ取得(`JQuantsClient` を DI、V2 経由)。日次の差分更新は**日付メジャー**（`update_prices_by_date`＝営業日ごとに全銘柄を1論理取得・落ちた日は `daily_quotes_failed_dates` に記録して成功するまで取り直す・2026-10-07）。旧方式（銘柄ごとの非同期取得 `update_prices_to_db_optimized`）は切戻し用に残置 |
 | `statements_processor.py` | 財務諸表 API フェッチャー(`/v2/fins/summary` 経由) |
 | `fundamentals_calculator.py` | PER, PBR, ROE, ROA等の財務指標計算(DB 列名を参照、V2 移行による変更なし) |
 | `_old/` | V1 実装の退避先(import 対象外) |
@@ -388,6 +388,13 @@ CREATE TABLE daily_quotes (
 
 CREATE INDEX idx_daily_quotes_code ON daily_quotes (Code);
 CREATE INDEX idx_daily_quotes_date ON daily_quotes (Date);
+
+-- 日付メジャー取得で落ちた日（成功した日は保存と同じトランザクションで消える）
+CREATE TABLE daily_quotes_failed_dates (
+    date TEXT PRIMARY KEY,
+    last_error TEXT,
+    failed_at TEXT
+);
 ```
 
 ### statements.db - 財務諸表データ
