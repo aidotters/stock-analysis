@@ -33,7 +33,7 @@ mypy .
 ### Daily Operations (launchd-scheduled)
 ```bash
 # Daily pipeline: J-Quants取得 → Daily Analysis → Integrated Analysis (平日18:00, チェーン実行)
-python scripts/run_daily_jquants.py            # --no-chain で取得のみ
+python scripts/run_daily_jquants.py            # --no-chain で取得のみ・--per-code で旧方式（銘柄ごと）
 python scripts/run_daily_analysis.py           # --no-chain / --modules hl_ratio rsp 等
 python scripts/run_adhoc_integrated_analysis.py
 

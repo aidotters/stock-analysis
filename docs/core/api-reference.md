@@ -1897,7 +1897,13 @@ processor = JQuantsDataProcessor(client=client)
 
 # 初回: 過去 5 年分の全銘柄取得
 result = processor.get_all_prices_for_past_5_years_to_db_optimized(db_path)
-# 差分更新
+# 差分更新（日付メジャー・日次の既定）
+result = processor.update_prices_by_date(db_path)
+# 戻り値: {"dates_to_fetch", "dates_fetched", "dates_failed", "failed_dates", "records_inserted",
+#          "logical_fetches": {"calendar", "daily_bars"}, "pages", "http_requests", "retries", "empty_today"}
+# 落ちた日は daily_quotes_failed_dates に記録され、成功するまで取り直される
+
+# 差分更新（旧方式・銘柄ごと＝切戻し用・run_daily_jquants.py --per-code）
 result = processor.update_prices_to_db_optimized(db_path)
 # 戻り値: {"total_listed", "codes_to_update", "codes_updated", "records_inserted", "codes_failed"}
 ```

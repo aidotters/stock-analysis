@@ -14,9 +14,10 @@ import logging
 import sqlite3
 import sys
 import time
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Any, Optional, cast
+from statistics import median
+from typing import Any, Iterable, Optional, cast
 
 import aiohttp
 import pandas as pd
@@ -40,6 +41,63 @@ from market_pipeline.utils.parallel_processor import (  # noqa: E402
 
 load_dotenv()
 
+CALENDAR_PATH = "/v2/markets/calendar"
+DAILY_BARS_PATH = "/v2/equities/bars/daily"
+# 取引カレンダーの HolDiv のうち現物の取引がある日（1=営業日・2=半日立会）。
+TRADING_HOL_DIVS = frozenset({"1", "2"})
+FAILED_DATES_TABLE = "daily_quotes_failed_dates"
+
+# 取り直す日の規則（ssp の短信同期と同じ「直近 7 平日」＋薄い日の補助判定）。
+RECENT_WEEKDAYS = 7
+THIN_LOOKBACK_TRADING_DAYS = 30
+THIN_RATIO = 0.9
+
+
+def recent_weekdays_start(today: date, n: int = RECENT_WEEKDAYS) -> date:
+    """今日を含む直近 n 平日の最初の日（祝日も平日として数える＝ssp の窓と同じ）。"""
+    d = today
+    count = 0
+    while True:
+        if d.weekday() < 5:
+            count += 1
+            if count == n:
+                return d
+        d -= timedelta(days=1)
+
+
+def select_dates_to_fetch(
+    *,
+    trading_days: list[str],
+    today: str,
+    last_jquants_date: Optional[str],
+    failed_dates: Iterable[str],
+    row_counts: dict[str, int],
+) -> dict[str, set[str]]:
+    """取り直す営業日を、理由ごとの集合で返す（和集合が取得対象）。
+
+    1. ``window``: 直近 7 平日に含まれる営業日（`INSERT OR REPLACE` なので取り直しは冪等）
+    2. ``after_last``: 全体の最終日より後の営業日（窓より長く止まっていた場合）
+    3. ``failed``: 記録された失敗日（窓や 30 日を過ぎても成功するまで残る）
+    4. ``thin``: 補助。直近 30 営業日のうち、行数がその 30 日の中央値の 90% 未満の日
+       （行数 0 を含む）。中央値が 0 なら判定しない（全滅は ``after_last`` が拾う）。
+
+    ``trading_days`` は今日以前の営業日の昇順。``row_counts`` は日ごとの jquants 行数。
+    """
+    days = [d for d in trading_days if d <= today]
+    window_start = recent_weekdays_start(date.fromisoformat(today)).isoformat()
+    window = {d for d in days if d >= window_start}
+    after_last = {d for d in days if last_jquants_date is None or d > last_jquants_date}
+    failed = set(failed_dates)
+
+    thin: set[str] = set()
+    lookback = days[-THIN_LOOKBACK_TRADING_DAYS:]
+    if lookback:
+        counts = [row_counts.get(d, 0) for d in lookback]
+        m = median(counts)
+        if m > 0:
+            thin = {d for d, c in zip(lookback, counts) if c < THIN_RATIO * m}
+    return {"window": window, "after_last": after_last, "failed": failed, "thin": thin}
+
 
 class JQuantsDataProcessor:
     """V2 API 経由の日次株価プロセッサ。
@@ -50,6 +108,10 @@ class JQuantsDataProcessor:
     """
 
     # 日本市場の上場銘柄は通常 4000+。100 未満なら API 異常とみなしキャッシュしない。
+    # 日付メジャー取得でも「1 日分が 100 行未満なら失敗」に使う。⚠️ これは異常応答の下限であって
+    # 完全性の検査ではない（1 日は約 4,440 行）。一部の銘柄が欠けた日は select_dates_to_fetch の
+    # 「薄い日」（中央値の 90% 未満）が拾う。半日立会の日も行数はほぼ変わらないので、ここを
+    # 行数の期待値へ引き上げないこと。
     MIN_EXPECTED_COMPANIES = 100
 
     def __init__(
@@ -450,6 +512,208 @@ class JQuantsDataProcessor:
             "codes_failed": len(failed_codes),
         }
 
+    # ----------------------------------------------------- date-major (S2a 橋)
+    def get_trading_days(self, from_date: str, to_date: str) -> list[str]:
+        """取引カレンダーから営業日を ISO 昇順で返す（1 論理取得）。"""
+        days: list[str] = []
+        for page in self.client.paginate(
+            CALENDAR_PATH, params={"from": from_date, "to": to_date}
+        ):
+            for row in page:
+                if str(row.get("HolDiv", "")) not in TRADING_HOL_DIVS:
+                    continue
+                d = str(row.get("Date", "")).strip()
+                if d:
+                    days.append(d)
+        return sorted(set(days))
+
+    def fetch_daily_quotes_by_date(self, day: str) -> tuple[pd.DataFrame, int]:
+        """1 営業日分の全銘柄を全ページ取り終えてから V1 互換 DataFrame で返す。
+
+        Returns:
+            (DataFrame, ページ数)。途中のページで落ちたら例外（その日は保存しない）。
+        """
+        rows: list[dict[str, Any]] = []
+        pages = 0
+        for page in self.client.paginate(DAILY_BARS_PATH, params={"date": day}):
+            rows.extend(page)
+            pages += 1
+        return normalize_daily_quotes(rows), pages
+
+    def save_day(self, db_path: str, day: str, df: pd.DataFrame) -> int:
+        """1 日分の保存と失敗日の削除を 1 トランザクションで行う。
+
+        ⚠️ 既存の `save_quotes_batch` は接続を受け取らず内部で commit するので、失敗日の
+        削除を同じトランザクションに含められない（別モデルレビュー T1）。列の変換・
+        `source='jquants'`・`INSERT OR REPLACE` は `save_quotes_batch` と同じ。
+        """
+        records = df.to_dict("records") if not df.empty else []
+        conn = sqlite3.connect(db_path)
+        try:
+            conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute("PRAGMA synchronous=NORMAL")
+            conn.execute("BEGIN")
+            if records:
+                columns = list(records[0].keys()) + ["source"]
+                placeholders = ",".join("?" for _ in columns)
+                query = (
+                    f"INSERT OR REPLACE INTO daily_quotes ({','.join(columns)}) "
+                    f"VALUES ({placeholders})"
+                )
+                conn.executemany(
+                    query,
+                    [tuple(r[c] for c in columns[:-1]) + ("jquants",) for r in records],
+                )
+            conn.execute(f"DELETE FROM {FAILED_DATES_TABLE} WHERE date = ?", (day,))
+            conn.commit()
+            return len(records)
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+
+    def record_failed_date(self, db_path: str, day: str, error: str) -> None:
+        """落ちた日を記録する（保存とは別のトランザクション）。"""
+        with sqlite3.connect(db_path) as conn:
+            conn.execute(
+                f"INSERT OR REPLACE INTO {FAILED_DATES_TABLE} (date, last_error, failed_at) "
+                "VALUES (?, ?, ?)",
+                (day, error[:500], datetime.now().isoformat(timespec="seconds")),
+            )
+            conn.commit()
+
+    def _read_fetch_state(
+        self, db_path: str, since: str
+    ) -> tuple[Optional[str], list[str], dict[str, int]]:
+        """(jquants 行の最終日, 失敗日, since 以降の日ごとの jquants 行数)。"""
+        with sqlite3.connect(db_path) as conn:
+            last = conn.execute(
+                "SELECT MAX(Date) FROM daily_quotes WHERE source = 'jquants'"
+            ).fetchone()[0]
+            failed = [
+                r[0]
+                for r in conn.execute(
+                    f"SELECT date FROM {FAILED_DATES_TABLE} ORDER BY date"
+                )
+            ]
+            counts = {
+                r[0]: int(r[1])
+                for r in conn.execute(
+                    "SELECT Date, COUNT(*) FROM daily_quotes "
+                    "WHERE source = 'jquants' AND Date >= ? GROUP BY Date",
+                    (since,),
+                )
+            }
+        return last, failed, counts
+
+    def update_prices_by_date(
+        self, db_path: str, today: Optional[str] = None
+    ) -> dict[str, Any]:
+        """日付メジャーの差分更新（S2a 橋・旧 `update_prices_to_db_optimized` の置き換え）。
+
+        取り直す日は `select_dates_to_fetch` の和集合。1 日は全ページを取り終えてから
+        `save_day` で保存し、落ちた日は保存せず失敗日へ記録して続ける。
+        """
+        start_time = time.time()
+        self._initialize_database(db_path)
+        req0, retry0 = self.client.http_requests, self.client.retries
+        today = today or date.today().isoformat()
+
+        # カレンダーの範囲: 薄い日の判定（30 営業日≒45 暦日）・最終日以降・最古の失敗日を覆う
+        since_dt = date.fromisoformat(today) - timedelta(days=45)
+        last, failed, _ = self._read_fetch_state(db_path, since_dt.isoformat())
+        candidates = [since_dt]
+        if last:
+            candidates.append(date.fromisoformat(last) + timedelta(days=1))
+        if failed:
+            candidates.append(date.fromisoformat(failed[0]))
+        cal_from = min(candidates).isoformat()
+
+        trading_days = self.get_trading_days(cal_from, today)
+        logical = {"calendar": 1, "daily_bars": 0}
+        _, _, counts = self._read_fetch_state(db_path, cal_from)
+        reasons = select_dates_to_fetch(
+            trading_days=trading_days,
+            today=today,
+            last_jquants_date=last,
+            failed_dates=failed,
+            row_counts=counts,
+        )
+        targets = sorted(set().union(*reasons.values()))
+        self.logger.info(
+            "取り直す日 %d 日（窓 %d・最終日以降 %d・失敗日 %d・薄い日 %d）",
+            len(targets),
+            len(reasons["window"]),
+            len(reasons["after_last"]),
+            len(reasons["failed"]),
+            len(reasons["thin"]),
+        )
+
+        pages_total = 0
+        records_total = 0
+        fetched: list[str] = []
+        failed_now: dict[str, str] = {}
+        empty_today = False
+        for day in targets:
+            logical["daily_bars"] += 1
+            try:
+                df, pages = self.fetch_daily_quotes_by_date(day)
+                pages_total += pages
+                n = len(df)
+                if n == 0 and day == today:
+                    # 当日分の公開前（手動の昼実行など）。次の実行の窓が拾うので失敗にしない。
+                    self.logger.warning(
+                        "%s: 当日分がまだ空です（次の実行で取り直します）", day
+                    )
+                    empty_today = True
+                    continue
+                if n < self.MIN_EXPECTED_COMPANIES:
+                    raise ValueError(
+                        f"行数が異常に少ない: {n} 行（{self.MIN_EXPECTED_COMPANIES} 未満）"
+                    )
+                records_total += self.save_day(db_path, day, df)
+                fetched.append(day)
+                self.logger.info("%s: %d 行（%d ページ）", day, n, pages)
+            except Exception as exc:  # noqa: BLE001 - 1 日の失敗で止めない
+                msg = f"{type(exc).__name__}: {exc}"
+                self.logger.error("%s: 取得または保存に失敗 %s", day, msg)
+                failed_now[day] = msg
+                try:
+                    self.record_failed_date(db_path, day, msg)
+                except Exception as rec_exc:  # noqa: BLE001
+                    self.logger.error("%s: 失敗日の記録にも失敗 %s", day, rec_exc)
+
+        http_requests = self.client.http_requests - req0
+        retries = self.client.retries - retry0
+        total_time = time.time() - start_time
+        self.logger.info(
+            "日付メジャー更新 %.1f 秒: 論理取得 カレンダー %d・日次バー %d／ページ %d／"
+            "実 HTTP %d／再試行 %d／保存 %d 日・%d 行／失敗 %d 日%s",
+            total_time,
+            logical["calendar"],
+            logical["daily_bars"],
+            pages_total,
+            http_requests,
+            retries,
+            len(fetched),
+            records_total,
+            len(failed_now),
+            f"（{', '.join(sorted(failed_now))}）" if failed_now else "",
+        )
+        return {
+            "dates_to_fetch": len(targets),
+            "dates_fetched": len(fetched),
+            "dates_failed": len(failed_now),
+            "failed_dates": sorted(failed_now),
+            "records_inserted": records_total,
+            "logical_fetches": logical,
+            "pages": pages_total,
+            "http_requests": http_requests,
+            "retries": retries,
+            "empty_today": empty_today,
+        }
+
     def _initialize_database(self, db_path: str) -> None:
         """daily_quotes テーブルを作成(V1 と同一スキーマ)。"""
         if not self.db_processor:
@@ -478,6 +742,16 @@ class JQuantsDataProcessor:
                     AdjustmentVolume INTEGER,
                     source TEXT,
                     PRIMARY KEY (Code, Date)
+                )
+                """
+            )
+            # S2a 橋: 日付メジャー取得で落ちた日（成功するまで取り直す）。daily_quotes の列は変えない。
+            con.execute(
+                f"""
+                CREATE TABLE IF NOT EXISTS {FAILED_DATES_TABLE} (
+                    date TEXT PRIMARY KEY,
+                    last_error TEXT,
+                    failed_at TEXT
                 )
                 """
             )

@@ -131,6 +131,10 @@ class JQuantsClient:
             initial_tokens=0,
         )
         self.logger = logging.getLogger(__name__)
+        # 同期 `get` の実 HTTP リクエスト数と再試行数（日付メジャー取得のログ用）。
+        # 非同期経路は数えない（銘柄ごとの旧取得はこの数を使わない）。
+        self.http_requests = 0
+        self.retries = 0
 
     @property
     def headers(self) -> dict[str, str]:
@@ -191,6 +195,9 @@ class JQuantsClient:
         last_exc: Optional[Exception] = None
         for attempt in range(self.max_retries + 1):
             self._bucket.acquire()
+            self.http_requests += 1
+            if attempt > 0:
+                self.retries += 1
             try:
                 response = requests.get(
                     url,

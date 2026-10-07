@@ -121,7 +121,8 @@ launchd (18:00)
 
 `--no-chain` フラグで個別実行も可能:
 ```bash
-uv run scripts/run_daily_jquants.py --no-chain   # J-Quants取得のみ
+uv run scripts/run_daily_jquants.py --no-chain   # J-Quants取得のみ（日付メジャー・落ちた日があれば終了コード 1）
+uv run scripts/run_daily_jquants.py --per-code   # 旧方式（銘柄ごと・約 4,650 コール）に戻す（切戻し用）
 uv run scripts/run_daily_analysis.py --no-chain   # 日次分析のみ（統合分析なし）
 ```
 
