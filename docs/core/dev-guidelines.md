@@ -195,6 +195,10 @@ def calculate_sma(prices, window):
 
 ## テストパターン
 
+### git worktree から commit するとき
+
+pre-commit フックの `pytest -q` は `tests/test_backtester.py`・`tests/test_virtual_portfolio.py` が `market_reader.DataReader` 経由で `data/jquants.db` を読む（SELECT のみ）。`data/` は git 管理外なので、worktree ではこの 2 ファイルの 65 件が `DatabaseConnectionError` で落ちる（コードの欠陥ではない）。worktree から commit するときは、日次ジョブが動いていないことを確かめてから `data/jquants.db` を本体の作業ツリーへのシンボリックリンクにし、commit 後に消す。フックは `ruff`／`mypy`／`pytest` を PATH から呼ぶので、`PATH="$PWD/.venv/bin:$PATH" git commit …` で走らせる。
+
 ### pytest使用
 
 ```python
