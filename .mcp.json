@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "stock-screener-plus": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "${HOME}/Projects/markets/stock-screener-plus",
+        "python",
+        "-m",
+        "stock_screener_plus.mcp_server"
+      ],
+      "env": {}
+    }
+  }
+}
