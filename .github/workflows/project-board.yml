@@ -27,6 +27,8 @@ jobs:
       GH_TOKEN: ${{ secrets.PROJECT_BOARD_TOKEN }}
       OWNER: aidotters
       PROJECT_TITLE: 開発状況
+      # 列に使う単一選択のフィールド（GitHub 標準の Status は組み込みの自動化が「マージで Done」に動かすので使わない）
+      STATE_FIELD: 状態
       # 「サービス=パス,パス」を空白区切り。空ならマージで完了（デプロイの無いリポジトリ・自動デプロイ）
       DEPLOY_SERVICES: ""
       EVENT: ${{ github.event_name }}
@@ -49,8 +51,9 @@ jobs:
           [ -n "$number" ] || { echo "::error::ボード「$PROJECT_TITLE」が見つかりません"; exit 1; }
           project_id=$(gh project view "$number" --owner "$OWNER" --format json | jq -r .id)
           fields=$(gh project field-list "$number" --owner "$OWNER" --format json)
-          status_field=$(jq -r '.fields[] | select(.name == "Status") | .id' <<<"$fields")
-          option_id() { jq -r --arg n "$1" '.fields[] | select(.name == "Status") | .options[] | select(.name == $n) | .id' <<<"$fields"; }
+          status_field=$(jq -r --arg f "$STATE_FIELD" '.fields[] | select(.name == $f) | .id' <<<"$fields")
+          [ -n "$status_field" ] || { echo "::error::フィールド「$STATE_FIELD」がボードにありません"; exit 1; }
+          option_id() { jq -r --arg f "$STATE_FIELD" --arg n "$1" '.fields[] | select(.name == $f) | .options[] | select(.name == $n) | .id' <<<"$fields"; }
 
           set_status() { # $1=PR の URL $2=列の名前
             local item opt
@@ -120,8 +123,8 @@ jobs:
             push)
               # デプロイのタグ: このリポジトリのデプロイ待ちを見直す
               gh project item-list "$number" --owner "$OWNER" --format json --limit 1000 \
-                | jq -r --arg r "$GITHUB_REPOSITORY" \
-                    '.items[] | select(.status == "デプロイ待ち" and .content.repository == $r) | .content.number' \
+                | jq -r --arg r "$GITHUB_REPOSITORY" --arg f "$STATE_FIELD" \
+                    '.items[] | select(.[$f] == "デプロイ待ち" and .content.repository == $r) | .content.number' \
                 | while read -r n; do sync_pr "$n"; done
               ;;
             workflow_dispatch)
