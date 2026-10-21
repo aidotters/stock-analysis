@@ -40,6 +40,8 @@ jobs:
       - name: ボードを更新する
         run: |
           set -euo pipefail
+          # GitHub の API はまれに一時的な失敗を返すので、gh は3回まで試す
+          gh() { local i; for i in 1 2 3; do command gh "$@" && return 0; sleep 5; done; return 1; }
           if [ -z "$GH_TOKEN" ]; then
             echo "::notice::PROJECT_BOARD_TOKEN が無いので何もしません"
             exit 0
