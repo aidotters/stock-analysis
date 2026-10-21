@@ -1,0 +1,139 @@
+# 組織のボード「開発状況」へ、このリポジトリの PR の状態を写す。
+# 列: 開発中（draft）→ 承認待ち（draft でない・開いている）→ デプロイ待ち（マージ済み・本番に未反映）→ 完了。
+# デプロイ待ちは DEPLOY_SERVICES にあるサービスに効く変更だけ。本番に出したら deployed/<サービス> の
+# タグを出したコミットへ付け直して push すると、そのコミットに含まれる PR が完了へ移る。
+# 秘密 PROJECT_BOARD_TOKEN（classic PAT・repo と project）が無ければ何もしない。
+name: 開発状況ボード
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, converted_to_draft, review_requested, closed]
+  push:
+    tags: ["deployed/*"]
+  workflow_dispatch:
+
+concurrency:
+  group: project-board-${{ github.repository }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
+    env:
+      GH_TOKEN: ${{ secrets.PROJECT_BOARD_TOKEN }}
+      OWNER: aidotters
+      PROJECT_TITLE: 開発状況
+      # 列に使う単一選択のフィールド（GitHub 標準の Status は組み込みの自動化が「マージで Done」に動かすので使わない）
+      STATE_FIELD: 状態
+      # 「サービス=パス,パス」を空白区切り。空ならマージで完了（デプロイの無いリポジトリ・自動デプロイ）
+      DEPLOY_SERVICES: ""
+      EVENT: ${{ github.event_name }}
+      PR_URL: ${{ github.event.pull_request.html_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: ボードを更新する
+        run: |
+          set -euo pipefail
+          # GitHub の API はまれに一時的な失敗を返すので、gh は3回まで試す
+          gh() { local i; for i in 1 2 3; do command gh "$@" && return 0; sleep 5; done; return 1; }
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::notice::PROJECT_BOARD_TOKEN が無いので何もしません"
+            exit 0
+          fi
+          git fetch --force --tags --quiet
+
+          number=$(gh project list --owner "$OWNER" --format json --limit 100 \
+            | jq -r --arg t "$PROJECT_TITLE" '.projects[] | select(.title == $t) | .number' | head -n1)
+          [ -n "$number" ] || { echo "::error::ボード「$PROJECT_TITLE」が見つかりません"; exit 1; }
+          project_id=$(gh project view "$number" --owner "$OWNER" --format json | jq -r .id)
+          fields=$(gh project field-list "$number" --owner "$OWNER" --format json)
+          status_field=$(jq -r --arg f "$STATE_FIELD" '.fields[] | select(.name == $f) | .id' <<<"$fields")
+          [ -n "$status_field" ] || { echo "::error::フィールド「$STATE_FIELD」がボードにありません"; exit 1; }
+          option_id() { jq -r --arg f "$STATE_FIELD" --arg n "$1" '.fields[] | select(.name == $f) | .options[] | select(.name == $n) | .id' <<<"$fields"; }
+
+          set_status() { # $1=PR の URL $2=列の名前
+            local item opt
+            item=$(gh project item-add "$number" --owner "$OWNER" --url "$1" --format json | jq -r .id)
+            opt=$(option_id "$2")
+            [ -n "$opt" ] || { echo "::error::列「$2」がボードにありません"; exit 1; }
+            gh project item-edit --project-id "$project_id" --id "$item" \
+              --field-id "$status_field" --single-select-option-id "$opt" >/dev/null
+            echo "$1 → $2"
+          }
+
+          # その PR が待っているサービス（変更したパスがサービスのパスに当たるもの）
+          services_for() { # $1=PR 番号
+            local files svc paths p hit
+            files=$(gh pr view "$1" --json files --jq '.files[].path')
+            for rule in $DEPLOY_SERVICES; do
+              svc=${rule%%=*}; paths=${rule#*=}; hit=""
+              for p in ${paths//,/ }; do
+                if grep -q -- "^$p" <<<"$files"; then hit=1; fi
+              done
+              [ -n "$hit" ] && echo "$svc"
+            done
+            return 0
+          }
+
+          # マージ済みの PR が本番に出ているか（待っている全サービスのタグがマージコミットを含む）
+          deployed() { # $1=PR 番号 $2=マージコミット
+            local svc
+            for svc in $(services_for "$1"); do
+              git rev-parse -q --verify "refs/tags/deployed/$svc" >/dev/null || return 1
+              git merge-base --is-ancestor "$2" "refs/tags/deployed/$svc" || return 1
+            done
+            return 0
+          }
+
+          status_of() { # $1=PR 番号 → 列の名前（閉じただけの PR は空）
+            local pr
+            pr=$(gh pr view "$1" --json state,isDraft,mergeCommit)
+            case $(jq -r .state <<<"$pr") in
+              OPEN)   if [ "$(jq -r .isDraft <<<"$pr")" = true ]; then echo 開発中; else echo 承認待ち; fi ;;
+              MERGED) if deployed "$1" "$(jq -r .mergeCommit.oid <<<"$pr")"; then echo 完了; else echo デプロイ待ち; fi ;;
+              *)      echo "" ;;
+            esac
+          }
+
+          sync_pr() { # $1=PR 番号
+            local url st item
+            url=$(gh pr view "$1" --json url --jq .url)
+            st=$(status_of "$1")
+            if [ -n "$st" ]; then
+              set_status "$url" "$st"
+            else
+              # マージせずに閉じた PR はボードから外す
+              item=$(gh project item-list "$number" --owner "$OWNER" --format json --limit 1000 \
+                | jq -r --arg u "$url" '.items[] | select(.content.url == $u) | .id' | head -n1)
+              if [ -n "$item" ]; then
+                gh project item-delete "$number" --owner "$OWNER" --id "$item" >/dev/null
+                echo "$url → 外した"
+              fi
+            fi
+          }
+
+          case "$EVENT" in
+            pull_request)
+              sync_pr "${PR_URL##*/}"
+              ;;
+            push)
+              # デプロイのタグ: このリポジトリのデプロイ待ちを見直す
+              gh project item-list "$number" --owner "$OWNER" --format json --limit 1000 \
+                | jq -r --arg r "$GITHUB_REPOSITORY" --arg f "$STATE_FIELD" \
+                    '.items[] | select(.[$f] == "デプロイ待ち" and .content.repository == $r) | .content.number' \
+                | while read -r n; do sync_pr "$n"; done
+              ;;
+            workflow_dispatch)
+              # 取り込み直し: 開いている PR と、直近30日にマージされた PR
+              since=$(date -u -d '30 days ago' +%Y-%m-%d)
+              { gh pr list --state open --limit 200 --json number --jq '.[].number'
+                gh pr list --state merged --search "merged:>=$since" --limit 200 --json number --jq '.[].number'
+              } | while read -r n; do sync_pr "$n"; done
+              ;;
+          esac
