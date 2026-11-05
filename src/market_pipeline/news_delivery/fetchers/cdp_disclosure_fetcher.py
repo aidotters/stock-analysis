@@ -209,11 +209,19 @@ class CdpDisclosureFetcher(BaseFetcher):
         from playwright.sync_api import sync_playwright
 
         pw = sync_playwright().start()
-        context = pw.chromium.launch_persistent_context(
-            user_data_dir=str(self._profile_dir),
-            headless=self._headless,
-            user_agent=self._user_agent,
-        )
+        try:
+            context = pw.chromium.launch_persistent_context(
+                user_data_dir=str(self._profile_dir),
+                headless=self._headless,
+                user_agent=self._user_agent,
+            )
+        except BaseException:
+            # launch に失敗しても start() 済みの Playwright は必ず止める。
+            # 止めないと同じスレッドにイベントループが動いたまま残り、後続の
+            # fetcher の sync_playwright().start() が「Sync API inside the
+            # asyncio loop」で落ちて、本当の原因（ブラウザ未インストール等）を隠す。
+            pw.stop()
+            raise
         return pw, context
 
     def _fetch_html_via_page(self, page, code: str) -> str:  # type: ignore[no-untyped-def]

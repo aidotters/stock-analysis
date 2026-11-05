@@ -199,3 +199,38 @@ def test_empty_codes_returns_empty(tmp_path):
     items, errors = fetcher.fetch_for_codes_with_errors([])
     assert items == []
     assert errors == {}
+
+
+def test_open_context_stops_playwright_when_launch_fails(tmp_path, monkeypatch):
+    """launch 失敗時に start() 済みの Playwright を止め、全銘柄に本当の原因を積む。"""
+    import sys
+    import types
+
+    stopped: list[bool] = []
+
+    class FakeChromium:
+        def launch_persistent_context(self, **_kw):
+            raise RuntimeError("Executable doesn't exist")
+
+    class FakePw:
+        chromium = FakeChromium()
+
+        def stop(self):
+            stopped.append(True)
+
+    class FakeStarter:
+        def start(self):
+            return FakePw()
+
+    fake_mod = types.ModuleType("playwright.sync_api")
+    fake_mod.sync_playwright = lambda: FakeStarter()  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "playwright.sync_api", fake_mod)
+
+    fetcher = ShikihoStockNewsFetcher(
+        config_path=CONFIG, profile_dir=tmp_path / "prof", sleep_fn=lambda _s: None
+    )
+    items, errors = fetcher.fetch_for_codes_with_errors(["7203", "6758"])
+    assert items == []
+    assert set(errors) == {"7203", "6758"}
+    assert "Executable" in str(errors["7203"])
+    assert stopped == [True]
