@@ -197,3 +197,39 @@ def test_empty_codes_returns_empty(tmp_path):
     items, errors = fetcher.fetch_for_codes_with_errors([])
     assert items == []
     assert errors == {}
+
+
+def test_open_context_stops_playwright_when_launch_fails(tmp_path, monkeypatch):
+    """launch 失敗時に start() 済みの Playwright を止める（後続 fetcher の
+    「Sync API inside the asyncio loop」を防ぐ）。"""
+    import sys
+    import types
+
+    import pytest
+
+    stopped: list[bool] = []
+
+    class FakeChromium:
+        def launch_persistent_context(self, **_kw):
+            raise RuntimeError("Executable doesn't exist")
+
+    class FakePw:
+        chromium = FakeChromium()
+
+        def stop(self):
+            stopped.append(True)
+
+    class FakeStarter:
+        def start(self):
+            return FakePw()
+
+    fake_mod = types.ModuleType("playwright.sync_api")
+    fake_mod.sync_playwright = lambda: FakeStarter()  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "playwright.sync_api", fake_mod)
+
+    fetcher = CdpDisclosureFetcher(
+        config_path=CONFIG, profile_dir=tmp_path / "prof", sleep_fn=lambda _s: None
+    )
+    with pytest.raises(RuntimeError, match="Executable"):
+        fetcher.fetch_for_codes_with_errors(["7203"])
+    assert stopped == [True]
