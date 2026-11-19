@@ -2,6 +2,7 @@
 # 列: 開発中（draft）→ 承認待ち（draft でない・開いている）→ デプロイ待ち（マージ済み・本番に未反映）→ 完了。
 # デプロイ待ちは DEPLOY_SERVICES にあるサービスに効く変更だけ。本番に出したら deployed/<サービス> の
 # タグを出したコミットへ付け直して push すると、そのコミットに含まれる PR が完了へ移る。
+# 毎朝 7:30（JST）に、完了していない項目をもう一度見直す（GitHub の一時的な不調で取りこぼした更新を取り戻す）。
 # 秘密 PROJECT_BOARD_TOKEN（classic PAT・repo と project）が無ければ何もしない。
 name: 開発状況ボード
 
@@ -11,6 +12,8 @@ on:
   push:
     tags: ["deployed/*"]
   workflow_dispatch:
+  schedule:
+    - cron: "55 22 * * *" # 毎朝 7:55 JST（朝のまとめ 8:00 の前・6リポジトリで5分ずつずらす＝同時に走るとGitHubの呼び出し制限に当たる）
 
 concurrency:
   group: project-board-${{ github.repository }}
@@ -44,11 +47,17 @@ jobs:
           # gh は間隔を広げながら5回まで試す（10・20・40・60 秒）。それでも通らなければ、
           # ボードの更新は次の PR の動きか workflow_dispatch で取り戻せるので、失敗にせず警告で終える
           # （失敗にすると PR のたびに「Run failed」のメールが届く）。
+          # ⚠ ただしトークンが拒まれた（401 Bad credentials）ときは一時的な失敗ではないので、やり直さず失敗にする
+          # （2026-11-10 から全リポジトリで期限切れのまま「成功」で終わり続け、ボードが10日止まっていた）。
           gave_up="$RUNNER_TEMP/gh-gave-up"
+          bad_token="$RUNNER_TEMP/gh-bad-token"
+          gh_err="$RUNNER_TEMP/gh-stderr"
           gh() {
             local i wait=10
             for i in 1 2 3 4 5; do
-              command gh "$@" && return 0
+              command gh "$@" 2>"$gh_err" && { cat "$gh_err" >&2; return 0; }
+              cat "$gh_err" >&2
+              if grep -qiE 'Bad credentials|HTTP 401' "$gh_err"; then touch "$bad_token"; return 1; fi
               [ "$i" -lt 5 ] || break
               sleep "$wait"; wait=$(( wait * 2 > 60 ? 60 : wait * 2 ))
             done
@@ -57,6 +66,10 @@ jobs:
           }
           on_exit() {
             local code=$?
+            if [ -e "$bad_token" ]; then
+              echo "::error::PROJECT_BOARD_TOKEN が拒まれました（401 Bad credentials）。トークンの期限切れか無効化です。classic のトークン（repo・project・read:org）を作り直して、このリポジトリの秘密の値を差し替えてください"
+              exit 1
+            fi
             if [ "$code" -ne 0 ] && [ -e "$gave_up" ]; then
               local rl
               rl=$(command gh api rate_limit --jq '.resources.graphql | "残り \(.remaining)/\(.limit)・回復 \(.reset | todate)"' 2>/dev/null || echo "取得できず")
@@ -150,6 +163,15 @@ jobs:
               gh project item-list "$number" --owner "$OWNER" --format json --limit 1000 \
                 | jq -r --arg r "$GITHUB_REPOSITORY" --arg f "$STATE_FIELD" \
                     '.items[] | select(.[$f] == "デプロイ待ち" and .content.repository == $r) | .content.number' \
+                | while read -r n; do sync_pr "$n"; done
+              ;;
+            schedule)
+              # 毎朝の見直し: このリポジトリの完了していない項目（タグの push や PR の動きのときの更新が
+              # API の不調で諦められていても、ここで取り戻す。2026-11-18 の econ の deployed/web で実際に起きた）
+              gh project item-list "$number" --owner "$OWNER" --format json --limit 1000 \
+                | jq -r --arg r "$GITHUB_REPOSITORY" --arg f "$STATE_FIELD" \
+                    '.items[] | select(.content.repository == $r and .content.number != null
+                      and (.[$f] == "開発中" or .[$f] == "承認待ち" or .[$f] == "デプロイ待ち")) | .content.number' \
                 | while read -r n; do sync_pr "$n"; done
               ;;
             workflow_dispatch)
