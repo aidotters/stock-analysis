@@ -13,7 +13,7 @@ on:
     tags: ["deployed/*"]
   workflow_dispatch:
   schedule:
-    - cron: "30 22 * * *" # 毎朝 7:30 JST（朝のまとめ 8:00 の前）
+    - cron: "55 22 * * *" # 毎朝 7:55 JST（朝のまとめ 8:00 の前・6リポジトリで5分ずつずらす＝同時に走るとGitHubの呼び出し制限に当たる）
 
 concurrency:
   group: project-board-${{ github.repository }}
