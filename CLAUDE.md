@@ -123,7 +123,7 @@ python src/market_pipeline/analysis/chart_classification.py --mode full-optimize
 - `STOCK_NEWS_LOOKBACK_DAYS` / `STOCK_NEWS_QUIET_WHEN_EMPTY` / `STOCK_NEWS_SLACK_WEBHOOK_URL`（ニュース配信）
 
 ### PR の状態
-PR は作業中は draft のまま、作業が終わってオーナーの確認待ちになったら draft を外す。組織のボード「開発状況」の列（開発中／承認待ち）はこれで動く（`.github/workflows/project-board.yml`）。
+PR は作業中は draft のまま、作業が終わってオーナーの確認待ちになったら draft を外す。
 
 ### Testing
 - pytest + `tests/conftest.py` の fixtures。モックDBはメモリ/一時ファイルで分離。
